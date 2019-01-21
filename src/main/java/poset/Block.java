@@ -8,17 +8,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.bouncycastle.jce.interfaces.ECPrivateKey;
-
-import com.google.protobuf.InvalidProtocolBufferException;
-
 import autils.Appender;
-import common.Hash32;
 import common.RetResult;
 import common.RetResult3;
 import common.error;
-import poset.proto.PBlock;
-import poset.proto.PBlock.Block.Builder;
 
 public class Block {
 	BlockBody Body;

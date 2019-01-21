@@ -36,11 +36,11 @@ import proxy.proto.RestoreRequest;
 import proxy.proto.RestoreResponse;
 import proxy.proto.SnapshotRequest;
 import proxy.proto.SnapshotResponse;
-import proxy.proto.Grpc.ToClient;
-import proxy.proto.Grpc.ToClient.Block;
-import proxy.proto.Grpc.ToClient.Query;
-import proxy.proto.Grpc.ToClient.Restore;
-import proxy.proto.Grpc.ToServer.Answer;
+import proxy.proto.ToClient;
+import proxy.proto.ToClient.Block;
+import proxy.proto.ToClient.Query;
+import proxy.proto.ToClient.Restore;
+import proxy.proto.ToServer.Answer;
 
 public class GrpcLachesisProxy implements proxy.LachesisProxy {
 
@@ -140,7 +140,7 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 
 	// SubmitTx implements LachesisProxy interface method
 	public error SubmitTx(byte[] tx)  {
-//		r := new proxy.internal.Grpc.ToServer(
+//		r := new proxy.internal.ToServer(
 //			Event: &internal.ToServer_Tx_{
 //				Tx: &internal.ToServer_Tx{
 //					Data: tx,
@@ -148,8 +148,8 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 //			},
 //		);
 
-		proxy.proto.Grpc.ToServer.Tx tx1 = proxy.proto.Grpc.ToServer.Tx.newBuilder().setData(ByteString.copyFrom(tx)).build();
-		proxy.proto.Grpc.ToServer r = proxy.proto.Grpc.ToServer.newBuilder().setTx(tx1).build();
+		proxy.proto.ToServer.Tx tx1 = proxy.proto.ToServer.Tx.newBuilder().setData(ByteString.copyFrom(tx)).build();
+		proxy.proto.ToServer r = proxy.proto.ToServer.newBuilder().setTx(tx1).build();
 
 		error err = sendToServer(r);
 		return err;
@@ -159,7 +159,7 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 	 * network:
 	 */
 
-	public error sendToServer(Grpc.ToServer data) {
+	public error sendToServer(ToServer data) {
 		while (true) {
 			error err = streamSend(data);
 			if (err == null) {
@@ -174,19 +174,19 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 		}
 	}
 
-	public RetResult<Grpc.ToClient> recvFromServer() {
+	public RetResult<ToClient> recvFromServer() {
 		while (true) {
 			RetResult<ToClient> streamRecv = streamRecv();
 			ToClient data = streamRecv.result;
 			error err = streamRecv.err;
 			if (err == null) {
-				return new RetResult<Grpc.ToClient>(null, err);
+				return new RetResult<ToClient>(null, err);
 			}
 			logger.warn(String.format("recv from server err: %s", err));
 
 			err = reConnect();
 			if (err == ErrConnShutdown) {
-				return new RetResult<Grpc.ToClient>(null, err);
+				return new RetResult<ToClient>(null, err);
 			}
 		}
 	}
@@ -254,7 +254,7 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 	}
 
 	public void listen_events() {
-		Grpc.ToClient event;
+		ToClient event;
 		error err;
 		UUID uuid;
 		while(true) {
@@ -315,12 +315,12 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 		One2OneChannel<proxy.proto.CommitResponse> respCh = Channel.one2one();
 		ExecService.go(() ->
 		{
-			Grpc.ToServer answer = null;
+			ToServer answer = null;
 			CommitResponse resp = respCh.in().read();
 			boolean ok = resp != null;
 			if (ok) {
-				Grpc.ToServer.Answer.newBuilder().setUid(UuidUtils.asByteString(uuid)).setData(ByteString.copyFrom(resp.StateHash)).setError(resp.Error.Error());
-//				answer = new Grpc.ToServer(uuid[:], resp.StateHash, resp.Error);
+				ToServer.Answer.newBuilder().setUid(UuidUtils.asByteString(uuid)).setData(ByteString.copyFrom(resp.StateHash)).setError(resp.Error.Error());
+//				answer = new ToServer(uuid[:], resp.StateHash, resp.Error);
 			}
 			sendToServer(answer);
 		});
@@ -330,7 +330,7 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 	public One2OneChannel<proxy.proto.SnapshotResponse> newSnapshotResponseCh(UUID uuid) {
 		One2OneChannel<proxy.proto.SnapshotResponse> respCh = Channel.one2one();
 		ExecService.go( () -> {
-			Grpc.ToServer answer = null;
+			ToServer answer = null;
 			SnapshotResponse resp = respCh.in().read();
 			boolean ok = resp != null;
 			if (ok) {
@@ -344,7 +344,7 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 	public One2OneChannel<proxy.proto.RestoreResponse> newRestoreResponseCh(UUID uuid ) {
 		One2OneChannel<proxy.proto.RestoreResponse> respCh = Channel.one2one();
 		ExecService.go(() -> {
-			Grpc.ToServer answer = null;
+			ToServer answer = null;
 			RestoreResponse resp = respCh.in().read();
 			boolean ok = resp != null;
 //			resp, ok := <-respCh;
@@ -356,9 +356,9 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 		return respCh;
 	}
 
-	public Grpc.ToServer newAnswer(byte[] uuid ,byte[] data, error err) {
+	public ToServer newAnswer(byte[] uuid ,byte[] data, error err) {
 		if (err != null) {
-//			return new Grpc.ToServer (
+//			return new ToServer (
 //				Event: &internal.ToServer_Answer_{
 //					Answer: &internal.ToServer_Answer{
 //						Uid: uuid,
@@ -369,9 +369,9 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 //				},
 //			);
 
-			Answer answer = Grpc.ToServer.Answer.newBuilder().setUid(ByteString.copyFrom(uuid))
+			Answer answer = ToServer.Answer.newBuilder().setUid(ByteString.copyFrom(uuid))
 					.setError(err.Error()).build();
-			Grpc.ToServer server = Grpc.ToServer.newBuilder().setAnswer(answer).build();
+			ToServer server = ToServer.newBuilder().setAnswer(answer).build();
 			return server;
 		}
 
@@ -386,14 +386,14 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 //			},
 //		}
 
-		Answer answer = Grpc.ToServer.Answer.newBuilder().setUid(ByteString.copyFrom(uuid))
+		Answer answer = ToServer.Answer.newBuilder().setUid(ByteString.copyFrom(uuid))
 				.setData(ByteString.copyFrom(data)).build();
-		Grpc.ToServer server = Grpc.ToServer.newBuilder().setAnswer(answer).build();
+		ToServer server = ToServer.newBuilder().setAnswer(answer).build();
 
 		return server;
 	}
 
-	public error streamSend(Grpc.ToServer data)  {
+	public error streamSend(ToServer data)  {
 		Object v = stream.get(); // stream.Load();
 		if (v == null) {
 			return ErrNeedReconnect;
@@ -409,10 +409,10 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 		return stream.get().Send(data);
 	}
 
-	public RetResult<Grpc.ToClient> streamRecv() {
+	public RetResult<ToClient> streamRecv() {
 		LachesisNode_ConnectClient v = stream.get();// stream.Load();
 		if (v == null) {
-			return new RetResult<Grpc.ToClient>(null, ErrNeedReconnect);
+			return new RetResult<ToClient>(null, ErrNeedReconnect);
 		}
 
 		boolean ok = (v instanceof LachesisNode_ConnectClient);
@@ -420,7 +420,7 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 			stream.set(v);
 		}
 		if (!ok || stream == null) {
-			return new RetResult<Grpc.ToClient>(null, ErrNeedReconnect);
+			return new RetResult<ToClient>(null, ErrNeedReconnect);
 		}
 		return stream.get().Recv();
 	}

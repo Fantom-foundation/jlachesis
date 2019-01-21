@@ -30,11 +30,10 @@ import common.RetResult;
 import common.UuidUtils;
 import common.error;
 import proxy.internal.LachesisNode_ConnectServer;
-import proxy.proto.Grpc;
-import proxy.proto.Grpc.ToClient;
-import proxy.proto.Grpc.ToServer;
-import proxy.proto.Grpc.ToServer.Answer;
-import proxy.proto.Grpc.ToServer.Tx;
+import proxy.proto.ToClient;
+import proxy.proto.ToServer;
+import proxy.proto.ToServer.Answer;
+import proxy.proto.ToServer.Tx;
 
 
 //"google.golang.org/grpc"
@@ -50,11 +49,11 @@ public class GrpcAppProxy implements AppProxy {
 
 	Duration timeout;
 	One2OneChannel<ClientStream> new_clients; //  chan ClientStream;
-	Map<UUID, One2OneChannel<Grpc.ToServer.Answer>> askings; //      map[UUID]chan *internal.Grpc.ToServer.Answer;
+	Map<UUID, One2OneChannel<ToServer.Answer>> askings; //      map[UUID]chan *internal.ToServer.Answer;
 	ReadWriteLock askings_sync;
 
 	One2OneChannel<byte[]> event4server; //  chan []byte;
-	One2OneChannel<Grpc.ToClient> event4clients; // chan *internal.ToClient;
+	One2OneChannel<ToClient> event4clients; // chan *internal.ToClient;
 
 	// NewGrpcAppProxy instantiates a joined AppProxy-interface listen to remote apps
 	public GrpcAppProxy(String bind_addr, Duration timeout, Logger logger) {
@@ -69,7 +68,7 @@ public class GrpcAppProxy implements AppProxy {
 		this.timeout =     timeout;
 		this.new_clients = Channel.one2one(); // make(chan ClientStream, 100);
 		// TODO: make chans buffered?
-		this.askings =      new HashMap<UUID, One2OneChannel<Grpc.ToServer.Answer>>(); //make(map[UUID]chan *internal.Grpc.ToServer.Answer),
+		this.askings =      new HashMap<UUID, One2OneChannel<ToServer.Answer>>(); //make(map[UUID]chan *internal.ToServer.Answer),
 		this.event4server =  Channel.one2one(); // make(chan []byte),
 		this.event4clients = Channel.one2one(); //make(chan *internal.ToClient),
 
@@ -255,7 +254,7 @@ public class GrpcAppProxy implements AppProxy {
 	 * staff:
 	 */
 
-	public void route_answer(Grpc.ToServer.Answer hash) {
+	public void route_answer(ToServer.Answer hash) {
 //		uuid, err := xid.FromBytes(hash.GetUid());
 		UUID uuid = UUID.nameUUIDFromBytes(hash.getUid().toByteArray());
 		if (uuid == null) {
@@ -263,7 +262,7 @@ public class GrpcAppProxy implements AppProxy {
 			return;
 		}
 		askings_sync.readLock().lock();
-		One2OneChannel<Grpc.ToServer.Answer> ch = askings.get(uuid);
+		One2OneChannel<ToServer.Answer> ch = askings.get(uuid);
 		boolean ok = ch != null;
 		if (ok) {
 			ch.out().write(hash);
@@ -271,7 +270,7 @@ public class GrpcAppProxy implements AppProxy {
 		askings_sync.readLock().unlock();
 	}
 
-	public One2OneChannel<Grpc.ToServer.Answer> push_block(byte[] block) {
+	public One2OneChannel<ToServer.Answer> push_block(byte[] block) {
 		UUID uuid = UUID.randomUUID();
 		ByteString uuidBytes = ByteString.copyFrom(uuid.toString().getBytes());
 
@@ -284,18 +283,18 @@ public class GrpcAppProxy implements AppProxy {
 //			},
 //		}
 
-		Grpc.ToClient.Block b = Grpc.ToClient.Block.newBuilder().setData(ByteString.copyFrom(block))
+		ToClient.Block b = ToClient.Block.newBuilder().setData(ByteString.copyFrom(block))
 				.setUid(uuidBytes)
 				.build();
-		Grpc.ToClient event = Grpc.ToClient.newBuilder().setBlock(
+		ToClient event = ToClient.newBuilder().setBlock(
 				b).build();
 
-		One2OneChannel<Grpc.ToServer.Answer> answer = subscribe4answer(uuid);
+		One2OneChannel<ToServer.Answer> answer = subscribe4answer(uuid);
 		event4clients.out().write(event);
 		return answer;
 	}
 
-	public  One2OneChannel<Grpc.ToServer.Answer> push_query(long index) {
+	public  One2OneChannel<ToServer.Answer> push_query(long index) {
 		UUID uuid = UUID.randomUUID();
 
 //		event := &internal.ToClient{
@@ -307,21 +306,21 @@ public class GrpcAppProxy implements AppProxy {
 //			},
 //		}
 
-		Grpc.ToClient.Query query = Grpc.ToClient.Query.newBuilder().setUid(UuidUtils.asByteString(uuid))
+		ToClient.Query query = ToClient.Query.newBuilder().setUid(UuidUtils.asByteString(uuid))
 			.setIndex(index).build();
-		Grpc.ToClient event = Grpc.ToClient.newBuilder().setQuery(query).build();
+		ToClient event = ToClient.newBuilder().setQuery(query).build();
 
-		One2OneChannel<Grpc.ToServer.Answer> answer = subscribe4answer(uuid);
+		One2OneChannel<ToServer.Answer> answer = subscribe4answer(uuid);
 		event4clients.out().write(event);
 		return answer;
 	}
 
-	public  One2OneChannel<Grpc.ToServer.Answer> push_restore(byte[] snapshot) {
+	public  One2OneChannel<ToServer.Answer> push_restore(byte[] snapshot) {
 		UUID uuid = UUID.randomUUID();
 
-		Grpc.ToClient.Restore query = Grpc.ToClient.Restore.newBuilder().setUid(UuidUtils.asByteString(uuid))
+		ToClient.Restore query = ToClient.Restore.newBuilder().setUid(UuidUtils.asByteString(uuid))
 				.setData(ByteString.copyFrom(snapshot)).build();
-		Grpc.ToClient event = Grpc.ToClient.newBuilder().setRestore(query).build();
+		ToClient event = ToClient.newBuilder().setRestore(query).build();
 
 //		event := new internal.ToClient(
 //			Event: &internal.ToClient_Restore_{
@@ -337,8 +336,8 @@ public class GrpcAppProxy implements AppProxy {
 		return answer;
 	}
 
-	public  One2OneChannel<Grpc.ToServer.Answer> subscribe4answer(UUID uuid ) {
-		One2OneChannel<Grpc.ToServer.Answer> ch = Channel.one2one(); //make(chan *internal.Grpc.ToServer.Answer);
+	public  One2OneChannel<ToServer.Answer> subscribe4answer(UUID uuid ) {
+		One2OneChannel<ToServer.Answer> ch = Channel.one2one(); //make(chan *internal.ToServer.Answer);
 		askings_sync.writeLock().lock();
 		askings.put(uuid, ch);
 		askings_sync.writeLock().unlock();
