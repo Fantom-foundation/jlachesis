@@ -21,7 +21,7 @@ import com.google.protobuf.ByteString;
 import io.grpc.ManagedChannel;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
+import io.grpc.netty.NettyServerBuilder;
 import net.NetworkTransport;
 import autils.Appender;
 import channel.ChannelUtils;
@@ -81,8 +81,8 @@ public class GrpcAppProxy implements AppProxy {
 //		server = new grpc.Server(
 //			grpc.MaxRecvMsgSize(Integer.MAX_VALUE),
 //			grpc.MaxSendMsgSize(Integer.MAX_VALUE));
-		
-		
+
+
 		this.server = NettyServerBuilder.forAddress(new InetSocketAddress("localhost", 0))
 	    .addService(new GRPCServiceImpl(serviceParams))
 	    .build().start();

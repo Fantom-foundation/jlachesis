@@ -3,6 +3,13 @@ package common;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * A simple LRU cache implementation.
+ * TODO consider to use other LRU cache impl
+ *
+ * @param <K>
+ * @param <V>
+ */
 public class LRUCache<K,V> extends LinkedHashMap<K, V> {
 	public static <K,V> RetResult<LRUCache<K,V>> New(int i) {
 		// TBD implement it

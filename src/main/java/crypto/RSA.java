@@ -25,7 +25,6 @@ import javax.crypto.Cipher;
 import org.apache.commons.codec.binary.Base64;
 
 public class RSA {
-
 	private static String getKey(String filename) throws IOException {
 		// Read key from file
 		String strKeyPEM = "";

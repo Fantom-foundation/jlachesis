@@ -14,13 +14,21 @@ import proxy.proto.Commit;
 import proxy.proto.RestoreRequest;
 import proxy.proto.SnapshotRequest;
 
-// DummyClient is a implementation of the dummy app. Lachesis and the
-// app run in separate processes and communicate through proxy
+/**
+ * DummyClient is a implementation of the dummy app. Lachesis and the
+ * app run in separate processes and communicate through proxy
+ */
 public class DummyClient {
 	Logger logger;
 	proxy.ProxyHandler state;
 	proxy.LachesisProxy lachesisProxy;
 
+	/**
+	 * Construct a dummy client
+	 * @param logger
+	 * @param state
+	 * @param lachesisProxy
+	 */
 	public DummyClient(Logger logger, ProxyHandler state, LachesisProxy lachesisProxy) {
 		super();
 		this.logger = logger;
@@ -29,7 +37,11 @@ public class DummyClient {
 	}
 
 
-	// SubmitTx sends a transaction to node via proxy
+	/**
+	 * SubmitTx sends a transaction to node via proxy
+	 * @param tx
+	 * @return
+	 */
 	public error SubmitTx(byte[] tx) {
 		return lachesisProxy.SubmitTx(tx);
 	}
@@ -46,7 +58,13 @@ public class DummyClient {
 		return new DummyClient(logger, null, lachesisProxy);
 	}
 
-	// NewDummyClient instantiates an implementation of the dummy app
+	/**
+	 * NewDummyClient instantiates an implementation of the dummy app
+	 * @param lachesisProxy
+	 * @param handler
+	 * @param logger
+	 * @return
+	 */
 	public RetResult<DummyClient> NewDummyClient(proxy.LachesisProxy lachesisProxy , proxy.ProxyHandler handler , Logger logger) {
 //		State state = new State(logger);
 

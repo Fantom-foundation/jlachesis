@@ -1,0 +1,13 @@
+syntax = "proto3";
+package poset.proto;
+import "poset/root.proto";
+import "poset/event.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "PFrame";
+
+message Frame {
+  int64 Round = 1;
+  repeated Root Roots = 2;
+  repeated EventMessage Events = 3;
+}

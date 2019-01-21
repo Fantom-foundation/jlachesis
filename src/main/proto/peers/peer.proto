@@ -1,0 +1,11 @@
+syntax = "proto3";
+package peers.proto;
+
+option java_multiple_files = true;
+option java_outer_classname = "PPeer";
+
+message Peer {
+  int64 ID = 1;
+  string NetAddr = 2;
+  string PubKeyHex = 3;
+}

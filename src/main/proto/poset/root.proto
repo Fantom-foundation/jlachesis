@@ -1,0 +1,19 @@
+syntax = "proto3";
+package poset.proto;
+
+option java_multiple_files = true;
+option java_outer_classname = "PRoot";
+
+message RootEvent {
+  string Hash  = 1;
+  int64 CreatorID = 2;
+  int64 Index = 3;
+  int64 LamportTimestamp = 4;
+  int64 Round = 5;
+}
+
+message Root {
+  int64 NextRound = 1;
+  RootEvent SelfParent = 2;
+  map<string, RootEvent> Others = 3;
+}

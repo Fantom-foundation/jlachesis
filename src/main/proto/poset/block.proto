@@ -1,0 +1,25 @@
+syntax = "proto3";
+package poset.proto;
+
+option java_multiple_files = true;
+option java_outer_classname = "PBlock";
+
+message BlockBody {
+  int64 Index = 1;
+  int64 RoundReceived = 2;
+  repeated bytes Transactions = 5;
+}
+
+message WireBlockSignature {
+  int64 Index = 1;
+  string Signature = 2;
+}
+
+message Block {
+  BlockBody Body = 1;
+  map<string, string> Signatures = 2;
+  bytes hash = 3;
+  string hex = 4;
+  bytes StateHash = 5;
+  bytes FrameHash = 6;
+}
