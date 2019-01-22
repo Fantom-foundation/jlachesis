@@ -30,6 +30,7 @@ import common.RetResult;
 import common.UuidUtils;
 import common.error;
 import proxy.internal.LachesisNode_ConnectServer;
+import proxy.proto.LachesisNodeGrpc;
 import proxy.proto.ToClient;
 import proxy.proto.ToServer;
 import proxy.proto.ToServer.Answer;
@@ -57,8 +58,6 @@ public class GrpcAppProxy implements AppProxy {
 
 	// NewGrpcAppProxy instantiates a joined AppProxy-interface listen to remote apps
 	public GrpcAppProxy(String bind_addr, Duration timeout, Logger logger) {
-		error err;
-
 		if (logger == null) {
 			logger = Logger.getLogger(GrpcAppProxy.class);
 			logger.setLevel(Level.DEBUG);
@@ -73,24 +72,28 @@ public class GrpcAppProxy implements AppProxy {
 		this.event4clients = Channel.one2one(); //make(chan *internal.ToClient),
 
 //		p.listener, err = net.Listen("tcp", bind_addr);
-		this.listener = new ServerSocket(0, 50, InetAddress.getByName(bind_addr));
+		try {
+			this.listener = new ServerSocket(0, 50, InetAddress.getByName(bind_addr));
 
+			// TODO
+//			server = new grpc.Server(
+//				grpc.MaxRecvMsgSize(Integer.MAX_VALUE),
+//				grpc.MaxSendMsgSize(Integer.MAX_VALUE));
 
-		// TODO
-//		server = new grpc.Server(
-//			grpc.MaxRecvMsgSize(Integer.MAX_VALUE),
-//			grpc.MaxSendMsgSize(Integer.MAX_VALUE));
+//			this.server = NettyServerBuilder.forAddress(new InetSocketAddress("localhost", 0))
+//					.addService(new LachesisNodeGrpc.LachesisNodeImplBase(){})
+//					.build()
+//					.start();
+			server = ServerBuilder.forPort(listener.getLocalPort())
+					.addService(new LachesisNodeGrpc.LachesisNodeImplBase(){})
+					.build().start();
+		} catch (IOException e1) {
+			logger.error("Error starting grpc server" + e1.getMessage());
+			e1.printStackTrace();
+		}
 
-
-		this.server = NettyServerBuilder.forAddress(new InetSocketAddress("localhost", 0))
-	    .addService(new GRPCServiceImpl(serviceParams))
-	    .build().start();
-
-		server = ServerBuilder.forPort(listener.getLocalPort()).build();
-
-		RegisterLachesisNodeServer(server, this);
-
-		ExecService.go(() -> server.Serve(listener));
+//		RegisterLachesisNodeServer(server, this);
+//		ExecService.go(() -> server.Serve(listener));
 
 		ExecService.go(() -> send_events4clients());
 	}

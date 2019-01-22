@@ -1,8 +1,0 @@
-syntax = "proto3";
-package poset.proto;
-
-option java_outer_classname = "PFlagTableWrapper";
-
-message FlagTableWrapper {
-  map<string, int64> Body = 1;
-}

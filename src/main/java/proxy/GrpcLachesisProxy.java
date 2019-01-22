@@ -40,6 +40,7 @@ import proxy.proto.ToClient;
 import proxy.proto.ToClient.Block;
 import proxy.proto.ToClient.Query;
 import proxy.proto.ToClient.Restore;
+import proxy.proto.ToServer;
 import proxy.proto.ToServer.Answer;
 
 public class GrpcLachesisProxy implements proxy.LachesisProxy {
@@ -119,10 +120,6 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 		return null;
 	}
 
-	/*
-	 * inmem interface: LachesisProxy implementation
-	 */
-
 	// CommitCh implements LachesisProxy interface method
 	public One2OneChannel<proxy.proto.Commit> CommitCh()  {
 		return commitCh;
@@ -148,8 +145,10 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 //			},
 //		);
 
-		proxy.proto.ToServer.Tx tx1 = proxy.proto.ToServer.Tx.newBuilder().setData(ByteString.copyFrom(tx)).build();
-		proxy.proto.ToServer r = proxy.proto.ToServer.newBuilder().setTx(tx1).build();
+		proxy.proto.ToServer.Tx tx1 = proxy.proto.ToServer.Tx.newBuilder()
+				.setData(ByteString.copyFrom(tx)).build();
+		proxy.proto.ToServer r = proxy.proto.ToServer.newBuilder()
+				.setTx(tx1).build();
 
 		error err = sendToServer(r);
 		return err;
@@ -209,9 +208,9 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 //		case <-shutdown:
 //			closeStream();
 //			conn.Close();
-//			ChannelUtils.close(commitCh);
-//			ChannelUtils.close(queryCh);
-//			ChannelUtils.close(restoreCh);
+//			close(commitCh);
+//			close(queryCh);
+//			close(restoreCh);
 //			reconnect_ticket.out().write(ZeroTime);
 //			return ErrConnShutdown;
 //		default:

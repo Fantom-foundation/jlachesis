@@ -96,18 +96,12 @@ public class RootEvent {
 			this.Round == that.Round;
 	}
 
-
-//	public void Reset()         { *m = RootEvent{} }
-//	public String() string { return proto.CompactTextString(m) }
-//	}
-//
 //	public XXX_Unmarshal(b []byte) error {
 //		return xxx_messageInfo_RootEvent.Unmarshal(m, b)
 //	}
 //	public XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 //		return xxx_messageInfo_RootEvent.Marshal(b, m, deterministic)
 //	}
-//	var xxx_messageInfo_RootEvent proto.InternalMessageInfo
 
 	public String GetHash() {
 		return Hash;
