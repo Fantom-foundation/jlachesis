@@ -230,6 +230,10 @@ public class Service {
 		SpringApplication.run(Service.class, new String[] {});
 	}
 
+	public static void main (String[] args) {
+		SpringApplication.run(Service.class, new String[] {});
+	}
+
 
 //	public http.HandlerFunc corsHandler(http.HandlerFunc h) {
 //		return public(ResponseWriter w, Request r) {

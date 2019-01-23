@@ -2,24 +2,28 @@ package crypto;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
+import java.security.KeyPair;
 import java.security.PrivateKey;
+import java.security.Security;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.PEMKeyPair;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 
 import autils.FileUtils;
 import common.RetResult;
 import common.error;
 
-//import (
-//		"crypto/ecdsa"
-//		"crypto/x509"
-//		"encoding/pem"
-//		"io/ioutil"
-//		"sync"
-//	)
-
+/**
+ * PemKey loads from the .pem file.
+ *
+ */
 public class PemKey {
 	String path;
 
@@ -29,17 +33,35 @@ public class PemKey {
 		path = Paths.get(base, pemKeyPath).toString();
 	}
 
-	public synchronized RetResult<PrivateKey> ReadKey() {
-		RSAPrivateKey privateKey;
-		error err;
+	public synchronized RetResult<KeyPair> ReadKeyPair() {
 		try {
-			privateKey = RSA.getPrivateKey(path);
-		} catch (IOException | GeneralSecurityException e) {
-			err = error.Errorf(e.getMessage());
-			return new RetResult<PrivateKey>(null, err);
+			KeyPair keyPairFromPEM = keyPairFromPEM(path);
+			return new RetResult<>(keyPairFromPEM, null);
+		} catch (IllegalArgumentException | IOException e) {
+			return new RetResult<>(null, error.Errorf(e.getMessage()));
 		}
+	}
 
-		return new RetResult<PrivateKey>(privateKey, null);
+	private static KeyPair keyPairFromPEM(String pem) throws IllegalArgumentException, IOException {
+			Security.addProvider(new BouncyCastleProvider());
+
+			PEMParser pemParser = new PEMParser(new StringReader(pem));
+			Object keyObject = pemParser.readObject();
+			pemParser.close();
+
+			JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
+			KeyPair keys = converter.getKeyPair((PEMKeyPair) keyObject);
+			return keys;
+	}
+
+
+	public synchronized RetResult<PrivateKey> ReadKey() {
+		try {
+			RSAPrivateKey privateKey = RSA.getPrivateKey(path);
+			return new RetResult<>(privateKey, null);
+		} catch (IOException | GeneralSecurityException e) {
+			return new RetResult<>(null, error.Errorf(e.getMessage()));
+		}
 	}
 
 //	public synchronized RetResult<PrivateKey> ReadKey() {
@@ -76,8 +98,8 @@ public class PemKey {
 //		return new RetResult<PrivateKey>(generatePrivateKey, null);
 //	}
 
-	public synchronized error WriteKey(PrivateKey key) {
-		RetResult<PemDump> toPemKey = ToPemKey(key);
+	public synchronized error WriteKey(KeyPair keyPair) {
+		RetResult<PemDump> toPemKey = ToPemKey(keyPair);
 		PemDump pemKey = toPemKey.result;
 		error err = toPemKey.err;
 		if (err != null) {
@@ -95,17 +117,17 @@ public class PemKey {
 	}
 
 	public RetResult<PemDump> GeneratePemKey() {
-		RetResult<PrivateKey> ecdsa = Utils.GenerateECDSAKey();
-		PrivateKey key = ecdsa.result;
+		RetResult<KeyPair> ecdsa = Utils.GenerateECDSAKeyPair();
+		KeyPair keyPair = ecdsa.result;
 		error err = ecdsa.err;
 		if (err != null) {
 			return new RetResult<PemDump>(null, err);
 		}
 
-		return ToPemKey(key);
+		return ToPemKey(keyPair);
 	}
 
-	public static RetResult<PemDump> ToPemKey(PrivateKey priv) {
+	public static RetResult<PemDump> ToPemKey(KeyPair keyPair) {
 		// TODO
 //		String pub = String.format("0x%X", Utils.FromECDSAPub(priv.PublicKey));;
 //		b, err := x509.MarshalECPrivateKey(priv);
@@ -115,8 +137,8 @@ public class PemKey {
 //		pem.Block pemBlock = pem.newBlock("EC PRIVATE KEY", b);
 //		data = EncodeToMemory(pemBlock);
 
-		String publicKey = String.format("0x%X", Utils.FromECDSAPub(crypto.Utils.getPublicFromPrivate(priv)));
-		String privateKey = Arrays.toString(priv.getEncoded());
+		String publicKey = String.format("0x%X", Utils.FromECDSAPub(keyPair.getPublic()));
+		String privateKey = Arrays.toString(keyPair.getPrivate().getEncoded());
 		error err = null;
 		return new RetResult<PemDump>(new PemDump(publicKey, privateKey), err);
 	}

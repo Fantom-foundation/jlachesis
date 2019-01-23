@@ -1,7 +1,7 @@
 package poset;
 
 import java.math.BigInteger;
-import java.security.PrivateKey;
+import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -230,7 +230,7 @@ public class Block {
 	}
 
 
-	public RetResult<BlockSignature> Sign(PrivateKey privKey) {
+	public RetResult<BlockSignature> Sign(KeyPair keyPair) {
 		RetResult<byte[]> hash2 = Body.Hash();
 		byte[] signBytes = hash2.result;
 		error err = hash2.err;
@@ -238,7 +238,7 @@ public class Block {
 		if (err != null) {
 			return new RetResult<BlockSignature>(bs, err);
 		}
-		RetResult3<BigInteger, BigInteger> sign = crypto.Utils.Sign(privKey, signBytes);
+		RetResult3<BigInteger, BigInteger> sign = crypto.Utils.Sign(keyPair.getPrivate(), signBytes);
 		BigInteger R = sign.result1;
 		BigInteger S = sign.result2;
 		err = sign.err;
@@ -247,7 +247,7 @@ public class Block {
 		}
 
 		BlockSignature signature = new BlockSignature(
-			crypto.Utils.FromECDSAPub(crypto.Utils.getPublicFromPrivate(privKey)),
+			crypto.Utils.FromECDSAPub(keyPair.getPublic()),
 			Index(),
 			crypto.Utils.encodeSignature(R, S));
 

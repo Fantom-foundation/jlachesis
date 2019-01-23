@@ -1,5 +1,6 @@
 package node;
 
+import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.util.LinkedHashMap;
 import java.util.Random;
@@ -38,8 +39,8 @@ public class NodeList extends LinkedHashMap<PrivateKey, Node> {
 		for (int i = 0; i < count; i++) {
 			InmemTransport transp = new net.InmemTransport("");
 			String addr = transp.LocalAddr();
-			PrivateKey key = crypto.Utils.GenerateECDSAKey().result;
-			String pubKey = String.format("0x%X", crypto.Utils.FromECDSAPub(key.PublicKey));
+			KeyPair key = crypto.Utils.GenerateECDSAKeyPair().result;
+			String pubKey = String.format("0x%X", crypto.Utils.FromECDSAPub(key.getPublic()));
 			Peer peer = new peers.Peer(pubKey, addr);
 
 			Node n = new Node(
@@ -52,7 +53,7 @@ public class NodeList extends LinkedHashMap<PrivateKey, Node> {
 				DummyClient.NewInmemDummyApp(logger));
 
 			participants.AddPeer(peer);
-			this.put(key, n);
+			this.put(key.getPrivate(), n);
 		}
 
 		for (Node n : this.values()) {

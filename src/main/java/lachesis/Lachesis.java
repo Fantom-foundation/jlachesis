@@ -1,6 +1,6 @@
 package lachesis;
 
-import java.security.PrivateKey;
+import java.security.KeyPair;
 
 import org.apache.log4j.Logger;
 
@@ -106,14 +106,14 @@ public  error initStore() {
 public error initKey() {
 	if (Config.Key == null) {
 		PemKey pemKey = new PemKey(Config.DataDir);
-		RetResult<PrivateKey> readKey = pemKey.ReadKey();
-		PrivateKey privKey = readKey.result;
+		RetResult<KeyPair> readKey = pemKey.ReadKeyPair();
+		KeyPair privKey = readKey.result;
 		error err = readKey.err;
 
 		if (err != null) {
 			Config.logger.warn("Cannot read private key from file" + err);
 
-			RetResult<PrivateKey> keygen = Keygen(Config.DataDir);
+			RetResult<KeyPair> keygen = Keygen(Config.DataDir);
 			privKey = keygen.result;
 			err = keygen.err;
 
@@ -136,9 +136,9 @@ public error initKey() {
 }
 
 public error initNode() {
-	PrivateKey key = Config.Key;
+	KeyPair key = Config.Key;
 
-	String nodePub = String.format("0x%X", crypto.Utils.FromECDSAPub(crypto.Utils.getPublicFromPrivate(key)));
+	String nodePub = String.format("0x%X", crypto.Utils.FromECDSAPub(key.getPublic()));
 	Peer n = Peers.getByPubKey().get(nodePub);
 	boolean ok = n != null;
 	if (!ok) {
@@ -218,27 +218,27 @@ public error initNode() {
 		Node.Run(true);
 	}
 
-	public RetResult<PrivateKey> Keygen(String datadir) {
+	public RetResult<KeyPair> Keygen(String datadir) {
 		PemKey pemKey = new PemKey(datadir);
 
 		error err = pemKey.ReadKey().err;
 		if (err == null) {
-			return new RetResult<PrivateKey>(null, error.Errorf( String.format("another key already lives under %s", datadir)));
+			return new RetResult<>(null, error.Errorf( String.format("another key already lives under %s", datadir)));
 		}
 
-		RetResult<PrivateKey> generateECDSAKey = crypto.Utils.GenerateECDSAKey();
-		PrivateKey privKey = generateECDSAKey.result;
+		RetResult<KeyPair> generateECDSAKey = crypto.Utils.GenerateECDSAKeyPair();
+		KeyPair keyPair = generateECDSAKey.result;
 		err = generateECDSAKey.err;
 
 		if (err != null) {
-			return new RetResult<PrivateKey>(null, err);
+			return new RetResult<>(null, err);
 		}
 
-		err = pemKey.WriteKey(privKey);
+		err = pemKey.WriteKey(keyPair);
 		if (err != null) {
-			return new RetResult<PrivateKey>(null, err);
+			return new RetResult<>(null, err);
 		}
 
-		return new RetResult<PrivateKey>(privKey, null);
+		return new RetResult<>(keyPair, null);
 	}
 }

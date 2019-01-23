@@ -1,39 +1,65 @@
 package node;
 
-public enum NodeState {
-	// Gossiping is the initial state of a Lachesis node.
-	Gossiping (0, "Gossiping"),
+import java.util.concurrent.atomic.AtomicReference;
 
-	CatchingUp (1, "CatchingUp"),
+import channel.ExecService;
 
-	Shutdown (2, "Shutdown"),
-	
-	Unknown (3, "Unknown");
-	
-	private NodeState(int state, String stateName) {
-		this.state = state;
-		this.stateName = stateName;
+/**
+ * NodeState
+ */
+public class NodeState {
+	AtomicReference<NodeStates> state;
+	WaitGroup wg;
+
+	public NodeStates getState() {
+		return state.get();
 	}
 
-	public static NodeState getNodeState(int i) {
-		switch (i) {
-		case 0: return Gossiping;
-		case 1: return CatchingUp;
-		case 2: return Shutdown;
-		case 3: return Unknown;
-		default: return Gossiping;
+	public void setState(NodeStates s) {
+		state.set(s);
+	}
+
+	@Override
+	public String toString() {
+		return state.get().getStateName();
+	}
+
+	// TBD: conversion is ok?
+
+	// Start a goroutine and add it to waitgroup
+	public void goFunc(Runnable r) {
+		wg.add(1);
+		ExecService.go(() -> {
+			r.run();
+			wg.done();
+		});
+	}
+
+	public void waitRoutines() {
+		try {
+			wg.wait();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
-		
-	public int getState() {
-		return state;
-	}
 
-	public String getStateName() {
-		return stateName;
-	}
+	class WaitGroup {
+		private int jobs = 0;
 
-	final int state;
-	
-	final String stateName;
+		public synchronized void add(int i) {
+			jobs += i;
+		}
+
+		public synchronized void done() {
+			if (--jobs == 0) {
+				notifyAll();
+			}
+		}
+
+		public synchronized void await() throws InterruptedException {
+			while (jobs > 0) {
+				wait();
+			}
+		}
+	}
 }

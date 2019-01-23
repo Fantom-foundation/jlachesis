@@ -1,6 +1,6 @@
 package node;
 
-import java.security.PrivateKey;
+import java.security.KeyPair;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,9 +36,9 @@ import poset.Event;
 import poset.Frame;
 import poset.WireEvent;
 
-public class Node extends nodeState {
+public class Node extends NodeState {
 	// TBD: how to transfer this nodeState into Java
-	nodeState nodeState;
+	NodeState nodeState;
 
 	Config conf;
 	Logger logger;
@@ -75,7 +75,7 @@ public class Node extends nodeState {
 
 	public Node(Config conf,
 			long id,
-		PrivateKey key,
+		KeyPair key,
 		peers.Peers participants,
 		poset.Store store,
 		net.Transport trans,
@@ -122,7 +122,7 @@ public class Node extends nodeState {
 		needBoostrap = store.NeedBoostrap();
 
 		// Initialize
-		setState(NodeState.Gossiping);
+		setState(NodeStates.Gossiping);
 	}
 
 	public error Init() {
@@ -170,7 +170,7 @@ public class Node extends nodeState {
 		// Execute Node State Machine
 		while (true) {
 			// Run different routines depending on node state
-			NodeState state = nodeState.getState();
+			NodeStates state = nodeState.getState();
 //			logger.WithField("state", state.String()).Debug("RunAsync(gossip bool)")
 
 			switch (state) {
@@ -478,7 +478,7 @@ public class Node extends nodeState {
 		// check and handle syncLimit
 		if (syncLimit) {
 //			logger.WithField("from", peerAddr).Debug("SyncLimit")
-			setState(NodeState.CatchingUp);
+			setState(NodeStates.CatchingUp);
 			parentReturnCh.out().write(1); // <- struct{}{};
 			return null;
 		}
@@ -642,7 +642,7 @@ public class Node extends nodeState {
 			return err;
 		}
 
-		setState(NodeState.Gossiping);
+		setState(NodeStates.Gossiping);
 
 		return null;
 	}
@@ -770,12 +770,12 @@ public class Node extends nodeState {
 	}
 
 	public void Shutdown() {
-		if (getState() != NodeState.Shutdown) {
+		if (getState() != NodeStates.Shutdown) {
 			// mqtt.FireEvent("Shutdown()", "/mq/lachesis/node")
 //			logger.Debug("Shutdown()")
 
 			// Exit any non-shutdown state immediately
-			setState(NodeState.Shutdown);
+			setState(NodeStates.Shutdown);
 
 			// Stop and wait for concurrent operations
 			ChannelUtils.close(shutdownCh);

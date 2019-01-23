@@ -1,6 +1,7 @@
 package lachesis;
 
 import java.nio.file.*;
+import java.security.KeyPair;
 import java.security.PrivateKey;
 
 import org.apache.log4j.Level;
@@ -21,7 +22,7 @@ public class LachesisConfig {
 
 	boolean LoadPeers;
 	proxy.AppProxy Proxy;
-	PrivateKey Key;
+	KeyPair Key;
 
 	Logger logger;
 

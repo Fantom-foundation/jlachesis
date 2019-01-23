@@ -1,5 +1,6 @@
 package node;
 
+import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,7 +28,7 @@ import poset.Utils;
 
 public class Core {
 	long id;
-	PrivateKey key;
+	KeyPair key;
 	byte[] pubKey;
 	String hexID;
 	poset.Poset poset;
@@ -46,7 +47,7 @@ public class Core {
 
 	int maxTransactionsInEvent;
 
-	public Core(long id, PrivateKey key, peers.Peers participants,
+	public Core(long id, KeyPair key, peers.Peers participants,
 			poset.Store store, One2OneChannel<poset.Block>commitCh /**chan **/ , Logger logger) {
 
 		if (logger == null) {
@@ -87,7 +88,7 @@ public class Core {
 
 	public byte[] PubKey() {
 		if (pubKey == null) {
-			pubKey = hash.FromECDSAPub(key.PublicKey);
+			pubKey = crypto.Utils.FromECDSAPub(key.getPublic());
 		}
 		return pubKey;
 	}
@@ -215,7 +216,7 @@ public class Core {
 	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 	public error SignAndInsertSelfEvent( poset.Event event) {
-		error err = poset.SetWireInfoAndSign(event, key);
+		error err = poset.SetWireInfoAndSign(event, key.getPrivate());
 		if (err != null){
 			return err;
 		}

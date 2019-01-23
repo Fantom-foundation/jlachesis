@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
@@ -37,6 +38,18 @@ public class Utils {
 		}
 
 		return new RetResult<PrivateKey>(privKey, null);
+	}
+
+	public static RetResult<KeyPair> GenerateECDSAKeyPair() {
+		KeyPair privKey;
+		try {
+			privKey = ECDHPub.generateECDSAKeyPair();
+		} catch (NoSuchAlgorithmException | NoSuchProviderException
+				| InvalidAlgorithmParameterException e) {
+			return new RetResult<KeyPair>(null, error.Errorf(e.getMessage()));
+		}
+
+		return new RetResult<KeyPair>(privKey, null);
 	}
 
 
@@ -190,11 +203,5 @@ public class Utils {
 			return new RetResult<byte[]>(bigInteger.toByteArray(), error.Errorf(nfe.toString()));
 		}
 		return new RetResult<byte[]>(bigInteger.toByteArray(), null);
-	}
-
-
-	public static PublicKey getPublicFromPrivate(PrivateKey privKey) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }
