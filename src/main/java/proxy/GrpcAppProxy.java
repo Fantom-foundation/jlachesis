@@ -2,7 +2,6 @@ package proxy;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.time.Duration;
 import java.util.HashMap;
@@ -18,17 +17,15 @@ import org.jcsp.lang.One2OneChannel;
 
 import com.google.protobuf.ByteString;
 
-import io.grpc.ManagedChannel;
-import io.grpc.Server;
-import io.grpc.ServerBuilder;
-import io.grpc.netty.NettyServerBuilder;
-import net.NetworkTransport;
 import autils.Appender;
 import channel.ChannelUtils;
 import channel.ExecService;
 import common.RetResult;
 import common.UuidUtils;
 import common.error;
+import io.grpc.ServerBuilder;
+import io.grpc.stub.StreamObserver;
+import proxy.internal.LachesisNodeServer;
 import proxy.internal.LachesisNode_ConnectServer;
 import proxy.proto.LachesisNodeGrpc;
 import proxy.proto.ToClient;
@@ -36,11 +33,10 @@ import proxy.proto.ToServer;
 import proxy.proto.ToServer.Answer;
 import proxy.proto.ToServer.Tx;
 
-
-//"google.golang.org/grpc"
-
-//GrpcAppProxy implements the AppProxy interface
-public class GrpcAppProxy implements AppProxy {
+/**
+ * GrpcAppProxy implements the AppProxy interface
+ */
+public class GrpcAppProxy implements AppProxy, LachesisNodeServer {
 
 	static final error ErrNoAnswers = error.Errorf("no answers");
 
@@ -49,53 +45,94 @@ public class GrpcAppProxy implements AppProxy {
 	io.grpc.Server server;
 
 	Duration timeout;
-	One2OneChannel<ClientStream> new_clients; //  chan ClientStream;
-	Map<UUID, One2OneChannel<ToServer.Answer>> askings; //      map[UUID]chan *internal.ToServer.Answer;
+
+	// typedef ClientStream LachesisNode_ConnectServer
+	One2OneChannel<LachesisNode_ConnectServer> new_clients; // chan ClientStream;
+	Map<UUID, One2OneChannel<ToServer.Answer>> askings; // map[UUID]chan *internal.ToServer.Answer;
 	ReadWriteLock askings_sync;
 
-	One2OneChannel<byte[]> event4server; //  chan []byte;
+	One2OneChannel<byte[]> event4server; // chan []byte;
 	One2OneChannel<ToClient> event4clients; // chan *internal.ToClient;
 
-	// NewGrpcAppProxy instantiates a joined AppProxy-interface listen to remote apps
+	/**
+	 * Constructor instantiates a joined AppProxy-interface listen to remote apps
+	 *
+	 * @param bind_addr
+	 * @param timeout
+	 * @param logger
+	 */
 	public GrpcAppProxy(String bind_addr, Duration timeout, Logger logger) {
 		if (logger == null) {
 			logger = Logger.getLogger(GrpcAppProxy.class);
 			logger.setLevel(Level.DEBUG);
 		}
 
-		this.logger =     logger;
-		this.timeout =     timeout;
+		this.logger = logger;
+		this.timeout = timeout;
 		this.new_clients = Channel.one2one(); // make(chan ClientStream, 100);
 		// TODO: make chans buffered?
-		this.askings =      new HashMap<UUID, One2OneChannel<ToServer.Answer>>(); //make(map[UUID]chan *internal.ToServer.Answer),
-		this.event4server =  Channel.one2one(); // make(chan []byte),
-		this.event4clients = Channel.one2one(); //make(chan *internal.ToClient),
+		this.askings = new HashMap<UUID, One2OneChannel<ToServer.Answer>>(); // make(map[UUID]chan
+																				// *internal.ToServer.Answer),
+		this.event4server = Channel.one2one(); // make(chan []byte),
+		this.event4clients = Channel.one2one(); // make(chan *internal.ToClient),
 
 //		p.listener, err = net.Listen("tcp", bind_addr);
 		try {
 			this.listener = new ServerSocket(0, 50, InetAddress.getByName(bind_addr));
 
 			// TODO
-//			server = new grpc.Server(
-//				grpc.MaxRecvMsgSize(Integer.MAX_VALUE),
-//				grpc.MaxSendMsgSize(Integer.MAX_VALUE));
-
-//			this.server = NettyServerBuilder.forAddress(new InetSocketAddress("localhost", 0))
-//					.addService(new LachesisNodeGrpc.LachesisNodeImplBase(){})
-//					.build()
-//					.start();
-			server = ServerBuilder.forPort(listener.getLocalPort())
-					.addService(new LachesisNodeGrpc.LachesisNodeImplBase(){})
+//			server = new io.grpc.Server(grpc.MaxRecvMsgSize(Integer.MAX_VALUE),grpc.MaxSendMsgSize(Integer.MAX_VALUE));
+			this.server = ServerBuilder.forPort(listener.getLocalPort())
+					.addService(new LachesisNodeGrpcImpl())
+					.maxInboundMessageSize(Integer.MAX_VALUE)
+					.maxInboundMetadataSize(Integer.MAX_VALUE)
 					.build().start();
+			logger.error("grpc server started");
 		} catch (IOException e1) {
 			logger.error("Error starting grpc server" + e1.getMessage());
 			e1.printStackTrace();
 		}
 
+		// TODO: dont need these anymore. Already handled?
 //		RegisterLachesisNodeServer(server, this);
 //		ExecService.go(() -> server.Serve(listener));
 
 		ExecService.go(() -> send_events4clients());
+	}
+
+	static class LachesisNodeGrpcImpl extends LachesisNodeGrpc.LachesisNodeImplBase {
+		final Logger logger = Logger.getLogger(LachesisNodeGrpcImpl.class);
+
+		public io.grpc.stub.StreamObserver<proxy.proto.ToServer> connect(
+				io.grpc.stub.StreamObserver<proxy.proto.ToClient> responseObserver) {
+
+			return new StreamObserver<proxy.proto.ToServer>() {
+				ToServer m;
+
+				@Override
+				public void onNext(proxy.proto.ToServer value) {
+					logger.debug("onNext value: " + value);
+					m = value;
+				}
+
+				@Override
+				public void onError(Throwable t) {
+					logger.debug("onError t: " + t);
+					responseObserver.onError(t);
+				}
+
+				@Override
+				public void onCompleted() {
+					logger.debug("onCompleted");
+
+					// TODO put actual value into ToClient builder
+
+					responseObserver.onNext(ToClient.newBuilder().setRestore(ToClient.Restore.newBuilder().build())
+							.setQuery(ToClient.Query.newBuilder().build()).setBlock(ToClient.Block.newBuilder().build())
+							.build());
+				}
+			};
+		}
 	}
 
 	public error Close() {
@@ -110,14 +147,18 @@ public class GrpcAppProxy implements AppProxy {
 		return null;
 	}
 
-	/*
+	/**
 	 * network interface:
 	 */
 
-	// Connect implements gRPC-server interface: LachesisNodeServer
-	public error Connect(LachesisNode_ConnectServer stream )  {
+	/**
+	 * Connect implements gRPC-server interface: LachesisNodeServer
+	 * @param stream
+	 * @return
+	 */
+	public error Connect(LachesisNode_ConnectServer stream) {
 		// save client's stream for writing
-		this.new_clients.out().write((ClientStream) stream); //<- stream;
+		this.new_clients.out().write(stream); // <- stream;
 		logger.debug("client connected");
 		// read from stream
 		while (true) {
@@ -125,11 +166,11 @@ public class GrpcAppProxy implements AppProxy {
 			ToServer req = recv.result;
 			error err = recv.err;
 			if (err != null) {
-				if (err != io.EOF) {
-					logger.debug(String.format("client refused: %s", err));
-				} else {
-					logger.debug("client disconnected well");
-				}
+//				if (err != io.EOF) {
+				logger.debug(String.format("client received error: %s", err));
+//				} else {
+//					logger.debug("client disconnected well");
+//				}
 				return err;
 			}
 			Tx tx = req.getTx();
@@ -143,15 +184,13 @@ public class GrpcAppProxy implements AppProxy {
 				continue;
 			}
 		}
-
-		return null;
 	}
 
 	public void send_events4clients() {
 		error err;
-		ClientStream[] connected = null;
-		ClientStream[] alive = null;
-		ClientStream stream;
+		LachesisNode_ConnectServer[] connected = null;
+		LachesisNode_ConnectServer[] alive = null;
+		LachesisNode_ConnectServer stream;
 
 		event4clients.in().startRead();
 
@@ -164,20 +203,18 @@ public class GrpcAppProxy implements AppProxy {
 			// TODO
 			while (true) {
 				stream = new_clients.in().read();
-
 				if (stream == null) {
 					break;
 				}
 				connected = Appender.append(connected, stream);
 			}
 
-			for( ClientStream stre : connected) {
+			for (LachesisNode_ConnectServer stre : connected) {
 				err = stre.Send(event);
 				if (err == null) {
 					alive = Appender.append(alive, stre);
 				}
 			}
-
 			connected = alive;
 			alive = null;
 
@@ -197,7 +234,7 @@ public class GrpcAppProxy implements AppProxy {
 
 	// SubmitCh implements AppProxy interface method
 	// TODO: Incorrect implementation, just adding to the interface so long
-	public  One2OneChannel<poset.InternalTransaction> SubmitInternalCh() {
+	public One2OneChannel<poset.InternalTransaction> SubmitInternalCh() {
 		return null;
 	}
 
@@ -229,16 +266,18 @@ public class GrpcAppProxy implements AppProxy {
 		Answer answer = push_query.in().read();
 		boolean ok = answer != null;
 		if (!ok) {
-			return new  RetResult<byte[]>(null, ErrNoAnswers);
+			return new RetResult<byte[]>(null, ErrNoAnswers);
 		}
 		String err_msg = answer.getError();
 		if (!err_msg.isEmpty()) {
-			return new  RetResult<byte[]>(null, error.Errorf(err_msg));
+			return new RetResult<byte[]>(null, error.Errorf(err_msg));
 		}
-		return new  RetResult<byte[]>(answer.getData().toByteArray(), null);
+		return new RetResult<byte[]>(answer.getData().toByteArray(), null);
 	}
 
-	// Restore implements AppProxy interface method
+	/**
+	 * Restore implements AppProxy interface method
+	 */
 	public error Restore(byte[] snapshot) {
 		One2OneChannel<Answer> push_restore = push_restore(snapshot);
 		Answer answer = push_restore.in().read();
@@ -252,10 +291,6 @@ public class GrpcAppProxy implements AppProxy {
 		}
 		return null;
 	}
-
-	/*
-	 * staff:
-	 */
 
 	public void route_answer(ToServer.Answer hash) {
 //		uuid, err := xid.FromBytes(hash.GetUid());
@@ -286,18 +321,15 @@ public class GrpcAppProxy implements AppProxy {
 //			},
 //		}
 
-		ToClient.Block b = ToClient.Block.newBuilder().setData(ByteString.copyFrom(block))
-				.setUid(uuidBytes)
-				.build();
-		ToClient event = ToClient.newBuilder().setBlock(
-				b).build();
+		ToClient.Block b = ToClient.Block.newBuilder().setData(ByteString.copyFrom(block)).setUid(uuidBytes).build();
+		ToClient event = ToClient.newBuilder().setBlock(b).build();
 
 		One2OneChannel<ToServer.Answer> answer = subscribe4answer(uuid);
 		event4clients.out().write(event);
 		return answer;
 	}
 
-	public  One2OneChannel<ToServer.Answer> push_query(long index) {
+	public One2OneChannel<ToServer.Answer> push_query(long index) {
 		UUID uuid = UUID.randomUUID();
 
 //		event := &internal.ToClient{
@@ -309,8 +341,7 @@ public class GrpcAppProxy implements AppProxy {
 //			},
 //		}
 
-		ToClient.Query query = ToClient.Query.newBuilder().setUid(UuidUtils.asByteString(uuid))
-			.setIndex(index).build();
+		ToClient.Query query = ToClient.Query.newBuilder().setUid(UuidUtils.asByteString(uuid)).setIndex(index).build();
 		ToClient event = ToClient.newBuilder().setQuery(query).build();
 
 		One2OneChannel<ToServer.Answer> answer = subscribe4answer(uuid);
@@ -318,7 +349,7 @@ public class GrpcAppProxy implements AppProxy {
 		return answer;
 	}
 
-	public  One2OneChannel<ToServer.Answer> push_restore(byte[] snapshot) {
+	public One2OneChannel<ToServer.Answer> push_restore(byte[] snapshot) {
 		UUID uuid = UUID.randomUUID();
 
 		ToClient.Restore query = ToClient.Restore.newBuilder().setUid(UuidUtils.asByteString(uuid))
@@ -334,13 +365,13 @@ public class GrpcAppProxy implements AppProxy {
 //			},
 //		);
 
-		One2OneChannel<Answer> answer = subscribe4answer(uuid);
+		One2OneChannel<ToServer.Answer> answer = subscribe4answer(uuid);
 		event4clients.out().write(event);
 		return answer;
 	}
 
-	public  One2OneChannel<ToServer.Answer> subscribe4answer(UUID uuid ) {
-		One2OneChannel<ToServer.Answer> ch = Channel.one2one(); //make(chan *internal.ToServer.Answer);
+	public One2OneChannel<ToServer.Answer> subscribe4answer(UUID uuid) {
+		One2OneChannel<ToServer.Answer> ch = Channel.one2one(); // make(chan *internal.ToServer.Answer);
 		askings_sync.writeLock().lock();
 		askings.put(uuid, ch);
 		askings_sync.writeLock().unlock();
