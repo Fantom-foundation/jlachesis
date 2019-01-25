@@ -1,6 +1,6 @@
 package net;
 
-public enum RequestEnum {
+public enum RequestType {
 	SyncRequest,
 	EagerSyncRequest,
 	FastForwardRequest,

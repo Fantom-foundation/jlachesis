@@ -105,25 +105,6 @@ public class Block {
 		return true;
 	}
 
-	//------------------------------------------------------------------------------
-
-//	public static RetResult<Block> Block(long blockIndex, Frame frame) {
-//		Block block = new Block();
-//		RetResult<byte[]> hash2 = frame.Hash();
-//		byte[] frameHash = hash2.result;
-//		error err = hash2.err;
-//		if (err != null) {
-//			return new RetResult<Block>(new Block(), err);
-//		}
-//		byte[][] transactions;
-//		for (int i = 0; i< frame.Events.length; ++i) {
-//			EventMessage e = frame.Events[i];
-//			transactions[i] = e.Body.Transactions;
-//		}
-//		return new RetResult<Block>(this, err);
-//	}
-
-
 	public static RetResult<Block> NewBlockFromFrame(long blockIndex, Frame frame) {
 		RetResult<byte[]> hash2 = frame.Hash();
 		byte[] frameHash = hash2.result;

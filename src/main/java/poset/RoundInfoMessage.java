@@ -10,14 +10,14 @@ public class RoundInfoMessage {
 		super();
 		Events = new HashMap<String,RoundEvent>();
 	}
-	
+
 //	public XXX_Unmarshal(b []byte) error {
 //		return xxx_messageInfo_RoundInfoMessage.Unmarshal(m, b)
 //	}
 //	public XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 //		return xxx_messageInfo_RoundInfoMessage.Marshal(b, m, deterministic)
 //	}
-	
+
 
 	public Map<String,RoundEvent> GetEvents() {
 		return Events;

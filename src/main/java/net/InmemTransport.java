@@ -14,11 +14,12 @@ import org.jcsp.lang.Guard;
 import org.jcsp.lang.One2OneChannel;
 
 import common.RetResult;
-import common.UuidUtils;
 import common.error;
 
-// InmemTransport implements the Transport interface, to allow lachesis to be
-// tested in-memory without going over a network.
+/**
+ * InmemTransport implements the Transport interface, to allow lachesis to be
+ * tested in-memory without going over a network.
+ */
 public class InmemTransport implements Transport {
 
 	One2OneChannel<RPC> consumerCh; // chan RPC;
@@ -47,7 +48,10 @@ public class InmemTransport implements Transport {
 		this.timeout = timeout;
 	}
 
-	// NewInmemTransport is used to initialize a new transport
+	/**
+	 * Constructs an InmemTransport used to initialize a new transport
+	 * @param addr
+	 */
 	public InmemTransport(String addr) {
 		if (addr.isEmpty()) {
 			addr = NewInmemAddr();
@@ -62,7 +66,6 @@ public class InmemTransport implements Transport {
 		inmemMediumSync.writeLock().unlock();
 	}
 
-	// and generates a random local address if none is specified
 	public One2OneChannel<RPC> getConsumerCh() {
 		return consumerCh;
 	}

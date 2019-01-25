@@ -35,7 +35,6 @@ public class Utils {
 		return Utils.<InternalTransaction>ListEquals(thisList, thatList);
 	}
 
-
 	public static boolean BlockSignatureListEquals(BlockSignature[] thisList, BlockSignature[] thatList) {
 		return Utils.<BlockSignature>ListEquals(thisList, thatList);
 	}

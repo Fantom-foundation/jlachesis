@@ -4,6 +4,7 @@ import java.util.Map;
 
 import common.RetResult;
 import common.error;
+import poset.proto.Trilean;
 
 public class RoundInfo {
 	RoundInfoMessage Message;
@@ -35,9 +36,9 @@ public class RoundInfo {
 			re = new RoundEvent(true);
 		}
 		if (f) {
-			re.Famous = Trilean.Trilean_TRUE;
+			re.Famous = Trilean.TRUE;
 		} else {
-			re.Famous = Trilean.Trilean_FALSE;
+			re.Famous = Trilean.FALSE;
 		}
 		Message.Events.put(x, re);
 	}
@@ -45,7 +46,7 @@ public class RoundInfo {
 	//return true if no witnesses' fame is left undefined
 	public boolean WitnessesDecided() {
 		for (RoundEvent e: Message.Events.values()) {
-			if (e.Witness && e.Famous == Trilean.Trilean_UNDEFINED) {
+			if (e.Witness && e.Famous == Trilean.UNDEFINED) {
 				return false;
 			}
 		}
@@ -88,14 +89,14 @@ public class RoundInfo {
 	public String[] FamousWitnesses() {
 		String[] res = Message.Events.keySet().stream().filter( x -> {
 			RoundEvent e = Message.Events.get(x);
-			return (e.Witness && e.Famous == Trilean.Trilean_TRUE);
+			return (e.Witness && e.Famous == Trilean.TRUE);
 		}).toArray(String[]::new);
 		return res;
 	}
 
 	public boolean IsDecided(String witness) {
 		RoundEvent w = Message.Events.get(witness);
-		return w != null && w.Witness && w.Famous != Trilean.Trilean_UNDEFINED;
+		return w != null && w.Witness && w.Famous != Trilean.UNDEFINED;
 	}
 
 	public RetResult<byte[]> ProtoMarshal() {

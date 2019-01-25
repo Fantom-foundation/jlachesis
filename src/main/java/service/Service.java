@@ -39,6 +39,10 @@ public class Service {
 		return JsonUtils.ObjectToString(stats);
     }
 
+	Service(){
+
+	}
+
 	@RequestMapping("/participants")
     String participants() {
 		RetResult<Peers> getParticipants = node.GetParticipants();

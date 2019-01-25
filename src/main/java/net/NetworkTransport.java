@@ -26,60 +26,59 @@ import channel.ExecService;
 import common.RetResult;
 import common.error;
 
-/*
-
-NetworkTransport provides a network based transport that can be
-used to communicate with lachesis on remote machines. It requires
-an underlying stream layer to provide a stream abstraction, which can
-be simple TCP, TLS, etc.
-
-This transport is very simple and lightweight. Each RPC request is
-framed by sending a byte that indicates the message type, followed
-by the json encoded request.
-
-The response is an error string followed by the response object,
-both are encoded using msgpack
-*/
+/**
+ * NetworkTransport provides a network based transport that can be used to
+ * communicate with lachesis on remote machines. It requires an underlying
+ * stream layer to provide a stream abstraction, which can be simple TCP, TLS,
+ * etc.
+ *
+ * This transport is very simple and lightweight. Each RPC request is framed by
+ * sending a byte that indicates the message type, followed by the json encoded
+ * request. The response is an error string followed by the response object,
+ * both are encoded using msgpack
+ */
 public class NetworkTransport implements Transport {
 
 	public static final error ErrTransportShutdown = error.Errorf("transport shutdown");
 
 	Logger logger;
 
-	Map<String, netConn[]> connPool; //     map[string][]*netConn
+	Map<String, netConn[]> connPool; // map[string][]*netConn
 	Lock connPoolLock;
 	int maxPool;
 
 	One2OneChannel<RPC> consumeCh; // chan RPC
 
 	boolean shutdown;
-	One2OneChannel<Object> shutdownCh; //   chan struct{}
+	One2OneChannel<Object> shutdownCh; // chan struct{}
 	Lock shutdownLock;
 
 	StreamLayer stream;
 
 	Duration timeout;
 
-	// NewNetworkTransport creates a new network transport with the given dialer
-	// and listener. The maxPool controls how many connections we will pool (per
-	// target). The is used to apply I/O deadlines.
-	public NetworkTransport(
-			StreamLayer stream ,
-		int maxPool,
-		Duration timeout,
-		Logger logger) {
+	/**
+	 *  Creates a new network transport with the given dialer
+	 *  and listener. The maxPool controls how many connections we will pool (per
+	 *  target). The is used to apply I/O deadlines.
+	 * @param stream
+	 * @param maxPool
+	 * @param timeout
+	 * @param logger
+	 */
+	public NetworkTransport(StreamLayer stream, int maxPool, Duration timeout, Logger logger) {
 		if (logger == null) {
 			logger = Logger.getLogger(this.getClass());
 			logger.setLevel(Level.DEBUG);
 //			lachesis_log.NewLocal(logger, logger.Level.String())
 		}
-			this.connPool = new HashMap<String, netConn[]>();
-			this.consumeCh = Channel.one2one(); //  make(chan RPC),
-			this.logger =     logger;
-			this.maxPool =    maxPool;
-			this.shutdownCh = Channel.one2one();
-			this.stream =     stream;
-			this.timeout =    timeout;
+		this.connPool = new HashMap<String, netConn[]>();
+		this.consumeCh = Channel.one2one(); // make(chan RPC),
+		this.logger = logger;
+		this.maxPool = maxPool;
+		this.shutdownCh = Channel.one2one();
+		this.stream = stream;
+		this.timeout = timeout;
 
 //		go listen();
 		ExecService.go(() -> listen());
@@ -119,31 +118,31 @@ public class NetworkTransport implements Transport {
 //			return false;
 //		}
 
-		final Alternative alt = new Alternative (new Guard[] {shutdownCh.in()});
+		final Alternative alt = new Alternative(new Guard[] { shutdownCh.in() });
 		final int SHUTDOWN = 0;
 
-		switch (alt.priSelect ()) {
-			case SHUTDOWN:
-				shutdownCh.in().read();
-			default:
-				return false;
+		switch (alt.priSelect()) {
+		case SHUTDOWN:
+			shutdownCh.in().read();
+		default:
+			return false;
 		}
 	}
 
 	// getPooledConn is used to grab a pooled connection.
-	public netConn getPooledConn(String target){
+	public netConn getPooledConn(String target) {
 		connPoolLock.lock();
 		try {
-		     netConn[] conns = connPool.get(target);
+			netConn[] conns = connPool.get(target);
 			boolean ok = conns != null;
 			if (!ok || conns.length == 0) {
 				return null;
 			}
 
 			int num = conns.length;
-			netConn conn = conns[num-1];
-			conns[num-1] = null;
-			connPool.put(target, Arrays.copyOf(conns, num-1));
+			netConn conn = conns[num - 1];
+			conns[num - 1] = null;
+			connPool.put(target, Arrays.copyOf(conns, num - 1));
 			return conn;
 		} finally {
 			connPoolLock.unlock();
@@ -154,7 +153,7 @@ public class NetworkTransport implements Transport {
 	public RetResult<netConn> getConn(String target, Duration timeout) {
 		// Check for a pooled conn
 		netConn conn = getPooledConn(target);
-		if ( conn != null) {
+		if (conn != null) {
 			return new RetResult<netConn>(conn, null);
 		}
 
@@ -171,17 +170,11 @@ public class NetworkTransport implements Transport {
 			return new RetResult<netConn>(null, err);
 		}
 
-
 		// Wrap the conn
 		netConn netConn;
 		try {
-			netConn = new netConn(
-				target,
-				conn2,
-				new BufferedReader(
-			            new InputStreamReader(conn2.getInputStream())),
-				new PrintWriter(conn2.getOutputStream(), true)
-			);
+			netConn = new netConn(target, conn2, new BufferedReader(new InputStreamReader(conn2.getInputStream())),
+					new PrintWriter(conn2.getOutputStream(), true));
 		} catch (IOException e) {
 			return new RetResult<netConn>(null, error.Errorf(e.getMessage()));
 		}
@@ -212,22 +205,22 @@ public class NetworkTransport implements Transport {
 	}
 
 	// Sync implements the Transport interface.
-	public error Sync(String target, SyncRequest args, SyncResponse resp)  {
-		return genericRPC(target, NetworkTransportEnum.rpcSync.ordinal(), args, resp);
+	public error Sync(String target, SyncRequest args, SyncResponse resp) {
+		return genericRPC(target, NetworkTransportType.rpcSync.ordinal(), args, resp);
 	}
 
 	// EagerSync implements the Transport interface.
-	public error EagerSync(String target, EagerSyncRequest args, EagerSyncResponse resp)  {
-		return genericRPC(target, NetworkTransportEnum.rpcEagerSync.ordinal(), args, resp);
+	public error EagerSync(String target, EagerSyncRequest args, EagerSyncResponse resp) {
+		return genericRPC(target, NetworkTransportType.rpcEagerSync.ordinal(), args, resp);
 	}
 
 	// FastForward implements the Transport interface.
-	public error FastForward(String target, FastForwardRequest args, FastForwardResponse resp)  {
-		return genericRPC(target, NetworkTransportEnum.rpcFastForward.ordinal(), args, resp);
+	public error FastForward(String target, FastForwardRequest args, FastForwardResponse resp) {
+		return genericRPC(target, NetworkTransportType.rpcFastForward.ordinal(), args, resp);
 	}
 
 	// genericRPC handles a simple request/response RPC.
-	public error genericRPC(String target, int rpcType, Object  args, Object resp)  {
+	public error genericRPC(String target, int rpcType, Object args, Object resp) {
 		// Get a conn
 		RetResult<netConn> connCall = getConn(target, timeout);
 		netConn conn = connCall.result;
@@ -263,7 +256,7 @@ public class NetworkTransport implements Transport {
 	}
 
 	// sendRPC is used to encode and send the RPC.
-	public error sendRPC(netConn conn, int rpcType, Object args)  {
+	public error sendRPC(netConn conn, int rpcType, Object args) {
 		// Write the request type
 		try {
 			conn.w.write(rpcType);
@@ -345,27 +338,26 @@ public class NetworkTransport implements Transport {
 	// handleConn is used to handle an inbound connection for its lifespan.
 	public void handleConn(Socket conn) {
 		try {
-			BufferedReader r = new BufferedReader(
-				        new InputStreamReader(conn.getInputStream()));
+			BufferedReader r = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 			PrintWriter w = new PrintWriter(conn.getOutputStream(), true);
 			jsonDecoder dec = new jsonDecoder(r);
 			jsonEncoder enc = new jsonEncoder(w);
 
 			while (true) {
 				error err = handleCommand(r, dec, enc);
-				if  (err != null) {
-					//FIXIT: should we check for ErrTransportShutdown here as well?
+				if (err != null) {
+					// FIXIT: should we check for ErrTransportShutdown here as well?
 					// TODO how to convert go's EOF
-	//				if (err != io.EOF && err != ErrTransportShutdown) {
+					// if (err != io.EOF && err != ErrTransportShutdown) {
 					if (err != ErrTransportShutdown) {
-	//					logger.WithField("error", err).Error("Failed to decode incoming command")
+						// logger.WithField("error", err).Error("Failed to decode incoming command")
 					}
 					return;
 				}
 
 				w.flush();
 				if (err != null) {
-	//				n.logger.WithField("error", err).Error("Failed to flush response")
+					// n.logger.WithField("error", err).Error("Failed to flush response")
 					return;
 				}
 			}
@@ -384,7 +376,7 @@ public class NetworkTransport implements Transport {
 	}
 
 	// handleCommand is used to decode and dispatch a single command.
-	public error handleCommand(Reader r, jsonDecoder dec , jsonEncoder enc)  {
+	public error handleCommand(Reader r, jsonDecoder dec, jsonEncoder enc) {
 		// Get the rpc type
 //		rpcType, err := r.ReadByte();
 		int rpcType;
@@ -400,35 +392,35 @@ public class NetworkTransport implements Transport {
 		One2OneChannel<RPCResponse> respCh = Channel.one2one(); // make(chan RPCResponse, 1);
 		RPC rpc = new RPC(respCh);
 
-		NetworkTransportEnum retrievedRpc = NetworkTransportEnum.values[rpcType];
+		NetworkTransportType retrievedRpc = NetworkTransportType.values[rpcType];
 		// Decode the command
 		switch (retrievedRpc) {
-			case rpcSync:
-				SyncRequest sreq = new SyncRequest();
-				err = dec.Decode(sreq);
-				if ( err != null ){
-					return err;
-				}
-				rpc.setCommand(sreq);
-				break;
-			case rpcEagerSync:
-				EagerSyncRequest esreq = new EagerSyncRequest();
-				err = dec.Decode(esreq);
-				if  (err != null) {
-					return err;
-				}
-				rpc.setCommand(esreq);
-				break;
-			case rpcFastForward:
-				FastForwardRequest ffreq = new FastForwardRequest();
-				err = dec.Decode(ffreq);
-				if  (err != null) {
-					return err;
-				}
-				rpc.setCommand(ffreq);
-				break;
-			default:
-				return error.Errorf(String.format("unknown rpc type %d", rpcType));
+		case rpcSync:
+			SyncRequest sreq = new SyncRequest();
+			err = dec.Decode(sreq);
+			if (err != null) {
+				return err;
+			}
+			rpc.setCommand(sreq);
+			break;
+		case rpcEagerSync:
+			EagerSyncRequest esreq = new EagerSyncRequest();
+			err = dec.Decode(esreq);
+			if (err != null) {
+				return err;
+			}
+			rpc.setCommand(esreq);
+			break;
+		case rpcFastForward:
+			FastForwardRequest ffreq = new FastForwardRequest();
+			err = dec.Decode(ffreq);
+			if (err != null) {
+				return err;
+			}
+			rpc.setCommand(ffreq);
+			break;
+		default:
+			return error.Errorf(String.format("unknown rpc type %d", rpcType));
 		}
 
 //		 Dispatch the RPC
@@ -439,17 +431,17 @@ public class NetworkTransport implements Transport {
 //			return ErrTransportShutdown;
 //		}
 
-		final Alternative alt = new Alternative (new Guard[] {shutdownCh.in()});
+		final Alternative alt = new Alternative(new Guard[] { shutdownCh.in() });
 		final int CONSUME = 0, SHUTDOWN = 1;
 
-		switch (alt.priSelect ()) {
-			default:
-				consumeCh.out().write(rpc);
-				break;
-				// fall through
-			case SHUTDOWN:
-				shutdownCh.in().read();
-				return ErrTransportShutdown;
+		switch (alt.priSelect()) {
+		default:
+			consumeCh.out().write(rpc);
+			break;
+		// fall through
+		case SHUTDOWN:
+			shutdownCh.in().read();
+			return ErrTransportShutdown;
 		}
 
 //		// Wait for response
@@ -474,33 +466,33 @@ public class NetworkTransport implements Transport {
 //				return ErrTransportShutdown;
 //		}
 
-		final Alternative alt2 = new Alternative (new Guard[] {respCh.in(), shutdownCh.in()});
+		final Alternative alt2 = new Alternative(new Guard[] { respCh.in(), shutdownCh.in() });
 		final int RESPONSE2 = 0, SHUTDOWN2 = 1;
 
 		RPCResponse resp;
 		error respErr;
-		switch (alt2.priSelect ()) {
-			case RESPONSE2:
-				resp = respCh.in().read();
-				// Send the error first
-				respErr = error.Errorf("");
-				if (resp.Error != null) {
-					respErr = resp.Error;
-				}
-				err = enc.Encode(respErr);
-				if ( err != null) {
-					return err;
-				}
+		switch (alt2.priSelect()) {
+		case RESPONSE2:
+			resp = respCh.in().read();
+			// Send the error first
+			respErr = error.Errorf("");
+			if (resp.Error != null) {
+				respErr = resp.Error;
+			}
+			err = enc.Encode(respErr);
+			if (err != null) {
+				return err;
+			}
 
-				// Send the response
-				err = enc.Encode(resp.Response);
-				if  (err != null) {
-					return err;
-				}
-				// fall through
-			case SHUTDOWN2:
-				shutdownCh.in().read();
-				return ErrTransportShutdown;
+			// Send the response
+			err = enc.Encode(resp.Response);
+			if (err != null) {
+				return err;
+			}
+			// fall through
+		case SHUTDOWN2:
+			shutdownCh.in().read();
+			return ErrTransportShutdown;
 		}
 
 		return null;

@@ -19,8 +19,16 @@ public class TCPTransport {
 		public NetworkTransport transportCreator(StreamLayer stream);
 	}
 
-	// NewTCPTransport returns a NetworkTransport that is built on top of
-	// a TCP streaming transport layer, with log output going to the supplied Logger
+	/**
+	 * Creates a new TCPTransport
+	 * @param bindAddr
+	 * @param advertise
+	 * @param maxPool
+	 * @param timeout
+	 * @param logger
+	 * @return a NetworkTransport that is built on top of
+	 * a TCP streaming transport layer, with log output going to the supplied Logger
+	 */
 	public static RetResult<NetworkTransport> NewTCPTransport(String bindAddr, InetAddress advertise, int maxPool,
 			Duration timeout, Logger logger) {
 		return newTCPTransport(bindAddr, advertise, maxPool, timeout, new TCPTransportCreator() {
