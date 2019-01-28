@@ -4,20 +4,17 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.util.LinkedHashMap;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.jcsp.lang.Alternative;
 import org.jcsp.lang.CSTimer;
 import org.jcsp.lang.Channel;
 import org.jcsp.lang.Guard;
-import org.jcsp.lang.One2OneChannel;
 import org.jcsp.lang.One2OneChannelInt;
 
 import autils.time;
 import channel.ChannelUtils;
 import channel.ExecService;
-import common.error;
 import dummy.DummyClient;
 import net.InmemTransport;
 import peers.Peer;
@@ -26,6 +23,8 @@ import poset.Block;
 
 // NodeList is a list of connected nodes for tests purposes
 public class NodeList extends LinkedHashMap<PrivateKey, Node> {
+	private static final long serialVersionUID = 1848444769246800729L;
+
 	public static final int delay = 100 * time.Millisecond;
 
 	// NewNodeList makes, fills and runs NodeList instance

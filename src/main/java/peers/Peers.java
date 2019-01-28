@@ -200,4 +200,16 @@ public class Peers {
 	public Peer ByPubKey(String pub) {
 		return ByPubKey.get(pub);
 	}
+
+	public ReadWriteLock getLock() {
+		return lock;
+	}
+
+	public Peer[] getSorted() {
+		return Sorted;
+	}
+
+	public List<Listener> getListeners() {
+		return Listeners;
+	}
 }

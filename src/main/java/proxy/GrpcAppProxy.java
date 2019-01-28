@@ -126,7 +126,6 @@ public class GrpcAppProxy implements AppProxy, LachesisNodeServer {
 					logger.debug("onCompleted");
 
 					// TODO put actual value into ToClient builder
-
 					responseObserver.onNext(ToClient.newBuilder().setRestore(ToClient.Restore.newBuilder().build())
 							.setQuery(ToClient.Query.newBuilder().build()).setBlock(ToClient.Block.newBuilder().build())
 							.build());

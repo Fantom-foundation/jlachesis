@@ -18,9 +18,9 @@ import poset.InmemStore;
 
 public class Lachesis {
 	LachesisConfig Config;
-	node.Node Node;
+	private node.Node Node;
 	net.Transport Transport;
-	poset.Store Store;
+	private poset.Store Store;
 	peers.Peers Peers;
 	service.Service Service;
 
@@ -78,7 +78,7 @@ public  error initStore() {
 	String dbDir = String.format("%s/badger", Config.DataDir);
 
 	if (!Config.Store) {
-		Store = new InmemStore(Peers, Config.NodeConfig.getCacheSize());
+		setStore(new InmemStore(Peers, Config.NodeConfig.getCacheSize()));
 
 		Config.logger.debug("created new in-mem store");
 	} else {
@@ -86,14 +86,14 @@ public  error initStore() {
 
 //		Config.logger.WithField("path", Config.BadgerDir()).debug("Attempting to load or create database");
 		RetResult<BadgerStore> loadOrCreateBadgerStore = BadgerStore.LoadOrCreateBadgerStore(Peers, Config.NodeConfig.getCacheSize(), dbDir);
-		Store = loadOrCreateBadgerStore.result;
+		setStore(loadOrCreateBadgerStore.result);
 		err = loadOrCreateBadgerStore.err;
 
 		if (err != null) {
 			return err;
 		}
 
-		if (Store.NeedBoostrap()) {
+		if (getStore().NeedBoostrap()) {
 			Config.logger.debug("loaded badger store from existing database at " + dbDir);
 		} else {
 			Config.logger.debug("created new badger store from fresh database");
@@ -152,17 +152,17 @@ public error initNode() {
 //		"id":           nodeID,
 //	}).Debug("PARTICIPANTS");
 
-	Node = new node.Node(
+	setNode(new node.Node(
 		Config.NodeConfig,
 		nodeID,
 		key,
 		Peers,
-		Store,
+		getStore(),
 		Transport,
-		Config.Proxy
-	);
+		Config.getProxy()
+	));
 
-	error err = Node.Init();
+	error err = getNode().Init();
 	if ( err != null) {
 		return error.Errorf(String.format("failed to initialize node: %s", err));
 	}
@@ -172,7 +172,7 @@ public error initNode() {
 
 	public error initService() {
 		if (!Config.ServiceAddr.isEmpty()) {
-			Service = new service.Service(Config.ServiceAddr, Node, Config.logger);
+			Service = new service.Service(Config.ServiceAddr, getNode(), Config.logger);
 		}
 		return null;
 	}
@@ -215,7 +215,7 @@ public error initNode() {
 		if (Service != null) {
 			ExecService.go(() -> Service.Serve());
 		}
-		Node.Run(true);
+		getNode().Run(true);
 	}
 
 	public RetResult<KeyPair> Keygen(String datadir) {
@@ -240,5 +240,21 @@ public error initNode() {
 		}
 
 		return new RetResult<>(keyPair, null);
+	}
+
+	public poset.Store getStore() {
+		return Store;
+	}
+
+	public void setStore(poset.Store store) {
+		Store = store;
+	}
+
+	public node.Node getNode() {
+		return Node;
+	}
+
+	public void setNode(node.Node node) {
+		Node = node;
 	}
 }

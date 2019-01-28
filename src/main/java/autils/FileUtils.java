@@ -3,12 +3,13 @@ package autils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -79,37 +80,75 @@ public class FileUtils {
 		Files.setPosixFilePermissions(path, perms);
 	}
 
-	public static RetResult<File> createFile(String filePath, int mod) {
+	public static boolean fileExist(String filePath) {
 		File file = Paths.get(filePath).toFile();
-
-		error err = null;
-		if (!file.exists()) {
-			file.mkdir();
-			try {
-				setPermission(file.toPath(), mod);
-			} catch (IOException e) {
-				err = error.Errorf("error writing to file " + filePath + ", returned msg= " + e.getMessage());
-			}
-		}
-		return new RetResult<File>(file, err);
+		return file.exists();
 	}
 
-	public static error writeToFile(File file, byte[] byteArray) {
-		FileOutputStream fileOuputStream = null;
+	/**
+	 *
+	 * @param filePath
+	 * @param mod is the mod in the forms of "rwxrwxrwx" or "rw-r--r--"
+	 * @return
+	 */
+	public static RetResult<Path> mkdirs(String filePath, String mod) {
+		Path newDirectoryPath = Paths.get(filePath).getParent();
+		error err = null;
+
+		if (!Files.exists(newDirectoryPath)) {
+			FileAttribute<Set<PosixFilePermission>> fileAttributes = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString(mod));
+			try {
+				newDirectoryPath = Files.createDirectory(newDirectoryPath, fileAttributes);
+			} catch (IOException e) {
+				err = error.Errorf("error mkdir " + filePath + ", returned msg= " + e.getMessage());
+			}
+		}
+		return new RetResult<>(newDirectoryPath, err);
+	}
+
+	/**
+	 *
+	 * @param filePath
+	 * @param mod is the mod in the forms of "rwxrwxrwx" or "rw-r--r--"
+	 * @return
+	 */
+	public static RetResult<Path> createFile(String filePath, String mod) {
+		Path newFilePath = Paths.get(filePath);
+		error err = null;
+
+		if (!Files.exists(newFilePath)) {
+			FileAttribute<Set<PosixFilePermission>> fileAttributes = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString(mod));
+			try {
+				newFilePath = Files.createFile(newFilePath, fileAttributes);
+			} catch (IOException e) {
+				err = error.Errorf("error create a file " + filePath + ", returned msg= " + e.getMessage());
+			}
+		}
+
+		return new RetResult<>(newFilePath, err);
+	}
+
+	public static error writeToFile(Path file, byte[] bytes) {
 		try {
-			fileOuputStream = new FileOutputStream(file);
-			fileOuputStream.write(byteArray);
+			Files.write(file, bytes);
 		} catch (IOException e) {
 			return error.Errorf("error writing to file " + e.getMessage());
-		} finally {
-			if (fileOuputStream != null) {
-				try {
-					fileOuputStream.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
 		}
 		return null;
 	}
+
+
+	public static error writeToFile(String file, byte[] bytes, String mod) {
+		RetResult<Path> createFile = createFile(file, mod);
+		if (createFile.err != null) {
+			return createFile.err;
+		}
+		error err = writeToFile(createFile.result, bytes);
+		return err;
+	}
+
+	public static final String MOD_666 = "rw-rw-rw-";
+	public static final String MOD_777 = "rwxrwxrwx";
+	public static final String MOD_700 = "rwx------";
+	public static final String MOD_755 = "rwxr-xr-x";
 }

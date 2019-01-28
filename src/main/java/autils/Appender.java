@@ -4,6 +4,11 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
+/**
+ * An Appender provides a means to express the append and slide operations.
+ *
+ * @author qn
+ */
 public class Appender {
 
 	public static byte[][] append(byte[][] a, byte[][] b) {
@@ -32,6 +37,7 @@ public class Appender {
 	}
 
 	/**
+	 * Appends two byte arrays into a single byte array
 	 *
 	 * @param a
 	 * @param b
@@ -49,6 +55,13 @@ public class Appender {
 		return destination;
 	}
 
+	/**
+	 * Appends two arrays into an array
+	 *
+	 * @param a
+	 * @param b
+	 * @return
+	 */
 	public static <T> T[] append(T[] a, T[] b) {
 //		final T[] result = (T[]) Array.newInstance(a[0].getClass().getComponentType(), a.length + b.length);
 //		result = Stream.of(a, b).flatMap(Stream::of).collect(Collectors.toList()).toArray(result);
@@ -60,6 +73,12 @@ public class Appender {
 		return result;
 	}
 
+	/**
+	 * Appends an object b into an array
+	 * @param a
+	 * @param b
+	 * @return
+	 */
 	public static <T> T[] append(T[] a, T b) {
 //		final T[] result = (T[]) Array.newInstance(a[0].getClass().getComponentType(), a.length + b.length);
 //		result = Stream.of(a, b).flatMap(Stream::of).collect(Collectors.toList()).toArray(result);

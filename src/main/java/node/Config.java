@@ -8,7 +8,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 public class Config {
-	Duration HeartbeatTimeout ; // `mapstructure:"heartbeat"`
+	public Duration HeartbeatTimeout ; // `mapstructure:"heartbeat"`
 	private Duration TCPTimeout       ; // `mapstructure:"timeout"`
 	int CacheSize; //         `mapstructure:"cache-size"`
 	long SyncLimit; //         `mapstructure:"sync-limit"`
@@ -72,6 +72,16 @@ public class Config {
 	public void setTCPTimeout(Duration tCPTimeout) {
 		TCPTimeout = tCPTimeout;
 	}
+
+	public Duration getHeartbeatTimeout() {
+		return HeartbeatTimeout;
+	}
+
+	public long getSyncLimit() {
+		return SyncLimit;
+	}
+
+
 
 //	public Config TestConfig(testing.T t) {
 //		Config config = DefaultConfig();

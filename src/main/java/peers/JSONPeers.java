@@ -75,12 +75,7 @@ public class JSONPeers {
 			byte[] encode = Base64.getEncoder().encode(peersString.getBytes());
 
 			// Write out as JSON
-			RetResult<File> fileCreation = FileUtils.createFile(path, 755);
-			error err = fileCreation.err;
-			if (err != null) {
-				return err;
-			}
-			FileUtils.writeToFile(fileCreation.result, encode);
+			error err = FileUtils.writeToFile(path, encode, FileUtils.MOD_755);
 		} catch (InterruptedException e) {
 			return error.Errorf(e.getMessage());
 		} finally {

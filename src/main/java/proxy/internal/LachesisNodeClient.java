@@ -33,9 +33,14 @@ public class LachesisNodeClient implements LachesisNode_ConnectClient {
 	public LachesisNodeClient(String host, int port) {
 		this.host = host;
 		this.port = port;
-		this.channel = ManagedChannelBuilder.forAddress(host, port).maxInboundMessageSize(Integer.MAX_VALUE)
+
+		logger.debug("host= " + host + "; port=" + port);
+
+		this.channel = ManagedChannelBuilder.forAddress(host, port)
+				.maxInboundMessageSize(Integer.MAX_VALUE)
 				.maxInboundMetadataSize(Integer.MAX_VALUE)
-				.usePlaintext().build();
+				.usePlaintext()
+				.build();
 		this.nodeStub = LachesisNodeGrpc.newStub(channel);
 	}
 

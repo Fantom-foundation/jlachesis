@@ -1,6 +1,5 @@
 package crypto;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Paths;
@@ -106,17 +105,12 @@ public class PemKey {
 			return err;
 		}
 
-		RetResult<File> fileCreation = FileUtils.createFile(path, 700);
-		err = fileCreation.err;
-		File file = fileCreation.result;
-		if (err != null) {
-			return err;
-		}
-		err = FileUtils.writeToFile(file, pemKey.PrivateKey.getBytes());
+		// 700
+		err = FileUtils.writeToFile(path, pemKey.PrivateKey.getBytes(), FileUtils.MOD_700);
 		return err;
 	}
 
-	public RetResult<PemDump> GeneratePemKey() {
+	public static RetResult<PemDump> GeneratePemKey() {
 		RetResult<KeyPair> ecdsa = Utils.GenerateECDSAKeyPair();
 		KeyPair keyPair = ecdsa.result;
 		error err = ecdsa.err;

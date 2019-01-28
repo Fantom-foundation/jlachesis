@@ -78,6 +78,8 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 			logger.setLevel(Level.DEBUG);
 		}
 
+		logger.info("connecting address =" + addr);
+
 		this.reconn_timeout = Duration.ofSeconds(2); // 2 * time.Second;
 		this.addr = addr;
 		this.shutdown = Channel.one2one(); // make(chan struct{}),
@@ -101,8 +103,14 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 //		}
 
 //		this.client = new LachesisNodeClient(this.conn);
-		this.client = new LachesisNodeClient(addr, 0);
-
+		if (addr.contains(":")) {
+			String ip = addr.split(":")[0];
+			int port = Integer.parseInt(addr.split(":")[1]);
+			this.client = new LachesisNodeClient(ip, port);
+		}
+		else {
+			this.client = new LachesisNodeClient(addr, 0);
+		}
 		this.reconnect_ticket.out().write(Instant.now()); // <- time.Now();
 
 		ExecService.go(() -> listen_events());

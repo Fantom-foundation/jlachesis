@@ -7,6 +7,7 @@ import org.jcsp.lang.Guard;
 import channel.ExecService;
 import common.RetResult;
 import common.error;
+import dummy.DummyClient;
 import proxy.GrpcLachesisProxy;
 import proxy.LachesisProxy;
 import proxy.ProxyHandler;
@@ -52,7 +53,7 @@ public class DummyClient {
 		return new proxy.InmemAppProxy(state, logger);
 	}
 
-	public DummyClient NewDummySocketClient(String addr, Logger logger) {
+	public static DummyClient NewDummySocketClient(String addr, Logger logger) {
 		GrpcLachesisProxy lachesisProxy = new GrpcLachesisProxy(addr, logger);
 
 		return new DummyClient(logger, null, lachesisProxy);
@@ -153,7 +154,7 @@ public class DummyClient {
 				}
 
 				if (err != null) {
-					err1.setErrMessage(err.getErrMessage());
+					err1.setErrMessage(err.Error());
 				}
 			}
 		});
