@@ -7,7 +7,13 @@ import org.junit.Test;
 
 import autils.Appender;
 
-public class RollingIndexTestSuccessful {
+/**
+ * Tests for RollingIndex
+ *
+ * @author qn
+ *
+ */
+public class RollingIndexTest {
 	@Test
 	public void TestRollingIndex() {
 		int size = 10;
