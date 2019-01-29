@@ -32,6 +32,9 @@ public class StoreErr extends error {
 	}
 
 	public static boolean Is(error err, StoreErrType t) {
+		if (err == null) {
+			return false;
+		}
 
 		if (StoreErr.class.isAssignableFrom(err.getClass())) {
 			StoreErr storeErr = (StoreErr) err;

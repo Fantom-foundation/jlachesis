@@ -63,14 +63,34 @@ public class Appender {
 	 * @return
 	 */
 	public static <T> T[] append(T[] a, T[] b) {
-//		final T[] result = (T[]) Array.newInstance(a[0].getClass().getComponentType(), a.length + b.length);
-//		result = Stream.of(a, b).flatMap(Stream::of).collect(Collectors.toList()).toArray(result);
-//		return result;
+		if (a == null && b == null)
+			return null;
+		if (a == null) {
+			return Arrays.copyOf(b, b.length);
+		}
+		if (b==null) {
+			return Arrays.copyOf(a, a.length);
+		}
 
-		T[] result = Stream.of(a, b).flatMap(Stream::of).toArray(size -> {
-			return (T[]) Array.newInstance(a[0].getClass().getComponentType(), size);
-		});
-		return result;
+		int countA = -1;
+		for (int i = 0; i < a.length; ++i) {
+			if (a[i] == null) {
+				countA = i;
+				break;
+			}
+		}
+
+		T[] copy = a;
+		if (countA == -1) {
+			copy= Arrays.copyOf(a, a.length + b.length);
+		} else if (countA + b.length > a.length) {
+			copy= Arrays.copyOf(a, countA + b.length);
+		}
+
+		for (int i = 0; i < b.length ; ++i) {
+			copy[countA + i] = b[i];
+		}
+		return copy;
 	}
 
 	/**
@@ -80,14 +100,33 @@ public class Appender {
 	 * @return
 	 */
 	public static <T> T[] append(T[] a, T b) {
-//		final T[] result = (T[]) Array.newInstance(a[0].getClass().getComponentType(), a.length + b.length);
-//		result = Stream.of(a, b).flatMap(Stream::of).collect(Collectors.toList()).toArray(result);
-//		return result;
+		if (b == null)
+			return a;
+		if (a == null) {
+			T[] res = (T[]) Array.newInstance(b.getClass(), 1);
+			res[0] = b;
+			return res;
+		}
 
-		T[] result = Stream.of(a, b).flatMap(Stream::of).toArray(size -> {
-			return (T[]) Array.newInstance(a[0].getClass().getComponentType(), size);
-		});
-		return result;
+		int countA = -1;
+		for (int i = 0; i < a.length; ++i) {
+			if (a[i] == null) {
+				countA = i;
+				break;
+			}
+		}
+
+		if (countA != -1 && countA <= a.length -1 ) {
+			a[countA] = b;
+			return a;
+		}
+		else {
+			// need to create a larger array
+			T[] copy = Arrays.copyOf(a, a.length + 1);
+			copy[a.length] = b;
+
+			return copy;
+		}
 	}
 
 	/**
@@ -104,5 +143,14 @@ public class Appender {
 			dest[i] = Arrays.copyOf(a[i], a[i].length);
 		}
 		return dest;
+	}
+
+	public static <T> T[] slice(T[] a, int low, int high) {
+		if (a == null) {
+			return null;
+		}
+
+		T[] res = Arrays.copyOfRange(a, low, high);
+		return res;
 	}
 }
