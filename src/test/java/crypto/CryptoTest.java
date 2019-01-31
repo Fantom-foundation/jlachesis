@@ -20,10 +20,8 @@ import java.security.PrivateKey;
 import java.security.Security;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Arrays;
 
 import org.apache.commons.codec.binary.Hex;
-import org.apache.tomcat.jni.File;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
@@ -35,7 +33,7 @@ import common.RetResult3;
 import common.error;
 
 /**
- * Tests for RollingIndex
+ * Tests for Crypto functions
  *
  * @author qn
  *
