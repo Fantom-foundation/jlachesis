@@ -20,7 +20,10 @@ import java.security.spec.ECPoint;
 import java.security.spec.ECPrivateKeySpec;
 import java.security.spec.ECPublicKeySpec;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
+import java.util.Base64;
 
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.ECPointUtil;
@@ -46,7 +49,9 @@ public class ECDHPub {
 
 	public static KeyPair generateECDSAKeyPair()
 			throws NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
-		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("ECDSA", "SC");
+//		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("ECDSA", "SC");
+		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("ECDSA", "BC");
+//		ECGenParameterSpec spec = new ECGenParameterSpec("secp256r1");
 		ECGenParameterSpec spec = new ECGenParameterSpec("secp256k1");
 		keyPairGenerator.initialize(spec, new SecureRandom());
 		return keyPairGenerator.generateKeyPair();
@@ -76,6 +81,34 @@ public class ECDHPub {
 		return kf.generatePublic(pubKeySpec);
 	}
 
+	////////////
+	// Use these methods to regenerate PublicKey and PrivateKey
+	//
+	//////////
+
+	public static ECPublicKey generateECDSAPublicKey(byte[] byte_pubkey) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+	    String str_key = Base64.getEncoder().encodeToString(byte_pubkey);
+	    byte_pubkey  = Base64.getDecoder().decode(str_key);
+	    KeyFactory factory = KeyFactory.getInstance("ECDSA", "BC");
+	    ECPublicKey public_key = (ECPublicKey) factory.generatePublic(new X509EncodedKeySpec(byte_pubkey));
+	    return public_key;
+	}
+
+	public static ECPrivateKey generateECDSAPrivateKey(byte[] byte_privkey) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+	    String str_key = Base64.getEncoder().encodeToString(byte_privkey);
+	    byte_privkey  = Base64.getDecoder().decode(str_key);
+	    KeyFactory factory = KeyFactory.getInstance("ECDSA", "BC");
+	    ECPrivateKey public_key = (ECPrivateKey) factory.generatePrivate(new PKCS8EncodedKeySpec(byte_privkey));
+	    return public_key;
+	}
+
+	public static byte[] getDecodedBytes(byte[] bytes) {
+		String str_key = Base64.getEncoder().encodeToString(bytes);
+	    byte[] byteArray  = Base64.getDecoder().decode(str_key);
+	    return byteArray;
+	}
+
+	/////
 
 	public static byte[] sign(PrivateKey privateKey, String message) throws Exception {
 		Signature signature = Signature.getInstance("SHA1withECDSA");
@@ -124,16 +157,15 @@ public class ECDHPub {
 	public static ECPublicKey publicFromPrivate(final ECPrivateKey privateKey) throws Exception {
 
 		KeyFactory keyFactory = KeyFactory.getInstance("ECDSA", "BC");
-	    ECNamedCurveParameterSpec spec = ECNamedCurveTable.getParameterSpec("secp256k1");
+		ECNamedCurveParameterSpec spec = ECNamedCurveTable.getParameterSpec("secp256k1");
 
-	    org.bouncycastle.math.ec.ECPoint Q = spec.getG().multiply(((org.bouncycastle.jce.interfaces.ECPrivateKey) privateKey).getD());
+		org.bouncycastle.math.ec.ECPoint Q = spec.getG()
+				.multiply(((org.bouncycastle.jce.interfaces.ECPrivateKey) privateKey).getD());
 
-	    org.bouncycastle.jce.spec.ECPublicKeySpec pubSpec = new
-	    	    org.bouncycastle.jce.spec.ECPublicKeySpec(Q, spec);
-	    PublicKey publicKeyGenerated = keyFactory.generatePublic(pubSpec);
+		org.bouncycastle.jce.spec.ECPublicKeySpec pubSpec = new org.bouncycastle.jce.spec.ECPublicKeySpec(Q, spec);
+		PublicKey publicKeyGenerated = keyFactory.generatePublic(pubSpec);
 		return (ECPublicKey) publicKeyGenerated;
 	}
-
 
 	////
 

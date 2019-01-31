@@ -1,8 +1,6 @@
 package node;
 
 import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -16,12 +14,10 @@ import autils.Appender;
 import common.RetResult;
 import common.RetResult3;
 import common.error;
-import crypto.hash;
 import peers.Peer;
 import poset.BlockSignature;
 import poset.Event;
 import poset.EventComparatorByTopologicalOrder;
-import poset.InternalTransaction;
 import poset.Poset;
 import poset.Root;
 import poset.Utils;
@@ -96,7 +92,8 @@ public class Core {
 	public String HexID() {
 		if (hexID.isEmpty()) {
 			pubKey = PubKey();
-			hexID = String.format("0x%X", pubKey);
+//			hexID = String.format("0x%X", pubKey);
+			hexID = crypto.Utils.toHexString(pubKey);
 		}
 		return hexID;
 	}

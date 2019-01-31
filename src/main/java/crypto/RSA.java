@@ -48,9 +48,9 @@ public class RSA {
 //		privateKeyPEM = privateKeyPEM.replace("-----BEGIN PRIVATE KEY-----\n", "");
 //		privateKeyPEM = privateKeyPEM.replace("-----END PRIVATE KEY-----", "");
 		Pattern parse = Pattern.compile("(?m)(?s)^---*BEGIN.*---*$(.*)^---*END.*---*$.*");
-	    String replacedPem = parse.matcher(privateKeyPEM).replaceFirst("$1");
+		String replacedPem = parse.matcher(privateKeyPEM).replaceFirst("$1");
 
-	    byte[] encoded = Base64.decodeBase64(replacedPem);
+		byte[] encoded = Base64.decodeBase64(replacedPem);
 		KeyFactory kf = KeyFactory.getInstance("RSA");
 		PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
 		RSAPrivateKey privKey = (RSAPrivateKey) kf.generatePrivate(keySpec);
@@ -67,7 +67,7 @@ public class RSA {
 //		publicKeyPEM = publicKeyPEM.replace("-----BEGIN PUBLIC KEY-----\n", "");
 //		publicKeyPEM = publicKeyPEM.replace("-----END PUBLIC KEY-----", "");
 		Pattern parse = Pattern.compile("(?m)(?s)^---*BEGIN.*---*$(.*)^---*END.*---*$.*");
-	    String replacedPem = parse.matcher(publicKeyPEM).replaceFirst("$1");
+		String replacedPem = parse.matcher(publicKeyPEM).replaceFirst("$1");
 
 		byte[] encoded = Base64.decodeBase64(replacedPem);
 		KeyFactory kf = KeyFactory.getInstance("RSA");

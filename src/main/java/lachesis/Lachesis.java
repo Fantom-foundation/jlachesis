@@ -138,7 +138,9 @@ public error initKey() {
 public error initNode() {
 	KeyPair key = Config.Key;
 
-	String nodePub = String.format("0x%X", crypto.Utils.FromECDSAPub(key.getPublic()));
+//	String nodePub = String.format("0x%X", crypto.Utils.FromECDSAPub(key.getPublic()));
+	String nodePub = crypto.Utils.keyToHexString(key.getPublic());
+
 	Peer n = Peers.getByPubKey().get(nodePub);
 	boolean ok = n != null;
 	if (!ok) {
@@ -221,7 +223,7 @@ public error initNode() {
 	public RetResult<KeyPair> Keygen(String datadir) {
 		PemKey pemKey = new PemKey(datadir);
 
-		error err = pemKey.ReadKey().err;
+		error err = pemKey.ReadKeyPair().err;
 		if (err == null) {
 			return new RetResult<>(null, error.Errorf( String.format("another key already lives under %s", datadir)));
 		}

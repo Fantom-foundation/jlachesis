@@ -52,10 +52,8 @@ public class hash {
 		case 1:
 			return hashes[0];
 		default:
-			byte[] left = SimpleHashFromHashes(
-					Arrays.copyOfRange(hashes, 0, (hashes.length+1)/2));
-			byte[] right = SimpleHashFromHashes(
-					Arrays.copyOfRange(hashes, (hashes.length+1)/2, hashes.length-1));
+			byte[] left = SimpleHashFromHashes(Arrays.copyOfRange(hashes, 0, (hashes.length + 1) / 2));
+			byte[] right = SimpleHashFromHashes(Arrays.copyOfRange(hashes, (hashes.length + 1) / 2, hashes.length - 1));
 			return SimpleHashFromTwoHashes(left, right);
 		}
 	}
