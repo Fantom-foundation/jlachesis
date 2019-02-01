@@ -9,7 +9,6 @@ import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Security;
@@ -21,12 +20,9 @@ import java.security.spec.X509EncodedKeySpec;
 import org.bouncycastle.asn1.ASN1Object;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
-import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
-import org.bouncycastle.openssl.PEMWriter;
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemObjectGenerator;
 import org.bouncycastle.util.io.pem.PemWriter;
@@ -87,40 +83,6 @@ public class PemKey {
 		}
 	}
 
-//	public synchronized RetResult<PrivateKey> ReadKey() {
-//		RetResult<byte[]> readResult = FileUtils.readFileToByteArray(path);
-//
-//		byte[] buf = readResult.result;
-//		error err = readResult.err;
-//
-//		if (err != null) {
-//			return new RetResult<PrivateKey>(null, err);
-//		}
-//
-//		return ReadKeyFromBuf(buf);
-//	}
-
-//	public synchronized RetResult<PrivateKey> ReadKeyFromBuf(byte[] buf) {
-//		if (buf.length == 0) {
-//			return new RetResult<PrivateKey>(null, null);
-//		}
-//
-//		PrivateKey generatePrivateKey;
-//		try {
-//			generatePrivateKey = ECDHPub.generatePrivateKey(buf);
-//		} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-//			return new RetResult<PrivateKey>(null, error.Errorf(e.getMessage()));
-//		}
-//
-////		block, _ = crypto.Utils.Decode(buf);
-////		if (block == null) {
-////			return new RetResult<PrivateKey>(null, error.Errorf("error decoding PEM block from data"));
-////		}
-////		return x509.ParseECPrivateKey(blocBytes);
-//
-//		return new RetResult<PrivateKey>(generatePrivateKey, null);
-//	}
-
 	public synchronized error WriteKey(KeyPair keyPair) {
 	    StringWriter stringWriter = new StringWriter();
 	    PemWriter pemWriter = new PemWriter(stringWriter);
@@ -157,9 +119,9 @@ public class PemKey {
 		StringWriter stringWriter = new StringWriter();
         PemWriter w = new PemWriter (stringWriter);
         PrivateKeyInfo i = PrivateKeyInfo.getInstance(ASN1Sequence.getInstance(key.getEncoded()));
-//        if( ! i.getPrivateKeyAlgorithm().getAlgorithm().equals(X9ObjectIdentifiers.id_ecPublicKey) ){
-//            throw new Exception ("not EC key");
-//        }
+        //if( ! i.getPrivateKeyAlgorithm().getAlgorithm().equals(X9ObjectIdentifiers.id_ecPublicKey) ){
+        //    throw new Exception ("not EC key");
+        //}
         ASN1Object o = (ASN1Object) i.parsePrivateKey();
         w.writeObject (new PemObject ("EC PRIVATE KEY", o.getEncoded("DER")));
         w.close();

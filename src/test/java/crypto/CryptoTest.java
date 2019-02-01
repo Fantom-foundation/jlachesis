@@ -117,6 +117,9 @@ public class CryptoTest {
 		String expectedPub = "3059301306072A8648CE3D020106082A8648CE3D030107034200046A347F0488ABC7D92E2208794E327ECA15B0C2B27018B2B5B89DD8CB736FD7CC38F37D2D10822530AD97359ACBD837A65C2CA62D44B0CE569BD222C2DABF268F";
 		assertEquals("public key should be %s, not %s", expectedPub, pub);
 
+		pub = Utils.keyToHexString(key.getPublic());
+		assertEquals("public key should be %s, not %s", expectedPub, pub);
+
 		String msg = "time for beer";
 		RetResult3<BigInteger, BigInteger> sign = Utils.Sign(key.getPrivate(), msg.getBytes());
 

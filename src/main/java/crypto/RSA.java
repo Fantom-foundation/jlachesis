@@ -75,6 +75,22 @@ public class RSA {
 		return pubKey;
 	}
 
+	public static PublicKey decodeRSAPublicKey(byte[] pubKeyBits)
+			throws InvalidKeySpecException, NoSuchAlgorithmException {
+		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+		// build the public key
+		PublicKey pubKey = keyFactory.generatePublic(new X509EncodedKeySpec(pubKeyBits));
+		return pubKey;
+	}
+
+	public static PrivateKey decodeRSAPrivateKey(byte[] privKeyBits)
+			throws InvalidKeySpecException, NoSuchAlgorithmException {
+		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+		// build the private key
+		PrivateKey privKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(privKeyBits));
+		return privKey;
+	}
+
 	public static String sign(PrivateKey privateKey, String message)
 			throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, UnsupportedEncodingException {
 		Signature sign = Signature.getInstance("SHA1withRSA");
@@ -115,5 +131,4 @@ public class RSA {
 		// make them a key pair
 		return new KeyPair(pubKey, privKey);
 	}
-
 }

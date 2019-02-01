@@ -7,7 +7,6 @@ import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
-import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -17,8 +16,6 @@ import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
@@ -29,7 +26,6 @@ import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemObjectGenerator;
 import org.bouncycastle.util.io.pem.PemWriter;
 
-import autils.FileUtils;
 import common.RetResult;
 import common.RetResult3;
 import common.error;
@@ -58,85 +54,36 @@ public class Utils {
 		return new RetResult<KeyPair>(privKey, null);
 	}
 
-	// TBD the conversion using P256
-//	public static PublicKey ToECDSAPub(byte[] pub) {
-//		if (pub.length == 0) {
-//			return null;
-//		}
+	public static PublicKey ToECDSAPub(byte[] pub) {
+		if (pub.length == 0) {
+			return null;
+		}
 //		x, y := elliptic.Unmarshal(elliptic.P256(), pub);
 //		return new PublicKey{Curve: elliptic.P256(), X: x, Y: y};
-//	}
 
-	public static PublicKey ToECDSAPub(byte[] publicBytes) {
 		try {
-			PublicKey pk = ECDHPub.generatePublicKey(publicBytes);
+			PublicKey pk = ECDHPub.generateECDSAPublicKey(pub);
 			return pk;
-		} catch (InvalidKeySpecException | NoSuchAlgorithmException e1) {
+		} catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e1) {
 			e1.printStackTrace();
 			return null;
 		}
 	}
 
-	// TBD not working. Conversion is in progress
-//	public static ECPublicKey ToECDSAPub(byte[] pub) {
-//	    KeyFactory factory = KeyFactory.getInstance("ECDSA", "BC");
-//	    java.security.PublicKey ecPublicKey = (ECPublicKey) factory
-//	            .generatePublic(new X509EncodedKeySpec(Helper
-//	                    .toByte(ecRemotePubKey)));
-//	    return (ECPublicKey) ecPublicKey;
-//	}
-
-	public static PublicKey decodeRSAPublicKey(byte[] pubKeyBits)
-			throws InvalidKeySpecException, NoSuchAlgorithmException {
-		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-		// build the public key
-		PublicKey pubKey = keyFactory.generatePublic(new X509EncodedKeySpec(pubKeyBits));
-		return pubKey;
-	}
-
-	public static PrivateKey decodeRSAPrivateKey(byte[] privKeyBits)
-			throws InvalidKeySpecException, NoSuchAlgorithmException {
-		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-		// build the private key
-		PrivateKey privKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(privKeyBits));
-		return privKey;
-	}
-
-//	public static PublicKey ToECDSAPub_old(byte[] publicBytes) {
-//		ECNamedCurveSpec params = ECDHPub.getP256Spec();
-//		ECPoint point = ECPointUtil.decodePoint(params.getCurve(), publicBytes);
-//		ECPublicKeySpec pubKeySpec = new ECPublicKeySpec(point, params);
-//
-//		KeyFactory kf;
-//		ECPublicKey pk = null;
-//		try {
-//			kf = KeyFactory.getInstance("ECDSA", BouncyCastleProvider.PROVIDER_NAME);
-//			pk = (ECPublicKey) kf.generatePublic(pubKeySpec);
-//		} catch (NoSuchAlgorithmException | NoSuchProviderException e) {
-//			e.printStackTrace();
-//			return null;
-//		} catch (InvalidKeySpecException e) {
-//			e.printStackTrace();
-//			return null;
-//		}
-//
-//		return pk;
-//	}
-
 	public static byte[] FromECDSAPub(PublicKey pub) {
-		// TODO simple?
-//		if (pub == null || pub.X == null || pub.Y == null) {
-//			return null;
-//		}
+		if (pub == null) {
+			return null;
+		}
 //		return elliptic.Marshal(elliptic.P256(), pub.X, pub.Y);
-
-		return pub.getEncoded();
+		String encodedKey = Base64.getEncoder().encodeToString(pub.getEncoded());
+		byte[] decoded = Base64.getDecoder().decode(encodedKey);
+		return decoded;
 	}
 
 	public static RetResult3<BigInteger, BigInteger> Sign(PrivateKey priv, byte[] hash) {
 		Signature ver;
 		try {
-//			ver = Signature.getInstance("SHA256withECDSA");
+			//ver = Signature.getInstance("SHA256withECDSA");
 			ver = Signature.getInstance("ECDSA", "BC");
 			ver.initSign(priv, new SecureRandom());
 			ver.update(hash);
@@ -148,7 +95,6 @@ public class Utils {
 		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | NoSuchProviderException e) {
 			return new RetResult3<BigInteger, BigInteger>(null, null,
 					error.Errorf("Signature Verification failed" + e.getMessage()));
-			// throw new Exception("Signature Verification failed");
 		}
 	}
 
@@ -167,7 +113,7 @@ public class Utils {
 
 		Signature ver;
 		try {
-//			ver = Signature.getInstance("SHA256withECDSA");
+			//ver = Signature.getInstance("SHA256withECDSA");
 			ver = Signature.getInstance("ECDSA", "BC");
 			ver.initVerify(pub);
 			ver.update(hash);
