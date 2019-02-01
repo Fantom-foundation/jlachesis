@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
+import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -17,6 +18,10 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
+import org.bouncycastle.asn1.ASN1Object;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
@@ -117,7 +122,6 @@ public class PemKey {
 //	}
 
 	public synchronized error WriteKey(KeyPair keyPair) {
-
 	    StringWriter stringWriter = new StringWriter();
 	    PemWriter pemWriter = new PemWriter(stringWriter);
 	    PemObjectGenerator priPemObject = new PemObject("EC " + "private".toUpperCase() + " KEY", keyPair.getPrivate().getEncoded());
@@ -139,6 +143,29 @@ public class PemKey {
 	    return err;
 	}
 
+	public static String toPEMString(Key key) throws IOException {
+		StringWriter stringWriter = new StringWriter();
+	    PemWriter pemWriter = new PemWriter(stringWriter);
+	    PemObjectGenerator priPemObject = new PemObject("EC " + "private".toUpperCase() + " KEY", key.getEncoded());
+    	pemWriter.writeObject(priPemObject);
+	    pemWriter.flush();
+	    pemWriter.close();
+	    return stringWriter.toString();
+	}
+
+	public static String toECString(PrivateKey key) throws IOException {
+		StringWriter stringWriter = new StringWriter();
+        PemWriter w = new PemWriter (stringWriter);
+        PrivateKeyInfo i = PrivateKeyInfo.getInstance(ASN1Sequence.getInstance(key.getEncoded()));
+//        if( ! i.getPrivateKeyAlgorithm().getAlgorithm().equals(X9ObjectIdentifiers.id_ecPublicKey) ){
+//            throw new Exception ("not EC key");
+//        }
+        ASN1Object o = (ASN1Object) i.parsePrivateKey();
+        w.writeObject (new PemObject ("EC PRIVATE KEY", o.getEncoded("DER")));
+        w.close();
+        return stringWriter.toString();
+	}
+
 	public static RetResult<PemDump> GeneratePemKey() {
 		RetResult<KeyPair> ecdsa = Utils.GenerateECDSAKeyPair();
 		KeyPair keyPair = ecdsa.result;
@@ -158,13 +185,13 @@ public class PemKey {
 //		}
 //		pem.Block pemBlock = pem.newBlock("EC PRIVATE KEY", b);
 //		data = EncodeToMemory(pemBlock);
-
 //		String publicKey = String.format("0x%X", Utils.FromECDSAPub(keyPair.getPublic()));
+
 		String publicKey = Utils.keyToHexString(keyPair.getPublic());
 		String privateKey = Utils.keyToHexString(keyPair.getPrivate());
 
-		System.out.println("PemDump publicKey = " + publicKey);
-		System.out.println("PemDump privateKey = " + privateKey);
+		//System.out.println("PemDump publicKey = " + publicKey);
+		//System.out.println("PemDump privateKey = " + privateKey);
 
 		error err = null;
 		return new RetResult<PemDump>(new PemDump(publicKey, privateKey), err);

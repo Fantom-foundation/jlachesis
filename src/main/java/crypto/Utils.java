@@ -173,11 +173,7 @@ public class Utils {
 			ver.update(hash);
 			boolean verify = ver.verify(derSignature);
 			return verify;
-		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
-			e.printStackTrace();
-//			throw new Exception("Signature Verification failed");
-		} catch (NoSuchProviderException e) {
-			// TODO Auto-generated catch block
+		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | NoSuchProviderException e) {
 			e.printStackTrace();
 		}
 		return false;

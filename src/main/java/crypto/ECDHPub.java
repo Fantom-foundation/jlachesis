@@ -41,7 +41,6 @@ public class ECDHPub {
 	public static ECNamedCurveSpec getP256Spec() {
 		// spec for P-256 curve
 		ECNamedCurveParameterSpec spec = ECNamedCurveTable.getParameterSpec("prime256v1");
-
 		// creates curve parameters (spec variable)
 		ECNamedCurveSpec params = new ECNamedCurveSpec("prime256v1", spec.getCurve(), spec.getG(), spec.getN());
 		return params;
@@ -49,9 +48,7 @@ public class ECDHPub {
 
 	public static KeyPair generateECDSAKeyPair()
 			throws NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
-//		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("ECDSA", "SC");
 		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("ECDSA", "BC");
-//		ECGenParameterSpec spec = new ECGenParameterSpec("secp256r1");
 		ECGenParameterSpec spec = new ECGenParameterSpec("secp256k1");
 		keyPairGenerator.initialize(spec, new SecureRandom());
 		return keyPairGenerator.generateKeyPair();
@@ -114,7 +111,6 @@ public class ECDHPub {
 		Signature signature = Signature.getInstance("SHA1withECDSA");
 		signature.initSign(privateKey);
 		signature.update(message.getBytes());
-
 		return signature.sign();
 	}
 
@@ -122,7 +118,6 @@ public class ECDHPub {
 		Signature signature = Signature.getInstance("SHA1withECDSA");
 		signature.initVerify(publicKey);
 		signature.update(message.getBytes());
-
 		return signature.verify(signed);
 	}
 
@@ -155,7 +150,6 @@ public class ECDHPub {
 	}
 
 	public static ECPublicKey publicFromPrivate(final ECPrivateKey privateKey) throws Exception {
-
 		KeyFactory keyFactory = KeyFactory.getInstance("ECDSA", "BC");
 		ECNamedCurveParameterSpec spec = ECNamedCurveTable.getParameterSpec("secp256k1");
 
@@ -168,7 +162,6 @@ public class ECDHPub {
 	}
 
 	////
-
 	private static ECPublicKey decodeECPublicKey(ECParameterSpec params, final byte[] pubkey)
 			throws NoSuchAlgorithmException, InvalidKeySpecException {
 		int keySizeBytes = params.getOrder().bitLength() / Byte.SIZE;

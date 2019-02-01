@@ -20,6 +20,7 @@ import java.security.PrivateKey;
 import java.security.Security;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
 
 import org.apache.commons.codec.binary.Hex;
 import org.bouncycastle.openssl.PEMKeyPair;
@@ -41,7 +42,7 @@ import common.error;
 public class CryptoTest {
 
 	@Test
-	public void TestPem() {
+	public void testPem() {
 		// Create the PEM key
 		String baseDir = "src/test/java/crypto/";
 		String filePath = baseDir + "test_data/lachesis";
@@ -54,7 +55,7 @@ public class CryptoTest {
 		}
 
 		PemKey pemKey = new PemKey(filePath);
-		System.out.println("path = " +  pemKey.path);
+		//System.out.println("path = " +  pemKey.path);
 		try {
 			Files.delete(Paths.get(pemKey.path));
 		} catch (IOException e1) {
@@ -90,7 +91,7 @@ public class CryptoTest {
 	}
 
 	@Test
-	public void TestReadPem() {
+	public void testReadPem() {
 		// Create the PEM key
 		String baseDir = "src/test/java/crypto/";
 		String filePath = baseDir + "test_data/testkey";
@@ -145,7 +146,7 @@ public class CryptoTest {
 	}
 
 	@Test
-	public void TestSignatureEncoding() {
+	public void testSignatureEncoding() {
 		KeyPair generateECDSAKeyPair = null;
 		try {
 			generateECDSAKeyPair = crypto.ECDHPub.generateECDSAKeyPair();
@@ -179,7 +180,7 @@ public class CryptoTest {
 	}
 
 	@Test
-	public void TestECDHKeyRegeneration() throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+	public void testECDHKeyRegeneration() throws IOException, InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
 		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 	    Reader rdr = new StringReader (
 	    "-----BEGIN EC PRIVATE KEY-----\n" +
@@ -201,5 +202,42 @@ public class CryptoTest {
 	    byte[] privkeyBytes = pair.getPrivate().getEncoded();
 	    PrivateKey privKey = ECDHPub.generateECDSAPrivateKey(privkeyBytes);
 	    assertEquals("Regenerated keys are the same", pair.getPrivate(), privKey);
+	}
+
+	@Test
+	public void testKeyOutput() throws IOException {
+		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+	    final String originalPem = "-----BEGIN EC PRIVATE KEY-----\n" +
+	    	    "MHcCAQEEICQgVepySeMSQD+CJ5tQRm3y0zAVCe7uYL+yCAsJ3bf2oAoGCCqGSM49\n" +
+	    	    "AwEHoUQDQgAEajR/BIirx9kuIgh5TjJ+yhWwwrJwGLK1uJ3Yy3Nv18w4830tEIIl\n" +
+	    	    "MK2XNZrL2DemXCymLUSwzlab0iLC2r8mjw==\n" +
+	    	    "-----END EC PRIVATE KEY-----";
+		Reader rdr = new StringReader (originalPem);
+	    Object parsed = new PEMParser(rdr).readObject();
+	    KeyPair pair = new JcaPEMKeyConverter().getKeyPair((PEMKeyPair)parsed);
+
+	    //System.out.println ("priv = " + pair.getPrivate().getAlgorithm() + " : " + pair.getPrivate().getFormat());
+	    //System.out.println ("pub = " +  pair.getPublic().getAlgorithm() + " : " + pair.getPublic().getFormat());
+
+	    String expectedPrivHex = "308193020100301306072A8648CE3D020106082A8648CE3D030107047930770201010420242055EA7249E312403F82279B50466DF2D3301509EEEE60BFB2080B09DDB7F6A00A06082A8648CE3D030107A144034200046A347F0488ABC7D92E2208794E327ECA15B0C2B27018B2B5B89DD8CB736FD7CC38F37D2D10822530AD97359ACBD837A65C2CA62D44B0CE569BD222C2DABF268F";
+	    String expectedPubHex = "3059301306072A8648CE3D020106082A8648CE3D030107034200046A347F0488ABC7D92E2208794E327ECA15B0C2B27018B2B5B89DD8CB736FD7CC38F37D2D10822530AD97359ACBD837A65C2CA62D44B0CE569BD222C2DABF268F";
+	    assertEquals("private key's hex", Utils.keyToHexString(pair.getPrivate()), expectedPrivHex);
+	    assertEquals("public key's hex", Utils.keyToHexString(pair.getPublic()), expectedPubHex);
+
+        String expectedMime =
+        		"MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgJCBV6nJJ4xJAP4In\n" +
+				"m1BGbfLTMBUJ7u5gv7IICwndt/agCgYIKoZIzj0DAQehRANCAARqNH8EiKvH2S4i\n" +
+				"CHlOMn7KFbDCsnAYsrW4ndjLc2/XzDjzfS0QgiUwrZc1msvYN6ZcLKYtRLDOVpvS\n" +
+				"IsLavyaP";
+        String outputKey  = Utils.getOutputString(pair.getPrivate(), "ec", "private");
+        assertTrue("Output string contains", outputKey.contains(expectedMime));
+
+        expectedMime = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEajR/BIirx9kuIgh5TjJ+yhWwwrJw\n" +
+        		"GLK1uJ3Yy3Nv18w4830tEIIlMK2XNZrL2DemXCymLUSwzlab0iLC2r8mjw==";
+        outputKey  = Utils.getOutputString(pair.getPublic(), "ec", "public");
+        assertTrue("PEM output string contains", outputKey.contains(expectedMime));
+
+        outputKey = PemKey.toECString(pair.getPrivate());
+        assertTrue("EC output  string contains", outputKey.contains(originalPem));
 	}
 }
