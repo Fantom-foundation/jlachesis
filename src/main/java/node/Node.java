@@ -37,9 +37,6 @@ import poset.Frame;
 import poset.WireEvent;
 
 public class Node extends NodeState {
-	// TBD: how to transfer this nodeState into Java
-	NodeState nodeState = new NodeState();
-
 	Config conf;
 	Logger logger;
 
@@ -116,8 +113,8 @@ public class Node extends NodeState {
 		this.gossipJobs = new AtomicLong(0);
 		this.rpcJobs = new AtomicLong(0);
 
-//		node.logger.WithField("peers", pmap).Debug("pmap")
-//		node.logger.WithField("pubKey", pubKey).Debug("pubKey")
+		logger.field("peers", pmap).debug("pmap");
+		logger.field("pubKey", pubKey).debug("pubKey");
 
 		needBoostrap = store.NeedBoostrap();
 
@@ -131,7 +128,7 @@ public class Node extends NodeState {
 		for (Peer p : peerSelector.Peers().ToPeerSlice()) {
 			peerAddresses = Appender.append(peerAddresses, p.GetNetAddr());
 		}
-//		logger.WithField("peers", peerAddresses).Debug("Initialize Node")
+		logger.field("peers", peerAddresses).debug("Initialize Node");
 
 		if (needBoostrap) {
 			logger.debug("Bootstrap");
@@ -170,8 +167,8 @@ public class Node extends NodeState {
 		// Execute Node State Machine
 		while (true) {
 			// Run different routines depending on node state
-			NodeStates state = nodeState.getState();
-//			logger.WithField("state", state.String()).Debug("RunAsync(gossip bool)")
+			NodeStates state = getState();
+			logger.field("state", state.toString()).debug("RunAsync(gossip bool)");
 
 			switch (state) {
 			case Gossiping:
@@ -203,11 +200,11 @@ public class Node extends NodeState {
 		while (true) {
 //			select {
 //			case t := <- submitCh:
-////				logger.Debug("Adding Transactions to Transaction Pool")
+////				logger.debug("Adding Transactions to Transaction Pool")
 //				addTransaction(t);
 //				resetTimer();
 //			case t := <- submitInternalCh:
-////				logger.Debug("Adding Internal Transaction")
+////				logger.debug("Adding Internal Transaction")
 //				addInternalTransaction(t);
 //				resetTimer();
 //			case block := <- commitCh:
@@ -215,10 +212,10 @@ public class Node extends NodeState {
 ////					"index":          block.Index(),
 ////					"round_received": block.RoundReceived(),
 ////					"transactions":   len(block.Transactions()),
-////				}).Debug("Adding EventBlock")
+////				}).debug("Adding EventBlock")
 //				error err = commit(block);
 //				if  (err != null) {
-////					logger.WithField("error", err).Error("Adding EventBlock")
+////					logger.field("error", err).error("Adding EventBlock")
 //				}
 //			case <-shutdownCh:
 //				return;
@@ -241,9 +238,13 @@ public class Node extends NodeState {
 					resetTimer();
 				case COMMIT:
 					Block block = commitCh.in().read();
+					logger.field("index",         block.Index())
+						.field("round_received", block.RoundReceived())
+						.field("transactions",   block.Transactions().length)
+						.debug("Adding EventBlock");
 					error err = commit(block);
 					if  (err != null) {
-//						logger.WithField("error", err).Error("Adding EventBlock")
+						logger.field("error", err).error("Adding EventBlock");
 					}
 				case SHUTDOWN:
 					shutdownCh.in().read();
@@ -317,7 +318,7 @@ public class Node extends NodeState {
 					Block block = commitCh.in().read();
 					error err = commit(block);
 					if  (err != null) {
-//						logger.WithField("error", err).Error("Adding EventBlock")
+						logger.field("error", err).error("Adding EventBlock");
 					}
 				case SHUTDOWN:
 					shutdownCh.in().read();
@@ -338,16 +339,16 @@ public class Node extends NodeState {
 		} else if (net.FastForwardRequest.class.isAssignableFrom(cmdClass)) {
 			processFastForwardRequest(rpc, (FastForwardRequest) cmd);
 		} else {
-//			logger.WithField("cmd", rpc.Command).Error("Unexpected RPC command")
+			logger.field("cmd", rpc.getCommand()).error("Unexpected RPC command");
 			rpc.Respond(null, error.Errorf("unexpected command"));
 		}
 	}
 
 	public void processSyncRequest(net.RPC rpc, net.SyncRequest cmd) {
-//		logger.WithFields(logrus.Fields{
-//			"from_id": cmd.FromID,
-//			"known":   cmd.Known,
-//		}).Debug("processSyncRequest(rpc net.RPC, cmd *net.SyncRequest)")
+		logger
+			.field("from_id", cmd.getFromID())
+			.field("known",   cmd.getKnown())
+			.debug("processSyncRequest(rpc net.RPC, cmd *net.SyncRequest)");
 
 		SyncResponse resp = new net.SyncResponse (id);
 		error respErr = null;
@@ -357,7 +358,7 @@ public class Node extends NodeState {
 		boolean overSyncLimit = core.OverSyncLimit(cmd.getKnown(), conf.SyncLimit);
 		coreLock.unlock();
 		if (overSyncLimit) {
-//			logger.Debug("core.OverSyncLimit(cmd.Known, conf.SyncLimit)")
+			logger.debug("core.OverSyncLimit(cmd.Known, conf.SyncLimit)");
 			resp.setSyncLimit(true);
 		} else {
 			// Compute Diff
@@ -367,10 +368,9 @@ public class Node extends NodeState {
 			Event[] eventDiff = eventDiffCall.result;
 			error err = eventDiffCall.err;
 			coreLock.unlock();
-			long elapsed = System.nanoTime() - start;
-//			logger.WithField("Duration", elapsed.Nanoseconds()).Debug("core.EventBlockDiff(cmd.Known)")
+			logger.field("Duration", time.Since(start)).debug("core.EventBlockDiff(cmd.Known)");
 			if (err != null) {
-//				logger.WithField("Error", err).Error("core.EventBlockDiff(cmd.Known)")
+				logger.field("Error", err).error("core.EventBlockDiff(cmd.Known)");
 				respErr = err;
 			}
 
@@ -379,7 +379,7 @@ public class Node extends NodeState {
 			WireEvent[] wireEvents = toWireCall.result;
 			err = toWireCall.err;
 			if (err != null) {
-//				logger.WithField("error", err).Debug("core.TransportEventBlock(eventDiff)")
+				logger.field("error", err).debug("core.TransportEventBlock(eventDiff)");
 				respErr = err;
 			} else {
 				resp.setEvents(wireEvents);
@@ -392,28 +392,27 @@ public class Node extends NodeState {
 		coreLock.unlock();
 		resp.setKnown(knownEvents);
 
-//		logger.WithFields(logrus.Fields{
-//			"events":     len(resp.Events),
-//			"known":      resp.Known,
-//			"sync_limit": resp.SyncLimit,
-//			"error":      respErr,
-//		}).Debug("SyncRequest Received")
+		logger
+			.field("events",     resp.getEvents().length)
+			.field("known",      resp.getKnown())
+			.field("sync_limit", resp.isSyncLimit())
+			.field("error",      respErr)
+			.debug("SyncRequest Received");
 
 		rpc.Respond(resp, respErr);
 	}
 
 	public void processEagerSyncRequest(net.RPC rpc, net.EagerSyncRequest cmd) {
-//		logger.WithFields(logrus.Fields{
-//			"from_id": cmd.FromID,
-//			"events":  len(cmd.Events),
-//		}).Debug("processEagerSyncRequest(rpc net.RPC, cmd *net.EagerSyncRequest)")
+		logger.field("from_id", cmd.getFromID())
+			.field("events",  cmd.getEvents().length)
+			.debug("processEagerSyncRequest(rpc net.RPC, cmd *net.EagerSyncRequest)");
 
 		boolean success = true;
 		coreLock.lock();
 		error err = sync(cmd.getEvents());
 		coreLock.unlock();
 		if (err != null) {
-//			logger.WithField("error", err).Error("sync(cmd.Events)")
+			logger.field("error", err).error("sync(cmd.Events)");
 			success = false;
 		}
 
@@ -422,9 +421,8 @@ public class Node extends NodeState {
 	}
 
 	public void processFastForwardRequest(net.RPC rpc, net.FastForwardRequest cmd) {
-//		logger.WithFields(logrus.Fields{
-//			"from": cmd.FromID,
-//		}).Debug("processFastForwardRequest(rpc net.RPC, cmd *net.FastForwardRequest)")
+		logger.field("from", cmd.getFromID())
+			.debug("processFastForwardRequest(rpc net.RPC, cmd *net.FastForwardRequest)");
 
 		FastForwardResponse resp = new net.FastForwardResponse(id);
 		error respErr = null;
@@ -437,7 +435,7 @@ public class Node extends NodeState {
 		error err = getAnchorBlockWithFrame.err;
 		coreLock.unlock();
 		if (err != null) {
-//			logger.WithField("error", err).Error("core.GetAnchorBlockWithFrame()")
+			logger.field("error", err).error("core.GetAnchorBlockWithFrame()");
 			respErr = err;
 		} else {
 			resp.setBlock(block);
@@ -448,16 +446,16 @@ public class Node extends NodeState {
 			byte[] snapshot = getSnapshot.result;
 			err = getSnapshot.err;
 			if (err != null) {
-//				logger.WithField("error", err).Error("proxy.GetSnapshot(block.Index())")
+				logger.field("error", err).error("proxy.GetSnapshot(block.Index())");
 				respErr = err;
 			}
 			resp.setSnapshot(snapshot);
 		}
 
-//		logger.WithFields(logrus.Fields{
-//			"Events": len(resp.Frame.Events),
-//			"Error":  respErr,
-//		}).Debug("FastForwardRequest Received")
+		logger
+			.field("Events", resp.getFrame().GetEvents().length)
+			.field("Error",  respErr)
+			.debug("FastForwardRequest Received");
 		rpc.Respond(resp, respErr);
 	}
 
@@ -477,7 +475,7 @@ public class Node extends NodeState {
 
 		// check and handle syncLimit
 		if (syncLimit) {
-//			logger.WithField("from", peerAddr).Debug("SyncLimit")
+			logger.field("from", peerAddr).debug("SyncLimit");
 			setState(NodeStates.CatchingUp);
 			parentReturnCh.out().write(1); // <- struct{}{};
 			return null;
@@ -510,22 +508,22 @@ public class Node extends NodeState {
 		net.SyncResponse resp = requestSyncCall.result;
 		error err = requestSyncCall.err;
 		long elapsed = System.nanoTime() - start;
-//		logger.WithField("Duration", elapsed.Nanoseconds()).Debug("requestSync(peerAddr, knownEvents)")
+		logger.field("Duration", time.Since(start)).debug("requestSync(peerAddr, knownEvents)");
 		// FIXIT: should we catch io.EOF error here and how we process it?
 		//	if err == io.EOF {
 		//		return false, null, null
 		//	}
 		if (err != null) {
-//			logger.WithField("Error", err).Error("requestSync(peerAddr, knownEvents)")
+			logger.field("Error", err).error("requestSync(peerAddr, knownEvents)");
 			return new RetResult3<Boolean,Map<Long,Long>>(false, null, err);
 		}
-//		logger.WithFields(logrus.Fields{
-//			"from_id":     resp.FromID,
-//			"sync_limit":  resp.SyncLimit,
-//			"events":      len(resp.Events),
-//			"known":       resp.Known,
-//			"knownEvents": knownEvents,
-//		}).Debug("SyncResponse");
+		logger
+			.field("from_id",     resp.getFromID())
+			.field("sync_limit",  resp.isSyncLimit())
+			.field("events",      resp.getEvents().length)
+			.field("known",       resp.getKnown())
+			.field("knownEvents", knownEvents)
+			.debug("SyncResponse");
 
 		if (resp.isSyncLimit()) {
 			return new RetResult3<Boolean,Map<Long,Long>>(true, null, null);
@@ -536,7 +534,7 @@ public class Node extends NodeState {
 		err = sync(resp.getEvents());
 		coreLock.unlock();
 		if (err != null) {
-//			logger.WithField("error", err).Error("sync(resp.Events)")
+//			logger.field("error", err).error("sync(resp.Events)")
 			return new RetResult3<Boolean,Map<Long,Long>>(false, null, err);
 		}
 
@@ -549,7 +547,7 @@ public class Node extends NodeState {
 		boolean overSyncLimit = core.OverSyncLimit(knownEvents, conf.SyncLimit);
 		coreLock.unlock();
 		if (overSyncLimit) {
-//			logger.Debug("core.OverSyncLimit(knownEvents, conf.SyncLimit)")
+			logger.debug("core.OverSyncLimit(knownEvents, conf.SyncLimit)");
 			return null;
 		}
 
@@ -560,10 +558,9 @@ public class Node extends NodeState {
 		Event[] eventDiff = eventDiffCall.result;
 		error err = eventDiffCall.err;
 		coreLock.unlock();
-		long elapsed = System.nanoTime() - start;
-//		logger.WithField("Duration", elapsed.Nanoseconds()).Debug("core.EventDiff(knownEvents)")
+		logger.field("Duration", time.Since(start)).debug("core.EventDiff(knownEvents)");
 		if (err != null) {
-//			logger.WithField("Error", err).Error("core.EventDiff(knownEvents)")
+			logger.field("Error", err).error("core.EventDiff(knownEvents)");
 			return err;
 		}
 
@@ -573,34 +570,33 @@ public class Node extends NodeState {
 			WireEvent[] wireEvents = toWire.result;
 			err = toWire.err;
 			if (err != null) {
-//				logger.WithField("Error", err).Debug("core.TransferEventBlock(eventDiff)")
+				logger.field("Error", err).debug("core.TransferEventBlock(eventDiff)");
 				return err;
 			}
 
 			// Create and Send EagerSyncRequest
 			start = System.nanoTime();
-//			logger.WithField("wireEvents", wireEvents).Debug("Sending requestEagerSync.wireEvents")
+			logger.field("wireEvents", wireEvents).debug("Sending requestEagerSync.wireEvents");
 
 			RetResult<EagerSyncResponse> requestEagerSync = requestEagerSync(peerAddr, wireEvents);
 			EagerSyncResponse resp2 = requestEagerSync.result;
 			err = requestEagerSync.err;
-			elapsed = System.nanoTime() - start;
-//			logger.WithField("Duration", elapsed.Nanoseconds()).Debug("requestEagerSync(peerAddr, wireEvents)")
+			logger.field("Duration", time.Since(start)).debug("requestEagerSync(peerAddr, wireEvents)");
 			if (err != null) {
-//				logger.WithField("Error", err).Error("requestEagerSync(peerAddr, wireEvents)")
+				logger.field("Error", err).error("requestEagerSync(peerAddr, wireEvents)");
 				return err;
 			}
-//			logger.WithFields(logrus.Fields{
-//				"from_id": resp2.FromID,
-//				"success": resp2.Success,
-//			}).Debug("EagerSyncResponse");
+			logger
+				.field("from_id", resp2.getFromID())
+				.field("success", resp2.isSuccess())
+				.debug("EagerSyncResponse");
 		}
 
 		return null;
 	}
 
 	public error fastForward() {
-//		logger.Debug("fastForward()");
+		logger.debug("fastForward()");
 
 		// wait until sync routines finish
 		waitRoutines();
@@ -611,34 +607,33 @@ public class Node extends NodeState {
 		RetResult<net.FastForwardResponse> requestFastForwardCall = requestFastForward(peer.GetNetAddr());
 		FastForwardResponse resp = requestFastForwardCall.result;
 		error err = requestFastForwardCall.err;
-		long elapsed = System.nanoTime() - start;
-//		logger.WithField("Duration", elapsed.Nanoseconds()).Debug("requestFastForward(peer.NetAddr)")
+		logger.field("Duration", time.Since(start)).debug("requestFastForward(peer.NetAddr)");
 		if (err != null) {
-//			logger.WithField("Error", err).Error("requestFastForward(peer.NetAddr)")
+			logger.field("Error", err).error("requestFastForward(peer.NetAddr)");
 			return err;
 		}
-//		logger.WithFields(logrus.Fields{
-//			"from_id":              resp.FromID,
-//			"block_index":          resp.Block.Index(),
-//			"block_round_received": resp.Block.RoundReceived(),
-//			"frame_events":         len(resp.Frame.Events),
-//			"frame_roots":          resp.Frame.Roots,
-//			"snapshot":             resp.Snapshot,
-//		}).Debug("FastForwardResponse")
+		logger
+			.field("from_id",              resp.getFromID())
+			.field("block_index",          resp.getBlock().Index())
+			.field("block_round_received", resp.getBlock().RoundReceived())
+			.field("frame_events",         resp.getFrame().GetEvents().length)
+			.field("frame_roots",          resp.getFrame().GetRoots())
+			.field("snapshot",             resp.getSnapshot())
+			.debug("FastForwardResponse");
 
 		// prepare core. ie: fresh poset
 		coreLock.lock();
 		err = core.FastForward(peer.GetPubKeyHex(), resp.getBlock(), resp.getFrame());
 		coreLock.unlock();
 		if (err != null) {
-//			logger.WithField("Error", err).Error("core.FastForward(peer.PubKeyHex, resp.Block, resp.Frame)")
+			logger.field("Error", err).error("core.FastForward(peer.PubKeyHex, resp.Block, resp.Frame)");
 			return err;
 		}
 
 		// update app from snapshot
 		err = proxy.Restore(resp.getSnapshot());
 		if (err != null) {
-//			logger.WithField("Error", err).Error("proxy.Restore(resp.Snapshot)")
+			logger.field("Error", err).error("proxy.Restore(resp.Snapshot)");
 			return err;
 		}
 
@@ -653,7 +648,7 @@ public class Node extends NodeState {
 
 		net.SyncResponse out = new net.SyncResponse();
 		error err = trans.Sync(target, args, out);
-		//logger.WithField("out", out).Debug("requestSync(target string, known map[int]int)")
+		//logger.field("out", out).debug("requestSync(target string, known map[int]int)")
 		return new RetResult<net.SyncResponse>(out, err);
 	}
 
@@ -661,18 +656,16 @@ public class Node extends NodeState {
 		EagerSyncRequest args = new net.EagerSyncRequest (id, events);
 
 		net.EagerSyncResponse out = new net.EagerSyncResponse();
-//		logger.WithFields(logrus.Fields{
-//			"target": target,
-//		}).Debug("requestEagerSync(target string, events []poset.WireEvent)")
+		logger.field("target", target)
+			.debug("requestEagerSync(target string, events []poset.WireEvent)");
 		error err = trans.EagerSync(target, args, out);
 
 		return new RetResult<net.EagerSyncResponse>(out, err);
 	}
 
 	public RetResult<net.FastForwardResponse> requestFastForward(String target) {
-//		logger.WithFields(logrus.Fields{
-//			"target": target,
-//		}).Debug("requestFastForward(target string) (net.FastForwardResponse, error)")
+		logger.field("target", target)
+			.debug("requestFastForward(target string) (net.FastForwardResponse, error)");
 
 		FastForwardRequest args = new net.FastForwardRequest(id);
 
@@ -687,7 +680,7 @@ public class Node extends NodeState {
 		long start = System.nanoTime();
 		error err = core.Sync(events);
 		long elapsed = System.nanoTime() - start;
-//		logger.WithField("Duration", elapsed.Nanoseconds()).Debug("core.Sync(events)");
+//		logger.field("Duration", elapsed.Nanoseconds()).debug("core.Sync(events)");
 		if (err != null) {
 			return err;
 		}
@@ -695,8 +688,7 @@ public class Node extends NodeState {
 		// Run consensus methods
 		start = System.nanoTime();
 		err = core.RunConsensus();
-		elapsed = System.nanoTime() - start;
-//		logger.WithField("Duration", elapsed.Nanoseconds()).Debug("core.RunConsensus()")
+		logger.field("Duration", time.Since(start)).debug("core.RunConsensus()");
 		if (err != null) {
 			return err;
 		}
@@ -708,14 +700,14 @@ public class Node extends NodeState {
 		byte[] stateHash = new byte[]{0, 1, 2};
 		error err = proxy.CommitBlock(block).err;
 		if (err != null) {
-//			logger.WithError(err).Debug("commit(block poset.Block)");
+			logger.field("error", err).debug("commit(block poset.Block)");
 		}
 
-//		logger.WithFields(logrus.Fields{
-//			"block":      block.Index(),
-//			"state_hash": fmt.Sprintf("%X", stateHash),
-//			// "err":        err,
-//		}).Debug("commit(eventBlock poset.EventBlock)")
+		logger
+			.field("block",      block.Index())
+			.field("state_hash", String.format("%X", stateHash))
+			// "err":        err,
+		.debug("commit(eventBlock poset.EventBlock)");
 
 		// XXX what do we do in case of error. Retry? This has to do with the
 		// Lachesis <-> App interface. Think about it.
@@ -772,7 +764,7 @@ public class Node extends NodeState {
 	public void Shutdown() {
 		if (getState() != NodeStates.Shutdown) {
 			// mqtt.FireEvent("Shutdown()", "/mq/lachesis/node")
-//			logger.Debug("Shutdown()")
+			logger.debug("Shutdown()");
 
 			// Exit any non-shutdown state immediately
 			setState(NodeStates.Shutdown);
@@ -840,25 +832,25 @@ public class Node extends NodeState {
 
 	public void logStats() {
 		Map<String,String> stats = GetStats();
-//		logger.WithFields(logrus.Fields{
-//			"last_consensus_round":   stats["last_consensus_round"],
-//			"last_block_index":       stats["last_block_index"],
-//			"consensus_events":       stats["consensus_events"],
-//			"consensus_transactions": stats["consensus_transactions"],
-//			"undetermined_events":    stats["undetermined_events"],
-//			"transaction_pool":       stats["transaction_pool"],
-//			"num_peers":              stats["num_peers"],
-//			"sync_rate":              stats["sync_rate"],
-//			"events/s":               stats["events_per_second"],
-//			"t/s":                    stats["transactions_per_second"],
-//			"rounds/s":               stats["rounds_per_second"],
-//			"round_events":           stats["round_events"],
-//			"id":                     stats["id"],
-//			"state":                  stats["state"],
-//			"z_gossipJobs":           gossipJobs.get(),
-//			"z_rpcJobs":              rpcJobs.get(),
-//			"addr":                   localAddr,
-//		}).Warn("logStats()")
+		logger
+			.field("last_consensus_round",   stats.get("last_consensus_round"))
+			.field("last_block_index",       stats.get("last_block_index"))
+			.field("consensus_events",       stats.get("consensus_events"))
+			.field("consensus_transactions", stats.get("consensus_transactions"))
+			.field("undetermined_events",    stats.get("undetermined_events"))
+			.field("transaction_pool",       stats.get("transaction_pool"))
+			.field("num_peers",              stats.get("num_peers"))
+			.field("sync_rate",              stats.get("sync_rate"))
+			.field("events/s",               stats.get("events_per_second"))
+			.field("t/s",                    stats.get("transactions_per_second"))
+			.field("rounds/s",               stats.get("rounds_per_second"))
+			.field("round_events",           stats.get("round_events"))
+			.field("id",                     stats.get("id"))
+			.field("state",                  stats.get("state"))
+			.field("z_gossipJobs",           gossipJobs.get())
+			.field("z_rpcJobs",              rpcJobs.get())
+			.field("addr",                   localAddr)
+			.warn("logStats()");
 	}
 
 
@@ -885,7 +877,7 @@ public class Node extends NodeState {
 		coreLock.lock();
 		try {
 			core.AddTransactions(new byte[][]{tx});
-			logger.debug( String.format( "PushTx('%s')", tx ));
+			logger.debugf("PushTx('%s')", tx);
 		} finally {
 			coreLock.unlock();
 		}

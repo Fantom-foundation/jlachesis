@@ -43,7 +43,6 @@ public class InmemAppProxy implements AppProxy {
 	/*
 	 * inmem interface: AppProxy implementation
 	 */
-
 	// SubmitCh implements AppProxy interface method
 	public One2OneChannel<byte[]> SubmitCh() /* chan []byte */ {
 		return submitCh;
@@ -57,8 +56,6 @@ public class InmemAppProxy implements AppProxy {
 
 	public void ProposePeerRemove(peers.Peer peer) {
 		submitInternalCh.out().write(new InternalTransaction(poset.TransactionType.PEER_REMOVE, peer)); // <-
-																										// poset.NewInternalTransaction(poset.TransactionType.PEER_REMOVE,
-																										// peer);
 	}
 
 	/**
@@ -74,12 +71,11 @@ public class InmemAppProxy implements AppProxy {
 		byte[] stateHash = commitHandler.result;
 		error err = commitHandler.err;
 
-//		logger.WithFields(logrus.Fields{
-//			"round_received": block.RoundReceived(),
-//			"txs":            len(block.Transactions()),
-//			"state_hash":     stateHash,
-//			"err":            err,
-//		}).Debug("InmemAppProxy.CommitBlock");
+		logger.field("round_received", block.RoundReceived())
+			.field("txs",           block.Transactions().length)
+			.field("state_hash",     stateHash)
+			.field("err",            err)
+			.debug("InmemAppProxy.CommitBlock");
 		return new RetResult<byte[]>(stateHash, err);
 	}
 
@@ -88,11 +84,10 @@ public class InmemAppProxy implements AppProxy {
 		RetResult<byte[]> snapshotHandler = handler.SnapshotHandler(blockIndex);
 		byte[] snapshot = snapshotHandler.result;
 		error err = snapshotHandler.err;
-//		logger.WithFields(logrus.Fields{
-//			"block":    blockIndex,
-//			"snapshot": snapshot,
-//			"err":      err,
-//		}).Debug("InmemAppProxy.GetSnapshot");
+		logger.field("block",    blockIndex)
+			.field("snapshot", snapshot)
+			.field("err",      err)
+			.debug("InmemAppProxy.GetSnapshot");
 		return new RetResult<byte[]>(snapshot, err);
 	}
 
@@ -103,10 +98,9 @@ public class InmemAppProxy implements AppProxy {
 		RetResult<byte[]> restoreHandler = handler.RestoreHandler(snapshot);
 		byte[] stateHash = restoreHandler.result;
 		error err = restoreHandler.err;
-//		logger.WithFields(logrus.Fields{
-//			"state_hash": stateHash,
-//			"err":        err,
-//		}).Debug("InmemAppProxy.Restore");
+		logger.field("state_hash", stateHash)
+			.field("err", err)
+			.debug("InmemAppProxy.Restore");
 		return err;
 	}
 

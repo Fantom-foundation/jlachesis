@@ -61,4 +61,8 @@ public class SyncResponse {
 	public void setKnown(Map<Long,Long> known) {
 		Known = known;
 	}
+
+	public long getFromID() {
+		return FromID;
+	}
 }

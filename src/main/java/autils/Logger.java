@@ -83,7 +83,7 @@ public class Logger {
 	}
 
 	private String getOutput(Object message) {
-		return mapToString() + " :: " + message;
+		return message + " :: " + mapToString();
 	}
 
 	private String mapToString() {

@@ -11,6 +11,7 @@ import org.jcsp.lang.One2OneChannel;
 
 import autils.Appender;
 import autils.Logger;
+import autils.time;
 import common.RetResult;
 import common.RetResult3;
 import common.error;
@@ -344,15 +345,13 @@ public class Core {
 		for (int k = 0; k < unknownEvents.length; ++k) {
 			poset.WireEvent we = unknownEvents[k];
 
-//			logger.WithFields(logrus.Fields{
-//				"unknown_events": we,
-//			}).Debug("unknownEvents")
+			logger.field("unknown_events", we).debug("unknownEvents");
 
 			RetResult<Event> readWireInfo = poset.ReadWireInfo(we);
 			Event ev = readWireInfo.result;
 			error err = readWireInfo.err;
 			if (err != null) {
-//				logger.WithField("EventBlock", we).Errorf("poset.ReadEventBlockInfo(we)")
+				logger.field("EventBlock", we).error("poset.ReadEventBlockInfo(we)");
 				return err;
 
 			}
@@ -478,11 +477,11 @@ public class Core {
 		if ( err != null) {
 			return error.Errorf(String.format("newHead := poset.NewEventBlock: %s", err));
 		}
-//		logger.WithFields(logrus.Fields{
-//			"transactions":          len(transactionPool),
-//			"internal_transactions": len(internalTransactionPool),
-//			"block_signatures":      len(blockSignaturePool),
-//		}).Debug("newHead := poset.NewEventBlock")
+		logger
+			.field("transactions",          transactionPool.length)
+			.field("internal_transactions", internalTransactionPool.length)
+			.field("block_signatures",      blockSignaturePool.length)
+			.debug("newHead := poset.NewEventBlock");
 
 		transactionPool = Appender.slice(transactionPool, nTxs, transactionPool.length); //transactionPool[nTxs:]; //[][]byte{}
 		internalTransactionPool = new poset.InternalTransaction[]{};
@@ -521,49 +520,48 @@ public class Core {
 
 		long start = System.nanoTime();
 		error err = poset.DivideRounds();
-//		logger.WithField("Duration", time.Since(start).Nanoseconds()).Debug("poset.DivideAtropos()")
+		logger.field("Duration", time.Since(start)).debug("poset.DivideAtropos()");
 		if (err != null) {
-//			logger.WithField("Error", err).Error("poset.DivideAtropos()")
+			logger.field("Error", err).error("poset.DivideAtropos()");
 			return err;
 		}
 
 		start = System.nanoTime();
 		err = poset.DecideFame();
-//		logger.WithField("Duration", time.Since(start).Nanoseconds()).Debug("poset.DecideClotho()")
+		logger.field("Duration", time.Since(start)).debug("poset.DecideClotho()");
 		if (err != null) {
-//			logger.WithField("Error", err).Error("poset.DecideClotho()")
+			logger.field("Error", err).error("poset.DecideClotho()");
 			return err;
 		}
 
 		start = System.nanoTime();
 		err = poset.DecideRoundReceived();
-//		logger.WithField("Duration", time.Since(start).Nanoseconds()).Debug("poset.DecideAtroposRoundReceived()")
+		logger.field("Duration", time.Since(start)).debug("poset.DecideAtroposRoundReceived()");
 		if (err != null) {
-//			logger.WithField("Error", err).Error("poset.DecideAtroposRoundReceived()")
+			logger.field("Error", err).error("poset.DecideAtroposRoundReceived()");
 			return err;
 		}
 
 		start = System.nanoTime();
 		err = poset.ProcessDecidedRounds();
-//		logger.WithField("Duration", time.Since(start).Nanoseconds()).Debug("poset.ProcessAtroposRounds()")
+		logger.field("Duration", time.Since(start)).debug("poset.ProcessAtroposRounds()");
 		if (err != null) {
-//			logger.WithField("Error", err).Error("poset.ProcessAtroposRounds()")
+			logger.field("Error", err).error("poset.ProcessAtroposRounds()");
 			return err;
 		}
 
 		start = System.nanoTime();
 		err = poset.ProcessSigPool();
-//		logger.WithField("Duration", time.Since(start).Nanoseconds()).Debug("poset.ProcessSigPool()")
+		logger.field("Duration", time.Since(start)).debug("poset.ProcessSigPool()");
 		if (err != null) {
-//			logger.WithField("Error", err).Error("poset.ProcessSigPool()")
+			logger.field("Error", err).error("poset.ProcessSigPool()");
 			return err;
 		}
 
-//		logger.WithFields(logrus.Fields{
-//			"transaction_pool":            len(transactionPool),
-//			"block_signature_pool":        len(blockSignaturePool),
-//			"poset.PendingLoadedEvents": poset.PendingLoadedEvents,
-//		}).Debug("RunConsensus()");
+		logger.field("transaction_pool", transactionPool.length)
+			.field("block_signature_pool", blockSignaturePool.length)
+			.field("poset.PendingLoadedEvents", poset.getPendingLoadedEvents())
+			.debug("RunConsensus()");
 
 		return null;
 	}

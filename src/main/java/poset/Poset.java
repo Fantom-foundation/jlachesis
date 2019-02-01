@@ -1006,7 +1006,7 @@ public class Poset {
 	public void updatePendingRounds(Map<Long,Long> decidedRounds) {
 
 		logger.field("decidedRounds", decidedRounds)
-		.debugf("updatePendingRounds() starts");
+		.debug("updatePendingRounds() starts");
 
 		for (pendingRound ur : PendingRounds) {
 			boolean ok = decidedRounds.containsKey(ur.Index);
@@ -1049,7 +1049,7 @@ public class Poset {
 			.field("selfParent", event.SelfParent())
 			.field("index", event.Index())
 			.field("hex", event.Hex())
-			.debugf("Invalid Event signature");
+			.debug("Invalid Event signature");
 
 			return error.Errorf("invalid Event signature");
 		}
@@ -1250,7 +1250,7 @@ public class Poset {
 	//DecideFame decides if witnesses are famous
 	public error DecideFame() {
 
-		logger.field("poset", this).debugf("DecideFame() starts");
+		logger.field("poset", this).debug("DecideFame() starts");
 
 		//Initialize the vote map
 		HashMap<String,Map<String,Boolean>> votes = new HashMap<String, Map<String, Boolean>>(); //[x][y]=>vote(x,y)
@@ -1268,7 +1268,7 @@ public class Poset {
 			.field("roundInfo", roundInfo)
 			.field("roundInfo.WitnessesDecided()", roundInfo.WitnessesDecided())
 			.field("roundInfo.Witnesses()", roundInfo.Witnesses().length)
-			.debugf("DecideFame() processing a pending round");
+			.debug("DecideFame() processing a pending round");
 
 			if ( err != null) {
 				return err;
@@ -1277,7 +1277,7 @@ public class Poset {
 //				logger.WithFields(logrus.Fields{
 //					"x": x,
 //					"roundInfo.IsDecided(x)": roundInfo.IsDecided(x),
-//				}).Debugf("DecideFame() processing a witness in pending round");
+//				}).debug("DecideFame() processing a witness in pending round");
 
 //				RoundEvent w = roundInfo.Message.Events.get(x);
 //				logger.WithFields(logrus.Fields{
@@ -1287,7 +1287,7 @@ public class Poset {
 //					"w.Famous" : w.Famous,
 //					"w.Witness" : w.Witness,
 //					"ok": ok,
-//				}).Debugf("DecideFame() check witness x");
+//				}).debug("DecideFame() check witness x");
 
 
 				if (roundInfo.IsDecided(x)) {
@@ -1304,7 +1304,7 @@ public class Poset {
 //							"x": x,
 //							"y": y,
 //							"diff": diff,
-//						}).Debugf("DecideFame() in VOTE_LOOP");
+//						}).debug("DecideFame() in VOTE_LOOP");
 
 						if (diff == 1) {
 							RetResult<Boolean> seeCall = see(y, x);
@@ -1314,7 +1314,7 @@ public class Poset {
 //							logger.WithFields(logrus.Fields{
 //								"ycx": ycx,
 //								"err" : err,
-//							}).Debugf("DecideFame() in VOTE_LOOP after see()");
+//							}).debug("DecideFame() in VOTE_LOOP after see()");
 
 							if (err != null) {
 								return err;
@@ -1331,7 +1331,7 @@ public class Poset {
 //								logger.WithFields(logrus.Fields{
 //									"ss": ss,
 //									"err" : err,
-//								}).Debugf("DecideFame() in VOTE_LOOP after stronglySee()");
+//								}).debug("DecideFame() in VOTE_LOOP after stronglySee()");
 
 								if ( err != null) {
 									return err;
@@ -1345,7 +1345,7 @@ public class Poset {
 //								"ssWitnesses": ssWitnesses,
 //								"Participants.Len()" : Participants.Len(),
 //								"superMajority": superMajority,
-//							}).Debugf("DecideFame() in VOTE_LOOP RRR compute ssWitnesses");
+//							}).debug("DecideFame() in VOTE_LOOP RRR compute ssWitnesses");
 
 							long yays = 0;
 							long nays = 0;
@@ -1371,7 +1371,7 @@ public class Poset {
 //								"v": v,
 //								"yays": yays,
 //								"nays" : nays,
-//							}).Debugf("DecideFame() in VOTE_LOOP RRR before SetFame called");
+//							}).debug("DecideFame() in VOTE_LOOP RRR before SetFame called");
 
 							//normal round
 							if ((diff % Participants.Len()) > 0) {
@@ -1380,7 +1380,7 @@ public class Poset {
 //									logger.WithFields(logrus.Fields{
 //										"x": x,
 //										"v": v,
-//									}).Debugf("DecideFame() in VOTE_LOOP XXXXX calling SetFame");
+//									}).debug("DecideFame() in VOTE_LOOP XXXXX calling SetFame");
 
 									roundInfo.SetFame(x, v);
 									setVote(votes, y, x, v);
@@ -1390,7 +1390,7 @@ public class Poset {
 //									logger.WithFields(logrus.Fields{
 //										"x": x,
 //										"v": v,
-//									}).Debugf("DecideFame() in VOTE_LOOP XXXXX calling setVote");
+//									}).debug("DecideFame() in VOTE_LOOP XXXXX calling setVote");
 
 									setVote(votes, y, x, v);
 								}
@@ -1399,7 +1399,7 @@ public class Poset {
 //									logger.WithFields(logrus.Fields{
 //										"x": x,
 //										"v": v,
-//									}).Debugf("DecideFame() in VOTE_LOOP XXXXX1 calling setVote");
+//									}).debug("DecideFame() in VOTE_LOOP XXXXX1 calling setVote");
 
 									setVote(votes, y, x, v);
 								} else {
@@ -1407,7 +1407,7 @@ public class Poset {
 //									logger.WithFields(logrus.Fields{
 //										"x": x,
 //										"v": v,
-//									}).Debugf("DecideFame() in VOTE_LOOP XXXXX2 calling setVote");
+//									}).debug("DecideFame() in VOTE_LOOP XXXXX2 calling setVote");
 
 									setVote(votes, y, x, middleBit(y)); //middle bit of y's hash
 								}
@@ -1424,7 +1424,7 @@ public class Poset {
 //				"roundInfo": roundInfo,
 //				"roundInfo.WitnessesDecided()": roundInfo.WitnessesDecided(),
 //				"err": err,
-//			}).Debugf("DecideFame() out of VOTE_LOOP, after check SetRound()");
+//			}).debug("DecideFame() out of VOTE_LOOP, after check SetRound()");
 
 			if ( err != null) {
 				return err;
@@ -1433,7 +1433,7 @@ public class Poset {
 //			logger.WithFields(logrus.Fields{
 //				"roundInfo": roundInfo,
 //				"roundInfo.WitnessesDecided()": roundInfo.WitnessesDecided(),
-//			}).Debugf("DecideFame() out of VOTE_LOOP, after error check SetRound()");
+//			}).debug("DecideFame() out of VOTE_LOOP, after error check SetRound()");
 
 //			for (Event e : roundInfo.Message.Events) {
 //				logger.WithFields(logrus.Fields{
@@ -1441,7 +1441,7 @@ public class Poset {
 //					"e.Witness": e.Witness,
 //					"e.Famous": e.Famous,
 //					"(e.Witness && e.Famous == Trilean_UNDEFINED)=" : e.Witness && e.Famous == Trilean_UNDEFINED,
-//				}).Debugf("DecideFame() out of VOTE_LOOP, forloop print");
+//				}).debug("DecideFame() out of VOTE_LOOP, forloop print");
 //			}
 
 			if (roundInfo.WitnessesDecided()) {
@@ -1450,7 +1450,7 @@ public class Poset {
 //					"roundIndex" : roundIndex,
 //					"pos" : pos,
 //					"err": err,
-//				}).Debugf("DecideFame() out of VOTE_LOOP, beofre set decidedRounds[roundIndex]");
+//				}).debug("DecideFame() out of VOTE_LOOP, beofre set decidedRounds[roundIndex]");
 
 				decidedRounds.put(roundIndex, (long) pos);
 			}
@@ -1465,10 +1465,9 @@ public class Poset {
 	//reach consensus
 	public error DecideRoundReceived() {
 
-//		logger.WithFields(logrus.Fields{
-//			"poset": *p,
-//			"UndeterminedEvents" : UndeterminedEvents,
-//		}).Debugf("DecideRoundReceived() starts");
+		logger.field("poset", this)
+			.field("UndeterminedEvents", UndeterminedEvents)
+			.debug("DecideRoundReceived() starts");
 
 		List<String> newUndeterminedEvents = new ArrayList<String>();
 
@@ -1567,10 +1566,7 @@ public class Poset {
 	//corresponding Frames, maps them into Blocks, and commits the Blocks via the
 	//commit channel
 	public error ProcessDecidedRounds() {
-
-//		logger.WithFields(logrus.Fields{
-//			"poset": *p,
-//		}).Debugf("ProcessDecidedRounds() starts");
+		logger.field("poset", this).debug("ProcessDecidedRounds() starts");
 
 		//Defer removing processed Rounds from the PendingRounds Queue
 		int processedIndex = 0;
@@ -1580,23 +1576,22 @@ public class Poset {
 //			PendingRounds = PendingRounds[processedIndex:];
 //		}()
 
-//		logger.WithFields(logrus.Fields{
-//			"PendingRounds": len(PendingRounds),
-//			"LastConsensusRound": LastConsensusRound,
-//		}).Debugf("ProcessDecidedRounds() gets PendingRounds");
+		logger.field("PendingRounds", PendingRounds.size())
+			.field("LastConsensusRound", LastConsensusRound)
+			.debug("ProcessDecidedRounds() gets PendingRounds");
 
 //		if LastConsensusRound != null {
 //			logger.WithFields(logrus.Fields{
 //				"*LastConsensusRound": *LastConsensusRound,
-//			}).Debugf("ProcessDecidedRounds() gets PendingRounds");
+//			}).debug("ProcessDecidedRounds() gets PendingRounds");
 //		}
 
 		for (pendingRound r : PendingRounds) {
 
-//			logger.WithFields(logrus.Fields{
-//				"r.Decided": r.Decided,
-//				"r.Index": r.Index,
-//			}).Debugf("ProcessDecidedRounds() processing pending round r");
+			logger
+				.field("r.Decided", r.Decided)
+				.field("r.Index", r.Index)
+				.debug("ProcessDecidedRounds() processing pending round r");
 
 			//Although it is possible for a Round to be 'decided' before a previous
 			//round, we should NEVER process a decided round before all the previous
@@ -1628,12 +1623,12 @@ public class Poset {
 			if ( err != null) {
 				return err;
 			}
-//			logger.WithFields(logrus.Fields{
-//				"round_received": r.Index,
-//				"witnesses":      round.FamousWitnesses(),
-//				"events":         len(frame.Events),
-//				"roots":          frame.Roots,
-//			}).Debugf("Processing Decided Round");
+			logger
+				.field("round_received", r.Index)
+				.field("witnesses",      round.FamousWitnesses())
+				.field("events",         frame.Events.length)
+				.field("roots",          frame.Roots)
+				.debug("Processing Decided Round");
 
 			if (frame.Events.length > 0) {
 				for (EventMessage e : frame.Events) {
@@ -1688,9 +1683,7 @@ public class Poset {
 	//GetFrame computes the Frame corresponding to a RoundReceived.
 	public RetResult<Frame> GetFrame(long roundReceived) {
 
-//		logger.WithFields(logrus.Fields{
-//			"roundReceived": roundReceived,
-//		}).Debugf("GetFrame() getting frame");
+		logger.field("roundReceived", roundReceived).debug("GetFrame() getting frame");
 
 		//Try to get it from the Store first
 		RetResult<Frame> getFrame = Store.GetFrame(roundReceived);
@@ -1700,9 +1693,7 @@ public class Poset {
 			return new RetResult<Frame>(frame, err);
 		}
 
-//		logger.WithFields(logrus.Fields{
-//			"frame": frame,
-//		}).Debugf("GetFrame() found frame");
+		logger.field("frame", frame).debug("GetFrame() found frame");
 
 		//Get the Round and corresponding consensus Events
 		RetResult<RoundInfo> getRound = Store.GetRound(roundReceived);
@@ -1712,10 +1703,9 @@ public class Poset {
 			return new RetResult<Frame>(new Frame(), err);
 		}
 
-//		logger.WithFields(logrus.Fields{
-//			"round": round,
-//			"round.ConsensusEvents()": round.ConsensusEvents(),
-//		}).Debugf("GetFrame() found round");
+		logger.field("round", round)
+			.field("round.ConsensusEvents()", round.ConsensusEvents())
+			.debug("GetFrame() found round");
 
 		List<Event> events = new ArrayList<Event>();
 		for (String eh : round.ConsensusEvents()) {
@@ -1728,15 +1718,13 @@ public class Poset {
 			events.add(e);
 		}
 
-//		logger.WithFields(logrus.Fields{
-//			"events": events,
-//		}).Debugf("GetFrame() before sorting by Lamport timestamp");
+		logger.field("events", events)
+			.debug("GetFrame() before sorting by Lamport timestamp");
 
 		Collections.sort(events, new EventComparatorByLamportTimestamp());
 
-//		logger.WithFields(logrus.Fields{
-//			"events": events,
-//		}).Debugf("GetFrame() after sorting by Lamport timestamp");
+		logger.field("events", events)
+			.debug("GetFrame() after sorting by Lamport timestamp");
 
 		// Get/Create Roots
 		HashMap<String, Root> roots = new HashMap<String,Root>();
@@ -1839,19 +1827,16 @@ public class Poset {
 	public error ProcessSigPool() {
 		Map<Long,Boolean> processedSignatures = new HashMap<Long,Boolean>(); //index in SigPool => Processed?
 
-		// TBD put the defer to the end
-//		defer removeProcessedSignatures(processedSignatures)
-
 		for (int i = 0; i < SigPool.size(); ++i) {
 			BlockSignature bs = SigPool.get(i);
 			//check if validator belongs to list of participants
-			Object validatorHex = String.format("0x%X", bs.Validator);
+			String validatorHex = String.format("0x%X", bs.Validator);
 			Peer ok = Participants.getByPubKey().get(validatorHex);
 			if (ok == null){
-//				logger.WithFields(logrus.Fields{
-//					"index":     bs.Index,
-//					"validator": validatorHex,
-//				}).Warning("Verifying Block signature. Unknown validator")
+				logger
+					.field("index",     bs.Index)
+					.field("validator", validatorHex)
+					.warn("Verifying Block signature. Unknown validator");
 				continue;
 			}
 			//only check if bs is greater than AnchorBlock, otherwise simply remove
@@ -1861,28 +1846,28 @@ public class Poset {
 				Block block = getBlock.result;
 				error err = getBlock.err;
 				if (err != null) {
-//					logger.WithFields(logrus.Fields{
-//						"index": bs.Index,
-//						"msg":   err,
-//					}).Warning("Verifying Block signature. Could not fetch Block")
+					logger
+						.field("index", bs.Index)
+						.field("msg",   err)
+						.warn("Verifying Block signature. Could not fetch Block");
 					continue;
 				}
 				RetResult<Boolean> verify = block.Verify(bs);
 				Boolean valid = verify.result;
 				err = verify.err;
 				if ( err != null) {
-//					logger.WithFields(logrus.Fields{
-//						"index": bs.Index,
-//						"msg":   err,
-//					}).Error("Verifying Block signature")
+					logger
+						.field("index", bs.Index)
+						.field("msg",   err)
+						.error("Verifying Block signature");
 					return err;
 				}
 				if (!valid) {
-//					logger.WithFields(logrus.Fields{
-//						"index":     bs.Index,
-//						"validator": Participants.ByPubKey[validatorHex],
-//						"block":     block,
-//					}).Warning("Verifying Block signature. Invalid signature")
+					logger
+						.field("index",     bs.Index)
+						.field("validator", Participants.ByPubKey(validatorHex))
+						.field("block",     block)
+						.warn("Verifying Block signature. Invalid signature");
 					continue;
 				}
 
@@ -1890,21 +1875,21 @@ public class Poset {
 
 				err = Store.SetBlock(block);
 				if ( err != null) {
-//					logger.WithFields(logrus.Fields{
-//						"index": bs.Index,
-//						"msg":   err,
-//					}).Warning("Saving Block");
+					logger
+						.field("index", bs.Index)
+						.field("msg",   err)
+						.warn("Saving Block");
 				}
 
 				if (block.Signatures.size() > trustCount &&
 					(AnchorBlock < 0 ||
 						block.Index() > AnchorBlock)) {
 					setAnchorBlock(block.Index());
-//					logger.WithFields(logrus.Fields{
-//						"block_index": block.Index(),
-//						"signatures":  len(block.Signatures),
-//						"trustCount":  trustCount,
-//					}).Debug("Setting AnchorBlock")
+					logger
+						.field("block_index", block.Index())
+						.field("signatures",  block.Signatures.size())
+						.field("trustCount",  trustCount)
+						.debug("Setting AnchorBlock");
 				}
 			}
 
@@ -1915,7 +1900,7 @@ public class Poset {
 
 		return null;
 	}
-//
+
 	//GetAnchorBlockWithFrame returns the AnchorBlock and the corresponding Frame.
 	//This can be used as a base to Reset a Poset
 	public RetResult3<Block,Frame> GetAnchorBlockWithFrame() {
@@ -2022,14 +2007,12 @@ public class Poset {
 
 	//Bootstrap loads all Events from the Store's DB (if there is one) and feeds
 	//them to the Poset (in topological order) for consensus ordering. After this
-	//method call, the Poset should be in a state coherent with the 'tip' of the
-	//Poset
+	//method call, the Poset should be in a state coherent with the 'tip' of the Poset
 	public error Bootstrap() {
 		if (Store instanceof BadgerStore) {
 			BadgerStore badgerStore = (BadgerStore) Store;
 
-			//Retreive the Events from the underlying DB. They come out in topological
-			//order
+			//Retrieve the Events from the underlying DB. They come out in topological order
 			RetResult<Event[]> dbTopologicalEventsCall = badgerStore.dbTopologicalEvents();
 			Event[] topologicalEvents = dbTopologicalEventsCall.result;
 			error err = dbTopologicalEventsCall.err;
@@ -2173,10 +2156,10 @@ public class Poset {
 			)
 		);
 
-//		logger.WithFields(logrus.Fields{
-//			"event.Signature":  event.Message.Signature,
-//			"wevent.Signature": wevent.Signature,
-//		}).Debug("Return Event from ReadFromWire")
+		logger
+			.field("event.Signature",  event.Message.Signature)
+			.field("wevent.Signature", wevent.Signature)
+			.debug("Return Event from ReadFromWire");
 
 		return new RetResult<Event>(event, null);
 	}
@@ -2196,7 +2179,7 @@ public class Poset {
 					String.format("not enough valid signatures: got %d, need %d", validSignatures, trustCount+1));
 		}
 
-//		logger.WithField("valid_signatures", validSignatures).Debug("CheckBlock")
+		logger.field("valid_signatures", validSignatures).debug("CheckBlock");
 		return null;
 	}
 

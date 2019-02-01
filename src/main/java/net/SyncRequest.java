@@ -21,4 +21,8 @@ public class SyncRequest {
 	public Map<Long,Long> getKnown() {
 		return Known;
 	}
+
+	public long getFromID() {
+		return FromID;
+	}
 }
