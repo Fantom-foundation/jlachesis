@@ -10,13 +10,16 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.HashSet;
 import java.util.Set;
 
 import common.RetResult;
 import common.error;
 
 public class FileUtils {
+	public static final String MOD_666 = "rw-rw-rw-";
+	public static final String MOD_777 = "rwxrwxrwx";
+	public static final String MOD_700 = "rwx------";
+	public static final String MOD_755 = "rwxr-xr-x";
 
 	public static RetResult<byte[]> readFile(String filePath) {
 		File file = new File(filePath);
@@ -24,8 +27,8 @@ public class FileUtils {
 		error err = null;
 		byte[] b = new byte[(int) file.length()];
 		try {
-			FileInputStream fileInputStream = new FileInputStream(file);
-			fileInputStream.read(b);
+			FileInputStream fis = new FileInputStream(file);
+			fis.read(b);
 			for (int i = 0; i < b.length; i++) {
 				System.out.print((char) b[i]);
 			}
@@ -51,33 +54,6 @@ public class FileUtils {
 //			e.printStackTrace();
 		}
 		return new RetResult<byte[]>(b, err);
-	}
-
-	public static void setPermission(Path path, int mod) throws IOException {
-
-		// using PosixFilePermission to set file permissions 755
-		Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
-		if (mod == 755) {
-			// add owners permission
-			perms.add(PosixFilePermission.OWNER_READ);
-			perms.add(PosixFilePermission.OWNER_WRITE);
-			perms.add(PosixFilePermission.OWNER_EXECUTE);
-			// add group permissions
-			perms.add(PosixFilePermission.GROUP_READ);
-			perms.add(PosixFilePermission.GROUP_EXECUTE);
-			// add others permissions
-			perms.add(PosixFilePermission.OTHERS_READ);
-			perms.add(PosixFilePermission.OTHERS_EXECUTE);
-		} else if (mod == 755) {
-			// add owners permission
-			perms.add(PosixFilePermission.OWNER_READ);
-			perms.add(PosixFilePermission.OWNER_WRITE);
-			perms.add(PosixFilePermission.OWNER_EXECUTE);
-			// add group permissions
-			// add others permissions
-		}
-
-		Files.setPosixFilePermissions(path, perms);
 	}
 
 	public static boolean fileExist(String filePath) {
@@ -146,9 +122,4 @@ public class FileUtils {
 		error err = writeToFile(createFile.result, bytes);
 		return err;
 	}
-
-	public static final String MOD_666 = "rw-rw-rw-";
-	public static final String MOD_777 = "rwxrwxrwx";
-	public static final String MOD_700 = "rwx------";
-	public static final String MOD_755 = "rwxr-xr-x";
 }
