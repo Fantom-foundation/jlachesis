@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.Scanner;
 
 import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 
+import autils.Logger;
 import common.Cmd;
 import common.error;
 import dummy.DummyClient;
@@ -85,13 +85,12 @@ public class RootCmd extends Cmd {
 
 		logger = newLogger();
 		logger.setLevel(ConfigUtils.LogLevel(config.LogLevel));
-//		logger.WithFields(logrus.Fields{
-//			"name":          config.Name,
-//			"client-listen": config.ClientAddr,
-//			"proxy-connect": config.ProxyAddr,
-//			"discard":       config.Discard,
-//			"log":           config.LogLevel,
-//		}).Debug("RUN");
+		logger.field("name", config.Name)
+			.field("client-listen", config.ClientAddr)
+			.field("proxy-connect", config.ProxyAddr)
+			.field("discard", config.Discard)
+			.field("log", config.LogLevel)
+			.debug("RUN");
 		return null;
 	}
 

@@ -10,7 +10,6 @@ import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
 
 import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.jcsp.lang.CSTimer;
 import org.jcsp.lang.Channel;
 import org.jcsp.lang.One2OneChannel;
@@ -18,6 +17,7 @@ import org.jcsp.lang.One2OneChannel;
 import com.google.protobuf.ByteString;
 
 import autils.Appender;
+import autils.Logger;
 import channel.ChannelUtils;
 import channel.ExecService;
 import common.RetResult;
@@ -166,7 +166,7 @@ public class GrpcAppProxy implements AppProxy, LachesisNodeServer {
 			error err = recv.err;
 			if (err != null) {
 //				if (err != io.EOF) {
-				logger.debug(String.format("client received error: %s", err));
+				logger.debugf("client received error: %s", err);
 //				} else {
 //					logger.debug("client disconnected well");
 //				}

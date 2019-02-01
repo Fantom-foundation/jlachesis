@@ -5,13 +5,13 @@ import java.security.PrivateKey;
 import java.util.LinkedHashMap;
 import java.util.Random;
 
-import org.apache.log4j.Logger;
 import org.jcsp.lang.Alternative;
 import org.jcsp.lang.CSTimer;
 import org.jcsp.lang.Channel;
 import org.jcsp.lang.Guard;
 import org.jcsp.lang.One2OneChannelInt;
 
+import autils.Logger;
 import autils.time;
 import channel.ChannelUtils;
 import channel.ExecService;

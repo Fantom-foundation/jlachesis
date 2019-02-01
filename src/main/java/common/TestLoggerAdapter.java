@@ -3,7 +3,8 @@ package common;
 import java.util.Arrays;
 
 import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+
+import autils.Logger;
 
 // This can be used as the destination for a logger and it'll
 // map them into calls to testing.T.Log, so that you only see

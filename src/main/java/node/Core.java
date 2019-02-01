@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.jcsp.lang.One2OneChannel;
 
 import autils.Appender;
+import autils.Logger;
 import common.RetResult;
 import common.RetResult3;
 import common.error;
@@ -51,7 +51,7 @@ public class Core {
 			logger.setLevel(Level.DEBUG);
 //			lachesis_log.NewLocal(logger, logger.Level.String());
 		}
-//		logEntry = logger.WithField("id", id);
+		logger = logger.field("id", id);
 
 		Map<String,Long> inDegrees = new HashMap<String,Long>();
 		for (String pubKey : participants.getByPubKey().keySet()) {
@@ -67,7 +67,7 @@ public class Core {
 		this.transactionPool=         new byte[][] {};
 		this.internalTransactionPool= new poset.InternalTransaction[]{};
 		this.blockSignaturePool=      new poset.BlockSignature[] {};
-//		this.logger=                  logEntry;
+		this.logger=                  logger;
 		this.head=  "";
 		this.Seq=   -1;
 			// MaxReceiveMessageSize limitation in grpc: https://github.com/grpc/grpc-go/blob/master/clientconn.go#L96
@@ -158,11 +158,8 @@ public class Core {
 		this.head = head;
 		this.Seq = seq;
 
-//		logger.WithFields(logrus.Fields{
-//			"core.head": head,
-//			"core.Seq":  Seq,
-//			"is_root":   isRoot,
-//		}).Debugf("SetHeadAndSeq()");
+		logger.field("core.head", head).field("core.Seq", Seq)
+		.field("is_root", isRoot).debugf("SetHeadAndSeq()");
 
 		return null;
 	}
@@ -223,13 +220,10 @@ public class Core {
 
 	public error InsertEvent(poset.Event event, boolean setWireInfo ) {
 
-//		logger.WithFields(logrus.Fields{
-//			"event":      event,
-//			"creator":    event.Creator(),
-//			"selfParent": event.SelfParent(),
-//			"index":      event.Index(),
-//			"hex":        event.Hex(),
-//		}).Debug("InsertEvent(event poset.Event, setWireInfo bool)")
+		logger.field("event", event).field("creator", event.Creator())
+		.field("selfParent", event.SelfParent()).field("index", event.Index())
+		.field("hex", event.Hex()).debugf("InsertEvent(event poset.Event, setWireInfo bool)");
+
 		error err = poset.InsertEvent(event, setWireInfo);
 		if (err != null) {
 			return err;
@@ -320,13 +314,10 @@ public class Core {
 				if (err != null) {
 					return new RetResult<poset.Event[]>(new poset.Event[] {}, err);
 				}
-//				logger.WithFields(logrus.Fields{
-//					"event":      ev,
-//					"creator":    ev.Creator(),
-//					"selfParent": ev.SelfParent(),
-//					"index":      ev.Index(),
-//					"hex":        ev.Hex(),
-//				}).Debugf("Sending Unknown Event")
+				logger.field("event", ev).field("creator", ev.Creator())
+				.field("selfParent", ev.SelfParent())
+				.field("index", ev.Index()).field("hex", ev.Hex())
+				.debugf("Sending Unknown Event");
 				unknown = Appender.append(unknown,  ev);
 			}
 		}
@@ -340,13 +331,12 @@ public class Core {
 
 	public error Sync(poset.WireEvent[] unknownEvents)  {
 
-//		logger.WithFields(logrus.Fields{
-//			"unknown_events":              len(unknownEvents),
-//			"transaction_pool":            len(transactionPool),
-//			"internal_transaction_pool":   len(internalTransactionPool),
-//			"block_signature_pool":        len(blockSignaturePool),
-//			"poset.PendingLoadedEvents": poset.PendingLoadedEvents,
-//		}).Debug("Sync(unknownEventBlocks []poset.EventBlock)")
+		logger.field("unknown_events", unknownEvents.length)
+		.field("transaction_pool", transactionPool.length)
+		.field("internal_transaction_pool", internalTransactionPool.length)
+		.field("block_signature_pool", blockSignaturePool.length)
+		.field("poset.PendingLoadedEvents", poset.getPendingLoadedEvents())
+		.debug("Sync(unknownEventBlocks []poset.EventBlock)");
 
 		Map<Long, Long> myKnownEvents = KnownEvents();
 		String otherHead = "";

@@ -2,7 +2,6 @@ package service;
 
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.http.HttpStatus;
@@ -13,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import autils.JsonUtils;
+import autils.Logger;
 import common.RetResult;
 import common.RetResult3;
 import common.error;

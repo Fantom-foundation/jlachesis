@@ -1,9 +1,9 @@
 package dummy;
 
-import org.apache.log4j.Logger;
 import org.jcsp.lang.Alternative;
 import org.jcsp.lang.Guard;
 
+import autils.Logger;
 import channel.ExecService;
 import common.RetResult;
 import common.error;

@@ -5,8 +5,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.time.Duration;
 
-import org.apache.log4j.Logger;
-
+import autils.Logger;
 import common.RetResult;
 import common.error;
 

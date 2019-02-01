@@ -11,9 +11,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.jcsp.lang.One2OneChannel;
 
+import autils.Logger;
 import common.LRUCache;
 import common.RetResult;
 import common.RetResult3;
@@ -762,12 +762,11 @@ public class Poset {
 		String creatorLastKnown = lastEventFromCall.result1;
 		error err = lastEventFromCall.err;
 
-//		logger.WithFields(logrus.Fields{
-//			"selfParent":       selfParent,
-//			"creator":          creator,
-//			"creatorLastKnown": creatorLastKnown,
-//			"event":            event.Hex(),
-//		}).Debugf("checkSelfParent")
+		logger.field("selfParent", selfParent)
+		.field("creator", creator)
+		.field("creatorLastKnown", creatorLastKnown)
+		.field("event", event.Hex())
+		.debug("checkSelfParent");
 
 		if (err != null) {
 			return err;
@@ -1006,9 +1005,8 @@ public class Poset {
 
 	public void updatePendingRounds(Map<Long,Long> decidedRounds) {
 
-//		logger.WithFields(logrus.Fields{
-//				"decidedRounds": decidedRounds,
-//			}).Debugf("updatePendingRounds() starts")
+		logger.field("decidedRounds", decidedRounds)
+		.debugf("updatePendingRounds() starts");
 
 		for (pendingRound ur : PendingRounds) {
 			boolean ok = decidedRounds.containsKey(ur.Index);
@@ -1046,13 +1044,12 @@ public class Poset {
 				return err;
 			}
 
-//			logger.WithFields(logrus.Fields{
-//				"event":      event,
-//				"creator":    event.Creator(),
-//				"selfParent": event.SelfParent(),
-//				"index":      event.Index(),
-//				"hex":        event.Hex(),
-//			}).Debugf("Invalid Event signature");
+			logger.field("event", event)
+			.field("creator", event.Creator())
+			.field("selfParent", event.SelfParent())
+			.field("index", event.Index())
+			.field("hex", event.Hex())
+			.debugf("Invalid Event signature");
 
 			return error.Errorf("invalid Event signature");
 		}
@@ -1253,9 +1250,7 @@ public class Poset {
 	//DecideFame decides if witnesses are famous
 	public error DecideFame() {
 
-//		logger.WithFields(logrus.Fields{
-//			"poset": *p,
-//		}).Debugf("DecideFame() starts");
+		logger.field("poset", this).debugf("DecideFame() starts");
 
 		//Initialize the vote map
 		HashMap<String,Map<String,Boolean>> votes = new HashMap<String, Map<String, Boolean>>(); //[x][y]=>vote(x,y)
@@ -1269,12 +1264,11 @@ public class Poset {
 			RoundInfo roundInfo = getRound.result;
 			error err = getRound.err;
 
-//			logger.WithFields(logrus.Fields{
-//				"roundIndex": roundIndex,
-//				"roundInfo": roundInfo,
-//				"roundInfo.WitnessesDecided()": roundInfo.WitnessesDecided(),
-//				"roundInfo.Witnesses()" : len(roundInfo.Witnesses()),
-//			}).Debugf("DecideFame() processing a pending round");
+			logger.field("roundIndex", roundIndex)
+			.field("roundInfo", roundInfo)
+			.field("roundInfo.WitnessesDecided()", roundInfo.WitnessesDecided())
+			.field("roundInfo.Witnesses()", roundInfo.Witnesses().length)
+			.debugf("DecideFame() processing a pending round");
 
 			if ( err != null) {
 				return err;

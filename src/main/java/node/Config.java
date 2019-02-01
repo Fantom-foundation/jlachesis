@@ -1,17 +1,17 @@
 package node;
 
-//import common.TestLoggerAdapter;
-
 import java.time.Duration;
 
 import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+
+import autils.Logger;
+import common.TestLoggerAdapter;
 
 public class Config {
 	public Duration HeartbeatTimeout ; // `mapstructure:"heartbeat"`
-	private Duration TCPTimeout       ; // `mapstructure:"timeout"`
-	int CacheSize; //         `mapstructure:"cache-size"`
-	long SyncLimit; //         `mapstructure:"sync-limit"`
+	public Duration TCPTimeout       ; // `mapstructure:"timeout"`
+	public int CacheSize; //         `mapstructure:"cache-size"`
+	public long SyncLimit; //         `mapstructure:"sync-limit"`
 
 	private Logger logger = Logger.getLogger(Config.class);
 
@@ -32,7 +32,7 @@ public class Config {
 	}
 
 	public static Config DefaultConfig() {
-		Logger logger = Logger.getLogger(Config.class.getName());
+		Logger logger = Logger.getLogger(Config.class);
 		logger.setLevel(Level.DEBUG);
 
 		return new Config(
@@ -81,14 +81,10 @@ public class Config {
 		return SyncLimit;
 	}
 
-
-
-//	public Config TestConfig(testing.T t) {
-//		Config config = DefaultConfig();
-//		config.HeartbeatTimeout = java.time.Duration.ofSeconds(1);
-//
-//		config.logger = TestLoggerAdapter.NewTestLogger(t);
-//
-//		return config;
-//	}
+	public Config TestConfig(Class testClz) {
+		Config config = DefaultConfig();
+		config.HeartbeatTimeout = java.time.Duration.ofSeconds(1);
+		config.logger = TestLoggerAdapter.NewTestLogger(testClz);
+		return config;
+	}
 }

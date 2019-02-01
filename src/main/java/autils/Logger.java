@@ -1,5 +1,6 @@
 package autils;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,6 +13,7 @@ import org.apache.log4j.Level;
  */
 public class Logger {
 	org.apache.log4j.Logger logger;
+
 	Map<String,Object> map;
 
 	public Logger(org.apache.log4j.Logger logger) {
@@ -36,22 +38,55 @@ public class Logger {
 	}
 
 	public void debug(Object message) {
-		logger.debug(message);
+		logger.debug(getOutput(message));
 		map = null;
 	}
 
 	public void info(Object message) {
-		logger.info(message);
+		logger.info(getOutput(message));
 		map = null;
 	}
 
 	public void error(Object message) {
-		logger.error(message);
+		logger.error(getOutput(message));
 		map = null;
 	}
 
 	public void fatal(Object message) {
-		logger.fatal(message);
+		logger.fatal(getOutput(message));
 		map = null;
+	}
+
+	public void warn(String message) {
+		logger.warn(getOutput(message));
+		map = null;
+	}
+
+	public void debugf(String format, Object... objs) {
+		logger.debug(getOutput(String.format(format, objs)));
+		map = null;
+	}
+
+	public void warnf(String format, Object... objs) {
+		logger.warn(getOutput(String.format(format, objs)));
+		map = null;
+	}
+
+	public void errorf(String format, Object... objs) {
+		logger.error(getOutput(String.format(format, objs)));
+		map = null;
+	}
+
+	public void fatalf(String format, Object... objs) {
+		logger.fatal(getOutput(String.format(format, objs)));
+		map = null;
+	}
+
+	private String getOutput(Object message) {
+		return mapToString() + " :: " + message;
+	}
+
+	private String mapToString() {
+		return Arrays.toString(map.entrySet().toArray());
 	}
 }

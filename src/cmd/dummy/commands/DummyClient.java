@@ -11,8 +11,8 @@ import java.util.Map;
 import java.util.Scanner;
 
 import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 
+import autils.Logger;
 import common.error;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import lachesis.ConfigUtils;
@@ -76,9 +76,9 @@ public class DummyClient implements Runnable {
 		String name = this.name;
 		String address = this.proxyAddr;
 
-//		logger.WithFields(logrus.Fields{
-//			"name": name, "proxy_addr": address,
-//		}).Debug("RUN");
+		logger.field("name", name)
+			.field("proxy_addr", address)
+			.debug("RUN");
 
 		// Create and run Dummy Socket Client
 		dummy.DummyClient client = dummy.DummyClient.NewDummySocketClient(address, logger);

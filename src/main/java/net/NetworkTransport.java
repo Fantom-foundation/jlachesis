@@ -14,13 +14,13 @@ import java.util.Map;
 import java.util.concurrent.locks.Lock;
 
 import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.jcsp.lang.Alternative;
 import org.jcsp.lang.Channel;
 import org.jcsp.lang.Guard;
 import org.jcsp.lang.One2OneChannel;
 
 import autils.Appender;
+import autils.Logger;
 import channel.ChannelUtils;
 import channel.ExecService;
 import common.RetResult;
@@ -158,10 +158,9 @@ public class NetworkTransport implements Transport {
 		}
 
 		// Dial a new connection
-//		logger.WithFields(logrus.Fields{
-//			"target":  target,
-//			"timeout": timeout,
-//		}).Info("Dialing")
+		logger.field("target", target)
+				.field("timeout", timeout)
+				.info("Dialing");
 
 		RetResult<Socket> dialCall = stream.Dial(target, timeout);
 		Socket conn2 = dialCall.result;
@@ -309,9 +308,7 @@ public class NetworkTransport implements Transport {
 
 	// listen is used to handling incoming connections.
 	public void listen() {
-//		logger.WithFields(logrus.Fields{
-//			"addr": LocalAddr(),
-//		}).Info("Listening")
+		logger.field("addr", LocalAddr()).info("Listening");
 
 		while (true) {
 			// Accept incoming connections
@@ -322,13 +319,12 @@ public class NetworkTransport implements Transport {
 				if (IsShutdown()) {
 					return;
 				}
-//				logger.WithField("error", err).Error("Failed to accept connection")
+				logger.field("error", err).error("Failed to accept connection");
 				continue;
 			}
-//			logger.WithFields(logrus.Fields{
-//				"node": conn.LocalAddr(),
-//				"from": conn.RemoteAddr(),
-//			}).Info("accepted connection");
+			logger.field("node", conn.getLocalAddress())
+					.field("from", conn.getRemoteSocketAddress())
+			.info("accepted connection");
 
 			// Handle the connection in dedicated routine
 			ExecService.go(() -> handleConn(conn));
@@ -350,14 +346,14 @@ public class NetworkTransport implements Transport {
 					// TODO how to convert go's EOF
 					// if (err != io.EOF && err != ErrTransportShutdown) {
 					if (err != ErrTransportShutdown) {
-						// logger.WithField("error", err).Error("Failed to decode incoming command")
+						 logger.field("error", err).error("Failed to decode incoming command");
 					}
 					return;
 				}
 
 				w.flush();
 				if (err != null) {
-					// n.logger.WithField("error", err).Error("Failed to flush response")
+					 logger.field("error", err).error("Failed to flush response");
 					return;
 				}
 			}

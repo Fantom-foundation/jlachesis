@@ -4,9 +4,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
-
 import autils.Appender;
+import autils.Logger;
 import common.RetResult;
 import common.error;
 import proxy.ProxyHandler;
@@ -40,18 +39,18 @@ public class State implements ProxyHandler {
 	 */
 
 	public RetResult<byte[]> CommitHandler(poset.Block block ) {
-//		s.logger.WithField("block", block).Debug("CommitBlock")
+		logger.field("block", block).debug("CommitBlock");
 
 		error err = commit(block);
 		if (err != null) {
 			return new RetResult<byte[]>(null, err);
 		}
-//		logger.WithField("stateHash", stateHash).Debug("CommitBlock Answer")
+		logger.field("stateHash", stateHash).debug("CommitBlock Answer");
 		return new RetResult<byte[]>(stateHash, null);
 	}
 
 	public RetResult<byte[]> SnapshotHandler(long blockIndex) {
-//		logger.WithField("block", blockIndex).Debug("GetSnapshot")
+		logger.field("block", blockIndex).debug("GetSnapshot");
 
 		byte[] snapshot = snapshots.get(blockIndex);;
 		boolean ok = snapshot != null;

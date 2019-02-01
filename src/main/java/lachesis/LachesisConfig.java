@@ -4,8 +4,8 @@ import java.nio.file.Paths;
 import java.security.KeyPair;
 
 import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 
+import autils.Logger;
 import node.Config;
 
 public class LachesisConfig {

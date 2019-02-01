@@ -3,10 +3,10 @@ package proxy;
 import java.util.Arrays;
 
 import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.jcsp.lang.Channel;
 import org.jcsp.lang.One2OneChannel;
 
+import autils.Logger;
 import common.RetResult;
 import common.error;
 import poset.InternalTransaction;
@@ -22,7 +22,7 @@ public class InmemAppProxy implements AppProxy {
 
 	/**
 	 * Constructor instantiates an InmemProxy from a set of handlers
-	 * 
+	 *
 	 * @param handler
 	 * @param logger
 	 */
@@ -112,7 +112,7 @@ public class InmemAppProxy implements AppProxy {
 
 	/**
 	 * SubmitTx is called by the App to submit a transaction to Lachesis
-	 * 
+	 *
 	 * @param tx
 	 */
 	public void SubmitTx(byte[] tx) {

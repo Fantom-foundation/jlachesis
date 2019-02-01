@@ -7,7 +7,6 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.jcsp.lang.Alternative;
 import org.jcsp.lang.Channel;
 import org.jcsp.lang.Guard;
@@ -15,6 +14,7 @@ import org.jcsp.lang.One2OneChannel;
 
 import com.google.protobuf.ByteString;
 
+import autils.Logger;
 import channel.ChannelUtils;
 import channel.ExecService;
 import common.RetResult;
@@ -163,7 +163,7 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 			if (err == null) {
 				return err;
 			}
-			logger.warn(String.format("send to server err: %s", err));
+			logger.warnf("send to server err: %s", err);
 
 			err = reConnect();
 			if (err == ErrConnShutdown) {
@@ -180,7 +180,7 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 			if (err == null) {
 				return new RetResult<ToClient>(null, err);
 			}
-			logger.warn(String.format("recv from server err: %s", err));
+			logger.warnf("recv from server err: %s", err);
 
 			err = reConnect();
 			if (err == ErrConnShutdown) {
@@ -263,7 +263,7 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 			event = recvFromServer.result;
 			err = recvFromServer.err;
 			if (err != null) {
-				logger.debug(String.format("recv err: %s", err));
+				logger.debugf("recv err: %s", err);
 
 //				if (err == io.EOF) {
 //					logger.debug(String.format("recv EOF: %s", err));

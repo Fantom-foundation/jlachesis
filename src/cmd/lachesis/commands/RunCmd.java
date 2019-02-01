@@ -1,7 +1,6 @@
 package lachesis.commands;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -184,25 +183,25 @@ public class RunCmd extends Cmd {
 
 //		lachesis_log.NewLocal(config.Lachesis.Logger, config.Lachesis.LogLevel);
 
-//		config.Lachesis.Logger.WithFields(logrus.Fields{
-//			"proxy-listen":   config.ProxyAddr,
-//			"client-connect": config.ClientAddr,
-//			"standalone":     config.Standalone,
-//			"service-only":   config.Lachesis.ServiceOnly,
-//
-//			"lachesis.datadir":        config.Lachesis.DataDir,
-//			"lachesis.bindaddr":       config.Lachesis.BindAddr,
-//			"lachesis.service-listen": config.Lachesis.ServiceAddr,
-//			"lachesis.maxpool":        config.Lachesis.MaxPool,
-//			"lachesis.store":          config.Lachesis.Store,
-//			"lachesis.loadpeers":      config.Lachesis.LoadPeers,
-//			"lachesis.log":            config.Lachesis.LogLevel,
-//
-//			"lachesis.node.heartbeat":  config.Lachesis.NodeConfig.HeartbeatTimeout,
-//			"lachesis.node.tcptimeout": config.Lachesis.NodeConfig.TCPTimeout,
-//			"lachesis.node.cachesize":  config.Lachesis.NodeConfig.CacheSize,
-//			"lachesis.node.synclimit":  config.Lachesis.NodeConfig.SyncLimit,
-//		}).Debug("RUN")
+		config.Lachesis.getLogger()
+			.field("proxy-listen", config.ProxyAddr)
+			.field("client-connect", config.ClientAddr)
+			.field("standalone", config.Standalone)
+			.field("service-only", config.Lachesis.ServiceOnly)
+
+			.field("lachesis.datadir", config.Lachesis.DataDir)
+			.field("lachesis.bindaddr", config.Lachesis.BindAddr)
+			.field("lachesis.service-listen", config.Lachesis.ServiceAddr)
+			.field("lachesis.maxpool", config.Lachesis.MaxPool)
+			.field("lachesis.store",  config.Lachesis.Store)
+			.field("lachesis.loadpeers", config.Lachesis.LoadPeers)
+			.field("lachesis.log", config.Lachesis.LogLevel)
+
+			.field("lachesis.node.heartbeat", config.Lachesis.NodeConfig.HeartbeatTimeout)
+			.field("lachesis.node.tcptimeout",config.Lachesis.NodeConfig.TCPTimeout)
+			.field("lachesis.node.cachesize",  config.Lachesis.NodeConfig.CacheSize)
+			.field("lachesis.node.synclimit",  config.Lachesis.NodeConfig.SyncLimit)
+			.debug("RUN");
 
 		if (!config.Standalone) {
 			GrpcAppProxy p = new GrpcAppProxy(

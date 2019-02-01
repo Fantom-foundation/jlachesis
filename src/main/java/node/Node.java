@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 
-import org.apache.log4j.Logger;
 import org.jcsp.lang.Alternative;
 import org.jcsp.lang.Channel;
 import org.jcsp.lang.Guard;
@@ -15,6 +14,7 @@ import org.jcsp.lang.One2OneChannel;
 import org.jcsp.lang.One2OneChannelInt;
 
 import autils.Appender;
+import autils.Logger;
 import autils.time;
 import channel.ChannelUtils;
 import channel.ExecService;
@@ -102,7 +102,7 @@ public class Node extends NodeState {
 		this.conf= conf;
 		this.core = core;
 		this.localAddr = localAddr;
-		this.logger = conf.getLogger(); //.WithField("this_id", id);
+		this.logger = conf.getLogger().field("this_id", id);
 		this.peerSelector = peerSelector;
 		this.trans = trans;
 		this.netCh = trans.Consumer();

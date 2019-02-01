@@ -2,8 +2,7 @@ package lachesis;
 
 import java.security.KeyPair;
 
-import org.apache.log4j.Logger;
-
+import autils.Logger;
 import channel.ExecService;
 import common.RetResult;
 import common.error;
@@ -84,7 +83,7 @@ public  error initStore() {
 	} else {
 		error err;
 
-//		Config.logger.WithField("path", Config.BadgerDir()).debug("Attempting to load or create database");
+		Config.logger.field("path", Config.BadgerDir()).debug("Attempting to load or create database");
 		RetResult<BadgerStore> loadOrCreateBadgerStore = BadgerStore.LoadOrCreateBadgerStore(Peers, Config.NodeConfig.getCacheSize(), dbDir);
 		setStore(loadOrCreateBadgerStore.result);
 		err = loadOrCreateBadgerStore.err;
@@ -149,10 +148,9 @@ public error initNode() {
 
 	long nodeID = n.GetID();
 
-//	Config.logger.WithFields(logrus.Fields{
-//		"participants": Peers,
-//		"id":           nodeID,
-//	}).Debug("PARTICIPANTS");
+	Config.logger
+		.field("participants", Peers)
+		.field("id", nodeID).debug("PARTICIPANTS");
 
 	setNode(new node.Node(
 		Config.NodeConfig,

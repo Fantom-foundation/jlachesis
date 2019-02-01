@@ -1,8 +1,8 @@
 package difftool;
 import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.junit.Test;
 
+import autils.Logger;
 import node.Node;
 import node.NodeList;
 import node.NodeList.Stoppable;
@@ -15,7 +15,7 @@ import node.NodeList.Stoppable;
  */
 public class ExampleTest {
 
-	@Test
+	//@Test
 	public void testPem() {
 		Logger logger = Logger.getLogger(this.getClass());
 		logger.setLevel(Level.FATAL);
