@@ -38,7 +38,7 @@ import poset.WireEvent;
 
 public class Node extends NodeState {
 	// TBD: how to transfer this nodeState into Java
-	NodeState nodeState;
+	NodeState nodeState = new NodeState();
 
 	Config conf;
 	Logger logger;

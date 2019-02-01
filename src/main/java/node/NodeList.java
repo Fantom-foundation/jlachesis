@@ -166,7 +166,7 @@ public class NodeList extends LinkedHashMap<PrivateKey, Node> {
 		}
 	}
 
-	interface Stoppable {
+	public static interface Stoppable {
 		void stop();
 	}
 }

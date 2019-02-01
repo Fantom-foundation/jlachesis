@@ -6,9 +6,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Peers {
-	ReadWriteLock lock;
+	ReadWriteLock lock = new ReentrantReadWriteLock();
 
 	Peer[] Sorted;
 	PubKeyPeers ByPubKey;
@@ -29,8 +30,10 @@ public class Peers {
 
 	/* Constructors */
 	public Peers() {
+		Sorted = new Peer[0];
 		ByPubKey = new PubKeyPeers();
 		ById = new IdPeers();
+		Listeners = new ArrayList<>();
 	}
 
 	public static Peers NewPeersFromSlice(Peer[] source) {

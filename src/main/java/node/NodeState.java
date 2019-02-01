@@ -8,8 +8,12 @@ import channel.ExecService;
  * NodeState
  */
 public class NodeState {
-	AtomicReference<NodeStates> state;
-	WaitGroup wg;
+	AtomicReference<NodeStates> state = new AtomicReference<NodeStates>();
+	WaitGroup wg = new WaitGroup();
+
+	public NodeState() {
+		state.set(NodeStates.CatchingUp);
+	}
 
 	public NodeStates getState() {
 		return state.get();

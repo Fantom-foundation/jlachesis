@@ -90,7 +90,7 @@ public class Core {
 	}
 
 	public String HexID() {
-		if (hexID.isEmpty()) {
+		if (hexID == null || hexID.isEmpty()) {
 			pubKey = PubKey();
 //			hexID = String.format("0x%X", pubKey);
 			hexID = crypto.Utils.toHexString(pubKey);

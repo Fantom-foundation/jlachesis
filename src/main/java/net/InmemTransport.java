@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.jcsp.lang.Alternative;
 import org.jcsp.lang.CSTimer;
@@ -29,7 +30,7 @@ public class InmemTransport implements Transport {
 	static Map<String, InmemTransport> inmemMedium = new HashMap<String,InmemTransport>();
 
 	//	sync.RWMutex inmemMediumSync;
-	static ReadWriteLock inmemMediumSync;
+	static ReadWriteLock inmemMediumSync = new ReentrantReadWriteLock();
 
 	// NewInmemAddr returns a new in-memory addr with
 	// a randomly generate UUID as the ID.
