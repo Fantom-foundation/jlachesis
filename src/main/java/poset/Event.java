@@ -313,6 +313,49 @@ public class Event implements FlagtableContainer {
 		return Message.OtherParentCreatorID;
 	}
 
+
+	public EventMessage getMessage() {
+		return Message;
+	}
+
+
+
+	public long getRound() {
+		return round;
+	}
+
+
+
+	public long getLamportTimestamp() {
+		return lamportTimestamp;
+	}
+
+
+
+	public long getRoundReceived() {
+		return roundReceived;
+	}
+
+
+
+	public String getCreator() {
+		return creator;
+	}
+
+
+
+	public byte[] getHash() {
+		return hash;
+	}
+
+
+
+	public String getHex() {
+		return hex;
+	}
+
+
+
 	public static String rootSelfParent(long participantID) {
 		return String.format("Root%d", participantID);
 	}
