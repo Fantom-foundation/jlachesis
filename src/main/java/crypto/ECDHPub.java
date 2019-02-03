@@ -63,26 +63,24 @@ public class ECDHPub {
 	//
 	//////////
 
-	public static ECPublicKey generateECDSAPublicKey(byte[] byte_pubkey) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
-	    String str_key = Base64.getEncoder().encodeToString(byte_pubkey);
-	    byte_pubkey  = Base64.getDecoder().decode(str_key);
+	public static ECPublicKey generateECDSAPublicKey(byte[] pubBytes) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+	    pubBytes  = getDecodedBytes(pubBytes);
 	    KeyFactory factory = KeyFactory.getInstance("ECDSA", "BC");
-	    ECPublicKey public_key = (ECPublicKey) factory.generatePublic(new X509EncodedKeySpec(byte_pubkey));
-	    return public_key;
+	    ECPublicKey pubKey = (ECPublicKey) factory.generatePublic(new X509EncodedKeySpec(pubBytes));
+	    return pubKey;
 	}
 
-	public static ECPrivateKey generateECDSAPrivateKey(byte[] byte_privkey) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
-	    String str_key = Base64.getEncoder().encodeToString(byte_privkey);
-	    byte_privkey  = Base64.getDecoder().decode(str_key);
+	public static ECPrivateKey generateECDSAPrivateKey(byte[] privBytes) throws InvalidKeySpecException, NoSuchAlgorithmException, NoSuchProviderException {
+	    privBytes  = getDecodedBytes(privBytes);
 	    KeyFactory factory = KeyFactory.getInstance("ECDSA", "BC");
-	    ECPrivateKey public_key = (ECPrivateKey) factory.generatePrivate(new PKCS8EncodedKeySpec(byte_privkey));
-	    return public_key;
+	    ECPrivateKey privKey = (ECPrivateKey) factory.generatePrivate(new PKCS8EncodedKeySpec(privBytes));
+	    return privKey;
 	}
 
 	public static byte[] getDecodedBytes(byte[] bytes) {
-		String str_key = Base64.getEncoder().encodeToString(bytes);
-	    byte[] byteArray  = Base64.getDecoder().decode(str_key);
-	    return byteArray;
+		String encoded = Base64.getEncoder().encodeToString(bytes);
+	    byte[] decoded  = Base64.getDecoder().decode(encoded);
+	    return decoded;
 	}
 
 	/////

@@ -1830,7 +1830,9 @@ public class Poset {
 		for (int i = 0; i < SigPool.size(); ++i) {
 			BlockSignature bs = SigPool.get(i);
 			//check if validator belongs to list of participants
-			String validatorHex = String.format("0x%X", bs.Validator);
+//			String validatorHex = String.format("0x%X", bs.Validator);
+			String validatorHex = bs.ValidatorHex();
+
 			Peer ok = Participants.getByPubKey().get(validatorHex);
 			if (ok == null){
 				logger

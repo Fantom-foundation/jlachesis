@@ -2,20 +2,12 @@ package common;
 
 import java.util.Arrays;
 
-import org.apache.log4j.Level;
-
-import autils.Logger;
-
 // This can be used as the destination for a logger and it'll
 // map them into calls to testing.T.Log, so that you only see
 // the logging for failed tests.
 public class TestLoggerAdapter {
 	Class<?> clazz;
 	String prefix;
-
-	public TestLoggerAdapter() {
-
-	}
 
 	public RetResult<Integer> Write(byte[] d) {
 		if (d[d.length - 1] == '\n') {
@@ -31,11 +23,5 @@ public class TestLoggerAdapter {
 
 //		t.Log(Arrays.toString(d));
 		return new RetResult<Integer>(d.length, null);
-	}
-
-	public static Logger NewTestLogger(Class<?> clazz) {
-		Logger logger = Logger.getLogger(clazz);
-		logger.setLevel(Level.FATAL);
-		return logger;
 	}
 }

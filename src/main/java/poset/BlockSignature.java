@@ -45,7 +45,8 @@ public class BlockSignature {
 
 
 	public String ValidatorHex() {
-		return String.format("0x%X", Validator);
+//		return String.format("0x%X", Validator);
+		return crypto.Utils.toHexString(Validator);
 	}
 
 //	public RetResult<byte[]> ProtoMarshal() {

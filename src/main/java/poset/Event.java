@@ -111,7 +111,8 @@ public class Event implements FlagtableContainer {
 
 	public String Creator() {
 		if (creator.isEmpty()) {
-			creator = String.format("0x%X", Message.Body.Creator);
+//			creator = String.format("0x%X", Message.Body.Creator);
+			creator = crypto.Utils.toHexString(Message.Body.Creator);
 		}
 		return creator;
 	}
@@ -207,7 +208,8 @@ public class Event implements FlagtableContainer {
 	public String Hex() {
 		if (hex.isEmpty()) {
 			byte[] hash = Hash().result;
-			hex = String.format("0x%X", hash);
+//			hex = String.format("0x%X", hash);
+			hex = crypto.Utils.toHexString(hash);
 		}
 		return hex;
 	}

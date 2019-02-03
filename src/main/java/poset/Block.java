@@ -86,23 +86,9 @@ public class Block {
 
 	public boolean equals(Block that) {
 		return this.Body.equals(that.Body) &&
-			MapStringsEquals(this.Signatures, that.Signatures) &&
+			this.Signatures.equals(that.Signatures) &&
 			Utils.BytesEquals(this.Hash, that.Hash) &&
 			this.Hex == that.Hex;
-	}
-
-
-	public boolean MapStringsEquals(Map<String,String> thisMap, Map<String,String> thatMap) {
-		if (thisMap.size() != thatMap.size()) {
-			return false;
-		}
-		for (Entry entry : thisMap.entrySet()) {
-			String v1 = thatMap.get(entry.getKey());
-			if (v1 == null || entry.getValue() != v1) {
-				return false;
-			}
-		}
-		return true;
 	}
 
 	public static RetResult<Block> NewBlockFromFrame(long blockIndex, Frame frame) {
@@ -227,20 +213,20 @@ public class Block {
 			return new RetResult<BlockSignature>(bs, err);
 		}
 
-		BlockSignature signature = new BlockSignature(
+		bs = new BlockSignature(
 			crypto.Utils.FromECDSAPub(keyPair.getPublic()),
 			Index(),
 			crypto.Utils.encodeSignature(R, S));
 
-		return new RetResult<BlockSignature>(signature, null);
+		return new RetResult<BlockSignature>(bs, null);
 	}
 
-	public error SetSignature( BlockSignature bs) {
+	public error SetSignature(BlockSignature bs) {
 		Signatures.put(bs.ValidatorHex(), bs.Signature);
 		return null;
 	}
 
-	public RetResult<Boolean> Verify( BlockSignature sig) {
+	public RetResult<Boolean> Verify(BlockSignature sig) {
 		RetResult<byte[]> hash2 = Body.Hash();
 		byte[] signBytes = hash2.result;
 		error err = hash2.err;

@@ -11,10 +11,6 @@ public class WireBody {
 
 	long Index;
 
-	public WireBody() {
-
-	}
-
 	public WireBody(byte[][] transactions, InternalTransaction[] internalTransactions,
 			WireBlockSignature[] blockSignatures, long selfParentIndex, long otherParentCreatorID,
 			long otherParentIndex, long creatorID, long index) {

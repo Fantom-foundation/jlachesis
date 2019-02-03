@@ -1,8 +1,13 @@
 package poset;
 
+import java.util.Arrays;
+
+import com.google.protobuf.ByteString;
+
 import common.RetResult;
 import common.error;
 import crypto.hash;
+import poset.proto.BlockBody.Builder;
 
 public class BlockBody {
 	long Index;
@@ -36,11 +41,6 @@ public class BlockBody {
 		return this.Transactions;
 	}
 
-	//StateHash is the hash of the current state of transactions, if you have one
-	//node talking to an app, and another set of nodes talking to inmem, the
-	//stateHash will be different
-	//statehash should be ignored for validator checking
-
 //	//json encoding of body only
 	public RetResult<byte[]> ProtoMarshal() {
 //		var bf proto.Buffer
@@ -50,8 +50,13 @@ public class BlockBody {
 //		}
 //		return bf.Bytes(), null
 
-		// TBD
-		return null;
+
+		Builder builder = poset.proto.BlockBody.newBuilder().setIndex(Index).setRoundReceived(RoundReceived);
+		Arrays.stream(this.Transactions)
+			.forEachOrdered(transaction -> builder.addTransactions(ByteString.copyFrom(transaction)));
+		poset.proto.BlockBody bb = builder.build();
+
+		return new RetResult<>(bb.toByteArray(), null);
 	}
 //
 //	public error ProtoUnmarshal(byte[] data) {

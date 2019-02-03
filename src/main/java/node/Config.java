@@ -5,7 +5,6 @@ import java.time.Duration;
 import org.apache.log4j.Level;
 
 import autils.Logger;
-import common.TestLoggerAdapter;
 
 public class Config {
 	public Duration HeartbeatTimeout ; // `mapstructure:"heartbeat"`
@@ -79,12 +78,5 @@ public class Config {
 
 	public long getSyncLimit() {
 		return SyncLimit;
-	}
-
-	public Config TestConfig(Class testClz) {
-		Config config = DefaultConfig();
-		config.HeartbeatTimeout = java.time.Duration.ofSeconds(1);
-		config.logger = TestLoggerAdapter.NewTestLogger(testClz);
-		return config;
 	}
 }

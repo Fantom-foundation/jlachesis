@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -15,7 +16,9 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.interfaces.ECPublicKey;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
@@ -54,16 +57,16 @@ public class Utils {
 		return new RetResult<KeyPair>(privKey, null);
 	}
 
-	public static PublicKey ToECDSAPub(byte[] pub) {
-		if (pub.length == 0) {
+	public static PublicKey ToECDSAPub(byte[] pubBytes) {
+		if (pubBytes.length == 0) {
 			return null;
 		}
 //		x, y := elliptic.Unmarshal(elliptic.P256(), pub);
 //		return new PublicKey{Curve: elliptic.P256(), X: x, Y: y};
-
 		try {
-			PublicKey pk = ECDHPub.generateECDSAPublicKey(pub);
-			return pk;
+		    KeyFactory factory = KeyFactory.getInstance("ECDSA", "BC");
+		    ECPublicKey pubKey = (ECPublicKey) factory.generatePublic(new X509EncodedKeySpec(pubBytes));
+		    return pubKey;
 		} catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException e1) {
 			e1.printStackTrace();
 			return null;
@@ -75,9 +78,7 @@ public class Utils {
 			return null;
 		}
 //		return elliptic.Marshal(elliptic.P256(), pub.X, pub.Y);
-		String encodedKey = Base64.getEncoder().encodeToString(pub.getEncoded());
-		byte[] decoded = Base64.getDecoder().decode(encodedKey);
-		return decoded;
+		return pub.getEncoded();
 	}
 
 	public static RetResult3<BigInteger, BigInteger> Sign(PrivateKey priv, byte[] hash) {
@@ -205,8 +206,7 @@ public class Utils {
 	}
 
 	public static String keyToString(Key key) {
-		byte encoded[] = key.getEncoded();
-		String encodedKey = Base64.getEncoder().encodeToString(encoded);
+		String encodedKey = Base64.getEncoder().encodeToString(key.getEncoded());
 		return encodedKey;
 	}
 
@@ -216,9 +216,8 @@ public class Utils {
 
 	public static String toHexString(byte[] encoded) {
 //		String encodedKey = String.format("0x%X", encoded);
-		String encodedKey = Base64.getEncoder().encodeToString(encoded);
-		byte[] decoded = Base64.getDecoder().decode(encodedKey);
-		String hexString = String.format("%040X", new BigInteger(1, decoded));
+		byte[] decoded = ECDHPub.getDecodedBytes(encoded);
+		String hexString = "0x" + String.format("%040X", new BigInteger(1, decoded));
 		return hexString;
 	}
 }

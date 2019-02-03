@@ -31,7 +31,7 @@ public class ParticipantEventsCache {
 		Peer peer = participants.getByPubKey().get(participant);
 
 		if (peer == null) {
-			return new RetResult<Long>( (long) -1,
+			return new RetResult<Long>(-1L,
 			StoreErr.newStoreErr("ParticipantEvents", StoreErrType.SkippedIndex, participant));
 
 		}

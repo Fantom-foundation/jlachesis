@@ -6,6 +6,18 @@ public class WireEvent {
 	byte[] FlagTable;
 	String[] WitnessProof;
 
+	public WireEvent() {
+
+	}
+
+	public WireEvent(WireBody body, String signature) {
+		super();
+		Body = body;
+		Signature = signature;
+		FlagTable = null;
+		WitnessProof = null;
+	}
+
 	public WireEvent(WireBody body, String signature, byte[] flagTable, String[] witnessProof) {
 		super();
 		Body = body;

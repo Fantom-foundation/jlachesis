@@ -90,9 +90,10 @@ public class EventBody {
 		return null;
 	}
 
-//	public  ProtoUnmarshal(data []byte) error {
-//		return proto.Unmarshal(data, e)
-//	}
+	public error ProtoUnmarshal(byte[] data) {
+		// TBD
+		return null;
+	}
 
 	public RetResult<byte[]> Hash() {
 		RetResult<byte[]> protoMarshal = ProtoMarshal();

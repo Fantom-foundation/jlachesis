@@ -41,11 +41,7 @@ import common.error;
  */
 public class CryptoTest {
 
-	@Test
-	public void testPem() {
-		// Create the PEM key
-		String baseDir = "src/test/java/crypto/";
-		String filePath = baseDir + "test_data/lachesis";
+	private void createParentDir(String filePath) {
 		try {
 			Path parentDir = Paths.get(filePath);
 			if (!Files.exists(parentDir))
@@ -53,14 +49,27 @@ public class CryptoTest {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
+	}
 
-		PemKey pemKey = new PemKey(filePath);
-		//System.out.println("path = " +  pemKey.path);
+	private void removePemFile(String pemFile) {
 		try {
-			Files.delete(Paths.get(pemKey.path));
+			if (Files.exists(Paths.get(pemFile)))
+				Files.delete(Paths.get(pemFile));
 		} catch (IOException e1) {
 			fail("Should not have thrown any exception" + e1);
 		}
+	}
+
+	@Test
+	public void testPem() {
+		// Create the PEM key
+		String baseDir = "src/test/java/crypto/";
+		String filePath = baseDir + "test_data/lachesis";
+		createParentDir(filePath);
+
+		PemKey pemKey = new PemKey(filePath);
+		//System.out.println("path = " +  pemKey.path);
+		removePemFile(pemKey.path);
 		FileUtils.createFile(pemKey.path, FileUtils.MOD_700);
 
 		// Try a read, should get nothing
@@ -88,6 +97,9 @@ public class CryptoTest {
 		// TODO
 		//assertNull("ReadKey should have no error", err);
 		//assertEquals("Keys should match", nKeyPair, keyPair);
+
+		// end test, remove the pemfile
+		removePemFile(pemKey.path);
 	}
 
 	@Test
@@ -113,12 +125,9 @@ public class CryptoTest {
 //		System.out.println("decoded = " +  Arrays.toString(decoded));
 //		String pub = Hex.encodeHexString(decoded);
 
-		String pub = new String(Hex.encodeHex(Utils.FromECDSAPub(key.getPublic()), false));
-		String expectedPub = "3059301306072A8648CE3D020106082A8648CE3D030107034200046A347F0488ABC7D92E2208794E327ECA15B0C2B27018B2B5B89DD8CB736FD7CC38F37D2D10822530AD97359ACBD837A65C2CA62D44B0CE569BD222C2DABF268F";
-		assertEquals("public key should be %s, not %s", expectedPub, pub);
-
-		pub = Utils.keyToHexString(key.getPublic());
-		assertEquals("public key should be %s, not %s", expectedPub, pub);
+		String expectedPub = "0x3059301306072A8648CE3D020106082A8648CE3D030107034200046A347F0488ABC7D92E2208794E327ECA15B0C2B27018B2B5B89DD8CB736FD7CC38F37D2D10822530AD97359ACBD837A65C2CA62D44B0CE569BD222C2DABF268F";
+		String pub = Utils.keyToHexString(key.getPublic());
+		assertEquals("public key should be equal to the expected on", expectedPub, pub);
 
 		String msg = "time for beer";
 		RetResult3<BigInteger, BigInteger> sign = Utils.Sign(key.getPrivate(), msg.getBytes());
@@ -146,6 +155,15 @@ public class CryptoTest {
 
 		boolean verifySig2 = Utils.Verify(key.getPublic(), msg.getBytes(), r2, s2);
 		assertTrue("(r2, s2) should also be a valid signature", verifySig2);
+
+
+		RetResult3<BigInteger, BigInteger> decodeSignature = Utils.DecodeSignature(sigEncoded);
+		BigInteger dr = decodeSignature.result1;
+		BigInteger ds = decodeSignature.result2;
+		assertEquals("Signature Rs should be the same", r, dr);
+		assertEquals("Signature Ss should be the same", s, ds);
+		boolean verifySig3 = Utils.Verify(key.getPublic(), msg.getBytes(), dr, ds);
+		assertTrue("(dr, ds) should also be a valid signature", verifySig3);
 	}
 
 	@Test
@@ -222,8 +240,8 @@ public class CryptoTest {
 	    //System.out.println ("priv = " + pair.getPrivate().getAlgorithm() + " : " + pair.getPrivate().getFormat());
 	    //System.out.println ("pub = " +  pair.getPublic().getAlgorithm() + " : " + pair.getPublic().getFormat());
 
-	    String expectedPrivHex = "308193020100301306072A8648CE3D020106082A8648CE3D030107047930770201010420242055EA7249E312403F82279B50466DF2D3301509EEEE60BFB2080B09DDB7F6A00A06082A8648CE3D030107A144034200046A347F0488ABC7D92E2208794E327ECA15B0C2B27018B2B5B89DD8CB736FD7CC38F37D2D10822530AD97359ACBD837A65C2CA62D44B0CE569BD222C2DABF268F";
-	    String expectedPubHex = "3059301306072A8648CE3D020106082A8648CE3D030107034200046A347F0488ABC7D92E2208794E327ECA15B0C2B27018B2B5B89DD8CB736FD7CC38F37D2D10822530AD97359ACBD837A65C2CA62D44B0CE569BD222C2DABF268F";
+	    String expectedPrivHex = "0x308193020100301306072A8648CE3D020106082A8648CE3D030107047930770201010420242055EA7249E312403F82279B50466DF2D3301509EEEE60BFB2080B09DDB7F6A00A06082A8648CE3D030107A144034200046A347F0488ABC7D92E2208794E327ECA15B0C2B27018B2B5B89DD8CB736FD7CC38F37D2D10822530AD97359ACBD837A65C2CA62D44B0CE569BD222C2DABF268F";
+	    String expectedPubHex = "0x3059301306072A8648CE3D020106082A8648CE3D030107034200046A347F0488ABC7D92E2208794E327ECA15B0C2B27018B2B5B89DD8CB736FD7CC38F37D2D10822530AD97359ACBD837A65C2CA62D44B0CE569BD222C2DABF268F";
 	    assertEquals("private key's hex", Utils.keyToHexString(pair.getPrivate()), expectedPrivHex);
 	    assertEquals("public key's hex", Utils.keyToHexString(pair.getPublic()), expectedPubHex);
 

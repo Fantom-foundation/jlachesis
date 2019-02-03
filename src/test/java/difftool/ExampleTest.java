@@ -1,4 +1,6 @@
 package difftool;
+import static org.junit.Assert.assertTrue;
+
 import org.apache.log4j.Level;
 import org.junit.Test;
 
@@ -31,11 +33,9 @@ public class ExampleTest {
 		Diff diff = Diff.compare(nodeArray[0],  nodeArray[1]);
 
 		System.out.println(diff);
+		assertTrue("diff = " + diff + " should not be empty", diff.IsEmpty());
 
-//		if !diffResult.IsEmpty() {
-//			logger.Fatal("\n" + diffResult.ToString())
-//		}
-//		fmt.Println("all good")
+		System.out.println("all good");
 		// Output:
 		// all good
 	}

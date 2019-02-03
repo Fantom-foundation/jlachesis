@@ -13,6 +13,7 @@ public class EventMessage {
 	long CreatorID; //      `protobuf:"varint,8,opt,name=CreatorID,json=creatorID" json:"CreatorID,omitempty"`
 	long TopologicalIndex; //      `protobuf:"varint,9,opt,name=TopologicalIndex,json=topologicalIndex" json:"TopologicalIndex,omitempty"`
 
+
 	public EventMessage() {
 		super();
 		Body = null;
@@ -24,6 +25,11 @@ public class EventMessage {
 		OtherParentIndex = -1;
 		CreatorID = -1;
 		TopologicalIndex = -1;
+	}
+
+	public EventMessage(EventBody body) {
+		this();
+		Body = body;
 	}
 
 	public EventMessage(EventBody body, String signature, byte[] flagTable, String[] witnessProof, long selfParentIndex,
