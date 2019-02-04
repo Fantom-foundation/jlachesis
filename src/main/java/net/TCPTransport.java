@@ -3,7 +3,9 @@ package net;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.UnknownHostException;
 import java.time.Duration;
+import java.util.Arrays;
 
 import autils.Logger;
 import common.RetResult;
@@ -43,8 +45,14 @@ public class TCPTransport {
 //		list, err := net.Listen("tcp", bindAddr);
 		ServerSocket list;
 		try {
-			list = new ServerSocket(0, 50, InetAddress.getByName(bindAddr));
-		} catch (IOException e) {
+			int port = 0;
+			// input in the form ":9000"
+			String[] tokens = bindAddr.split(":");
+			if (tokens.length == 2) {
+				port = Integer.parseInt(tokens[1]);
+			}
+			list = new ServerSocket(port, 50);
+		} catch (Exception e) {
 			return new RetResult<NetworkTransport>(null, error.Errorf(e.getMessage()));
 		}
 
@@ -53,6 +61,7 @@ public class TCPTransport {
 
 		// Verify that we have a usable advertise address
 		InetAddress addr = stream.Addr();
+
 		boolean ok = addr != null;
 		try {
 			if (!ok) {
