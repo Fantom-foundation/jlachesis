@@ -1,9 +1,6 @@
 package peers;
 
-import java.io.File;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Base64;
 import java.util.concurrent.Semaphore;
 
 import autils.FileUtils;
@@ -38,26 +35,20 @@ public class JSONPeers {
 			}
 
 			// Check for no peers
-			if (buf.length == 0) {
+			if (buf == null || buf.length == 0) {
 				return new RetResult<Peers>(null, null);
 			}
 
 			// Decode the peers
-			Peer[] peerSet;
-
 			// TODO: is the transformation correct?
 	//		dec := json.NewDecoder(bytes.NewReader(buf));
 	//		err := dec.Decode(peerSet);
-
-			byte[] dec = Base64.getDecoder().decode(buf);
-			peerSet = JsonUtils.StringToObject(Arrays.toString(dec), Peer[].class);
+			 Peer[] peerSet = JsonUtils.StringToObject(new String(buf), Peer[].class);
 
 			return new RetResult<Peers>(Peers.NewPeersFromSlice(peerSet), null);
 		} catch (InterruptedException e) {
 			error err = new error(e.getMessage());
 			return new RetResult<Peers>(null, err);
-
-//			e.printStackTrace();
 		} finally {
 			l.release();
 		}
@@ -72,7 +63,11 @@ public class JSONPeers {
 //			error err = enc.Encode(peers);
 
 			String peersString = JsonUtils.ObjectToString(peers);
-			byte[] encode = Base64.getEncoder().encode(peersString.getBytes());
+			//System.out.println("peers string = " +  peersString);
+			//System.out.println("write to file path = " +  path);
+
+			byte[] encode = peersString.getBytes();
+//			byte[] encode = Base64.getEncoder().encode(peersString.getBytes());
 
 			// Write out as JSON
 			error err = FileUtils.writeToFile(path, encode, FileUtils.MOD_755);
