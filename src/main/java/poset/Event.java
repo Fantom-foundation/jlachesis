@@ -34,10 +34,15 @@ public class Event implements FlagtableContainer {
 		for (int i = 0; i< internalTransactions.length; ++i) {
 			internalTransactionPointers[i] = new InternalTransaction(internalTransactions[i]);
 		}
-		BlockSignature[] blockSignaturePointers = new BlockSignature[blockSignatures.length];
-		for (int i = 0; i< blockSignatures.length; ++i) {
-			blockSignaturePointers[i] = new BlockSignature (blockSignatures[i]);
+
+		BlockSignature[] blockSignaturePointers = null;
+		if (blockSignaturePointers != null) {
+			blockSignaturePointers = new BlockSignature[blockSignatures.length];
+			for (int i = 0; i< blockSignatures.length; ++i) {
+				blockSignaturePointers[i] = new BlockSignature (blockSignatures[i]);
+			}
 		}
+
 		EventBody body = new EventBody(
 			transactions,
 			internalTransactionPointers,
@@ -47,8 +52,7 @@ public class Event implements FlagtableContainer {
 			blockSignaturePointers
 		);
 
-		Builder builder = PFlagTableWrapper.FlagTableWrapper.newBuilder();
-		builder.getBodyMap().putAll(flagTable);
+		Builder builder = PFlagTableWrapper.FlagTableWrapper.newBuilder().putAllBody(flagTable);
 		byte[] ft = builder.build().toByteArray();
 
 		this.Message = new EventMessage();
@@ -110,7 +114,7 @@ public class Event implements FlagtableContainer {
 	}
 
 	public String Creator() {
-		if (creator.isEmpty()) {
+		if (creator == null || creator.isEmpty()) {
 //			creator = String.format("0x%X", Message.Body.Creator);
 			creator = crypto.Utils.toHexString(Message.Body.Creator);
 		}
