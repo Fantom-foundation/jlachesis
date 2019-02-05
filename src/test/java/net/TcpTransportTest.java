@@ -3,12 +3,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import java.io.IOException;
-import java.net.Inet4Address;
-import java.net.Inet6Address;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.net.UnknownHostException;
 import java.time.Duration;
 
@@ -29,7 +24,6 @@ public class TcpTransportTest {
 	public void TestTCPTransport_BadAddr() {
 		error err = TCPTransport.NewTCPTransport("0.0.0.0:100000000", null, 1, Duration.ZERO,
 				TestUtils.NewTestLogger(this.getClass())).err;
-//		assertEquals("err", TCPTransport.errNotAdvertisable, err);
 		assertEquals("err", "Port value out of range: 100000000", err.Error());
 
 		err = TCPTransport.NewTCPTransport("0.0.0.0:-1", null, 1, Duration.ZERO,
@@ -69,22 +63,5 @@ public class TcpTransportTest {
 
 		int actualPort = ((TCPStreamLayer) trans.stream).listener.getLocalPort();
 		assertEquals("Bind port should match", expectedPort, actualPort);
-	}
-
-	public static void main(String[] args) throws UnknownHostException {
-	    InetAddress localIp = InetAddress.getLocalHost();
-		if(localIp instanceof Inet6Address){
-		     System.out.println("IPv6");
-		} else if (localIp instanceof Inet4Address) {
-             System.out.println("IPv4");
-	    }
-
-		InetAddress inetAddr = InetAddress.getByName("0.0.0.0");
-		ServerSocket list;
-		try {
-			list = new ServerSocket(0, 50, inetAddr);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 }

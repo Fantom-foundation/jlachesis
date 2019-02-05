@@ -21,12 +21,13 @@ public class InmemAppProxy implements AppProxy {
 	One2OneChannel<poset.InternalTransaction> submitInternalCh; // chan poset.InternalTransaction
 
 	/**
-	 * Constructor instantiates an InmemProxy from a set of handlers
+	 * Constructor instantiates an InmemProxy without a handler.
+	 * The handler should be set afterwards before use
 	 *
 	 * @param handler
 	 * @param logger
 	 */
-	public InmemAppProxy(ProxyHandler handler, Logger logger) {
+	public InmemAppProxy(Logger logger) {
 		super();
 
 		if (logger == null) {
@@ -35,9 +36,27 @@ public class InmemAppProxy implements AppProxy {
 		}
 
 		this.logger = logger;
-		this.handler = handler;
 		this.submitCh = Channel.one2one();// make(chan []byte);
 		this.submitInternalCh = Channel.one2one(); // make(chan poset.InternalTransaction);
+	}
+
+	/**
+	 * Constructor instantiates an InmemProxy from a set of handlers
+	 *
+	 * @param handler
+	 * @param logger
+	 */
+	public InmemAppProxy(ProxyHandler handler, Logger logger) {
+		this(logger);
+		this.handler = handler;
+	}
+
+	/**
+	 * Sets a proxy handler
+	 * @param handler
+	 */
+	public void setHandler(ProxyHandler handler) {
+		this.handler = handler;
 	}
 
 	/*
