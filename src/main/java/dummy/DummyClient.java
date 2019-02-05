@@ -67,8 +67,6 @@ public class DummyClient {
 	 * @return
 	 */
 	public RetResult<DummyClient> NewDummyClient(proxy.LachesisProxy lachesisProxy , proxy.ProxyHandler handler , Logger logger) {
-//		State state = new State(logger);
-
 		DummyClient c = new DummyClient( logger, handler, lachesisProxy);
 		if (handler == null) {
 			return new RetResult<DummyClient>(c, null);

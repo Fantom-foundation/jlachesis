@@ -21,8 +21,11 @@ public class SnapshotRequest {
 		RespChan.out().write(new SnapshotResponse(snapshot, err));
 	}
 
-
 	public long getBlockIndex() {
 		return BlockIndex;
+	}
+
+	public One2OneChannel<SnapshotResponse> getRespChan() {
+		return RespChan;
 	}
 }

@@ -3,11 +3,10 @@ package net;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
-import java.net.UnknownHostException;
 import java.time.Duration;
-import java.util.Arrays;
 
 import autils.Logger;
+import common.NetUtils;
 import common.RetResult;
 import common.error;
 
@@ -43,17 +42,12 @@ public class TCPTransport {
 			Duration timeout, TCPTransportCreator transportCreator) {
 		// Try to bind
 //		list, err := net.Listen("tcp", bindAddr);
-		ServerSocket list;
-		try {
-			int port = 0;
-			// input in the form ":9000"
-			String[] tokens = bindAddr.split(":");
-			if (tokens.length == 2) {
-				port = Integer.parseInt(tokens[1]);
-			}
-			list = new ServerSocket(port, 50);
-		} catch (Exception e) {
-			return new RetResult<NetworkTransport>(null, error.Errorf(e.getMessage()));
+
+		RetResult<ServerSocket> bind = NetUtils.bind(bindAddr);
+		ServerSocket list = bind.result;
+		error err = bind.err;
+		if (err != null) {
+			return new RetResult<NetworkTransport>(null, err);
 		}
 
 		// Create stream

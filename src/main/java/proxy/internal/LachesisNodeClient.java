@@ -49,6 +49,9 @@ public class LachesisNodeClient implements LachesisNode_ConnectClient {
 	}
 
 	public error Send(ToServer msg) {
+
+		logger.debug("Send toServer = " + msg);
+
 		// TODO Auto-generated method stub
 
 		StreamObserver<ToServer> collect = nodeStub.connect(new StreamObserver<ToClient>() {
@@ -77,6 +80,8 @@ public class LachesisNodeClient implements LachesisNode_ConnectClient {
 	}
 
 	public RetResult<ToClient> Recv() {
+
+		logger.debug("Recv() ");
 
 		StreamObserver<ToServer> collect = nodeStub.connect(new StreamObserver<ToClient>() {
 			@Override

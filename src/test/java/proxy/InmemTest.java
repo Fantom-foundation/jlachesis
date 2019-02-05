@@ -3,16 +3,13 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
-import org.jcsp.lang.Alternative;
-import org.jcsp.lang.CSTimer;
-import org.jcsp.lang.Guard;
-import org.jcsp.lang.One2OneChannel;
 import org.junit.Test;
 
 import autils.Appender;
 import autils.Logger;
 import autils.time;
 import channel.ExecService;
+import channel.Selectors;
 import common.RetResult;
 import common.TestUtils;
 import common.error;
@@ -43,21 +40,17 @@ public class InmemTest {
 		byte[] tx_origin = "the test transaction".getBytes();
 
 		ExecService.go(() -> {
-			final CSTimer tim = new CSTimer ();
-			One2OneChannel<byte[]> submitCh = proxy.SubmitCh();
-			final Alternative alt = new Alternative (new Guard[] {submitCh.in(), tim});
-			final int EVENT = 0, TIM = 1;
-
-			switch (alt.priSelect ()) {
-				case EVENT:
-					byte[] tx = submitCh.in().read();
+			new Selectors<byte[]>(proxy.SubmitCh()) {
+				public void onEvent() {
+					byte[] tx = ch.in().read();
 					// System.out.println("transation read = " + new String(tx));
 					assertArrayEquals("read result submitCh should match", tx_origin, tx);
-				// fall through
-				case TIM:
+				}
+				public void onTimeOut() {
 					tim.setAlarm(tim.read() + timeout * 1000);
 					fail(errTimeout);
-			}
+				}
+			}.run();
 		});
 
 		proxy.SubmitTx(tx_origin);

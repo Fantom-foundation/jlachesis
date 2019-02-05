@@ -88,6 +88,7 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 		this.commitCh = Channel.one2one(); // make(chan proto.Commit),
 		this.queryCh = Channel.one2one(); // make(chan proto.SnapshotRequest),
 		this.restoreCh = Channel.one2one(); // make(chan proto.RestoreRequest),
+		this.stream= new AtomicReference<LachesisNode_ConnectClient>();
 
 //		this.conn = grpc.Dial(this.addr,
 //			grpc.WithInsecure(),
@@ -96,9 +97,7 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 //		try {
 //			this.conn = new ServerSocket(0, 50, InetAddress.getByName(addr));
 //			this.conn.setSoTimeout((int) this.reconn_timeout.toMillis());
-//		} catch (UnknownHostException e) {
-//			e.printStackTrace();
-//		} catch (IOException e) {
+//		} catch (UnknownHostException | IOException e) {
 //			e.printStackTrace();
 //		}
 
@@ -111,9 +110,14 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 		else {
 			this.client = new LachesisNodeClient(addr, 0);
 		}
-		this.reconnect_ticket.out().write(Instant.now()); // <- time.Now();
 
-		ExecService.go(() -> listen_events());
+		ExecService.go(() -> {
+			this.logger.info("reconnect_ticket " + Instant.now());
+			this.reconnect_ticket.out().write(Instant.now()); // <- time.Now();
+			this.logger.info("after reconnect_ticket " + Instant.now());
+
+			listen_events();
+		});
 	}
 
 	public error Close() {
@@ -145,6 +149,8 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 //				},
 //			},
 //		);
+
+		logger.debug("SubmitTx: " + new String(tx));
 
 		proxy.proto.ToServer.Tx tx1 = proxy.proto.ToServer.Tx.newBuilder().setData(ByteString.copyFrom(tx)).build();
 		proxy.proto.ToServer r = proxy.proto.ToServer.newBuilder().setTx(tx1).build();
@@ -191,9 +197,12 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 
 	public error reConnect() {
 		Instant disconn_time = Instant.now();
-		Instant connect_time = reconnect_ticket.in().read();
 
-		if (connect_time.equals(ZeroTime)) {
+		logger.debug("reConnect disconn_time =" + disconn_time);
+		Instant connect_time = reconnect_ticket.in().read();
+		logger.debug("reConnect connect_time =" + connect_time);
+
+		if (ZeroTime.equals(connect_time)) {
 			reconnect_ticket.out().write(ZeroTime);
 			return ErrConnShutdown;
 		}
@@ -233,7 +242,6 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 			// see code below
 		}
 
-
 		// TODO
 //		stream = client.Connect(context.TODO(), grpc.MaxCallRecvMsgSize(Integer.MAX_VALUE),
 //				grpc.MaxCallSendMsgSize(Integer.MAX_VALUE));
@@ -255,10 +263,14 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 	}
 
 	public void listen_events() {
+		logger.info("Listening to events ..");
+
 		ToClient event;
 		error err;
 		UUID uuid;
 		while (true) {
+			logger.info("Listening to events .. looping");
+
 			RetResult<ToClient> recvFromServer = recvFromServer();
 			event = recvFromServer.result;
 			err = recvFromServer.err;

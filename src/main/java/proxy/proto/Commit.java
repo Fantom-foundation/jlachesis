@@ -23,4 +23,8 @@ public class Commit {
 	public poset.Block getBlock() {
 		return Block;
 	}
+
+	public One2OneChannel<CommitResponse> getRespChan() {
+		return RespChan;
+	}
 }

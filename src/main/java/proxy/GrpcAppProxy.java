@@ -1,7 +1,6 @@
 package proxy;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.time.Duration;
 import java.util.HashMap;
@@ -20,6 +19,7 @@ import autils.Appender;
 import autils.Logger;
 import channel.ChannelUtils;
 import channel.ExecService;
+import common.NetUtils;
 import common.RetResult;
 import common.UuidUtils;
 import common.error;
@@ -77,19 +77,21 @@ public class GrpcAppProxy implements AppProxy, LachesisNodeServer {
 		this.event4clients = Channel.one2one(); // make(chan *internal.ToClient),
 
 //		p.listener, err = net.Listen("tcp", bind_addr);
+		int parsePort = NetUtils.parsePort(bind_addr);
 		try {
-			this.listener = new ServerSocket(0, 50, InetAddress.getByName(bind_addr));
+//			this.listener = NetUtils.bind(bind_addr).result;
+//			this.listener = new ServerSocket(0, 50, InetAddress.getByName(bind_addr));
 
 			// TODO
 //			server = new io.grpc.Server(grpc.MaxRecvMsgSize(Integer.MAX_VALUE),grpc.MaxSendMsgSize(Integer.MAX_VALUE));
-			this.server = ServerBuilder.forPort(listener.getLocalPort())
+			this.server = ServerBuilder.forPort(parsePort)
 					.addService(new LachesisNodeGrpcImpl())
 					.maxInboundMessageSize(Integer.MAX_VALUE)
 					.maxInboundMetadataSize(Integer.MAX_VALUE)
 					.build().start();
-			logger.error("grpc server started");
+			logger.info("grpc server started");
 		} catch (IOException e1) {
-			logger.error("Error starting grpc server" + e1.getMessage());
+			logger.error("Error starting grpc server at port " + parsePort + " , err " + e1.getMessage());
 			e1.printStackTrace();
 		}
 
@@ -136,6 +138,8 @@ public class GrpcAppProxy implements AppProxy, LachesisNodeServer {
 
 	public error Close() {
 		server.shutdown();
+		logger.debug("server is shutting down");
+
 		try {
 			listener.close();
 		} catch (IOException e) {
@@ -186,6 +190,9 @@ public class GrpcAppProxy implements AppProxy, LachesisNodeServer {
 	}
 
 	public void send_events4clients() {
+
+		logger.debug("send_events4clients()");
+
 		error err;
 		LachesisNode_ConnectServer[] connected = null;
 		LachesisNode_ConnectServer[] alive = null;
