@@ -8,6 +8,7 @@ import java.time.Duration;
 
 import org.jcsp.lang.CSTimer;
 import org.jcsp.lang.One2OneChannel;
+import org.junit.Test;
 
 import autils.Logger;
 import autils.time;
@@ -33,7 +34,7 @@ public class GrpcTest {
 	static final long timeout = 1 * time.Second;
 	static final String errTimeout = "time is over";
 
-	//@Test
+//	@Test
 	public void TestGrpcCalls() {
 		String addr = NetUtils.GetUnusedNetAddr();
 		Logger logger = Logger.getLogger(this.getClass());

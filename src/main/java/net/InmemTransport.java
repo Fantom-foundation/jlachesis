@@ -14,6 +14,7 @@ import org.jcsp.lang.Channel;
 import org.jcsp.lang.Guard;
 import org.jcsp.lang.One2OneChannel;
 
+import channel.ChannelUtils;
 import common.RetResult;
 import common.error;
 
@@ -134,11 +135,10 @@ public class InmemTransport implements Transport {
 		InmemTransport peer= inmemMedium.get(target);
 		boolean ok = peer != null;
 		inmemMediumSync.readLock().unlock();
-		RPCResponse rpcResp = null;
 		error err = null;
 		if (!ok) {
 			err = error.Errorf(String.format("failed to connect to peer: %v", target));
-			return new RetResult<RPCResponse>(rpcResp, err);
+			return new RetResult<RPCResponse>(null, err);
 		}
 
 		// Send the RPC over
@@ -155,6 +155,7 @@ public class InmemTransport implements Transport {
 //			err = error.Errorf("command timed out");
 //		}
 
+		RPCResponse rpcResp = null;
 		final CSTimer tim = new CSTimer ();
 		final Alternative alt = new Alternative (new Guard[] {respCh.in(), tim});
 		final int EVENT = 0, TIM = 1;
@@ -171,7 +172,6 @@ public class InmemTransport implements Transport {
 				err = error.Errorf("command timed out");
 				break;
 		}
-
 		return new RetResult<RPCResponse>(rpcResp, err);
 	}
 

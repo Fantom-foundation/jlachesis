@@ -81,7 +81,7 @@ public class BlockTest {
 
 //		blockSignature, err := block.GetSignature(fmt.Sprintf("0x%X", pubKeyBytes));
 		String pub = Utils.toHexString(pubKeyBytes);
-		System.out.println(" pub toHexString = " + pub);
+//		System.out.println(" pub toHexString = " + pub);
 //
 		RetResult<BlockSignature> getSignature = block.GetSignature(pub);
 		BlockSignature blockSignature = getSignature.result;

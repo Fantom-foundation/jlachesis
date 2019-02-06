@@ -28,7 +28,7 @@ import poset.WireBody;
 public class NetTransportTest {
 	static Logger logger = null; //Logger.getLogger(NetTransportTest.class);
 
-	static final long timeout = 200 * time.Millisecond;
+	static final long timeout = 1200 * time.Millisecond;
 	static final String errTimeout = "time is over";
 	int maxPool = 3;
 
@@ -43,30 +43,29 @@ public class NetTransportTest {
 		}
 	}
 
-	private HashMap<Long,Long> createMap123() {
+	protected SyncRequest getExpectedSyncRequest() {
 		HashMap<Long,Long> map = new HashMap<Long,Long>();
 		map.put(0L, 1L);
 		map.put(1L, 2L);
 		map.put(2L, 3L);
-		return map;
-	}
 
-	private HashMap<Long,Long> createMap556() {
+		return new SyncRequest(0, map);
+	}
+	protected SyncResponse getExpectedSyncResponse() {
 		HashMap<Long,Long> map = new HashMap<Long,Long>();
 		map.put(0L, 5L);
 		map.put(1L, 5L);
 		map.put(2L, 6L);
-		return map;
-	}
-
-	private void testSync(One2OneChannel<RPC> rpcCh, NetworkTransport trans1, NetworkTransport trans2) {
-		SyncRequest expectedReq = new SyncRequest(0, createMap123());
-		SyncResponse expectedResp = new SyncResponse(1);
 
 		WireBody wireBody = new poset.WireBody(null, null, null, 1L, 10L, 0L, 9L, -1L);
+		SyncResponse expectedResp = new SyncResponse(1, false,
+				new poset.WireEvent[]{new poset.WireEvent(wireBody, null)},	map);
+		return expectedResp;
+	}
 
-		expectedResp.setEvents(new poset.WireEvent[]{new poset.WireEvent(wireBody, null)});
-		expectedResp.setKnown(createMap556());
+	protected void testSync(One2OneChannel<RPC> rpcCh, Transport trans1, Transport trans2) {
+		SyncRequest expectedReq = getExpectedSyncRequest();
+		SyncResponse expectedResp = getExpectedSyncResponse();
 
 		ExecService.go(() -> {
 			new TimedOutEventSelectors<RPC>(rpcCh) {
@@ -86,7 +85,7 @@ public class NetTransportTest {
 	}
 
 
-	private void testEagerSync(One2OneChannel<RPC> rpcCh, NetworkTransport trans1, NetworkTransport trans2) {
+	protected void testEagerSync(One2OneChannel<RPC> rpcCh, Transport trans1, Transport trans2) {
 		WireBody wireBody = new poset.WireBody(null, null, null, 1L, 10L, 0L, 9L, -1L);
 		EagerSyncRequest expectedReq = new EagerSyncRequest(0, new poset.WireEvent[]{new poset.WireEvent(wireBody, null)});
 		EagerSyncResponse expectedResp = new EagerSyncResponse(1, true);
@@ -108,7 +107,7 @@ public class NetTransportTest {
 		assertEquals("EagerSync response should match", expectedResp, resp);
 	}
 
-	private void testFastForward(One2OneChannel<RPC> rpcCh, NetworkTransport trans1, NetworkTransport trans2) {
+	protected void testFastForward(One2OneChannel<RPC> rpcCh, Transport trans1, Transport trans2) {
 		FastForwardRequest expectedReq = new FastForwardRequest(0);
 
 		Frame frame = new Frame();
@@ -142,10 +141,8 @@ public class NetTransportTest {
 	}
 
 	public void testPooledConn(One2OneChannel<RPC> rpcCh, NetworkTransport trans1, NetworkTransport trans2) {
-		SyncRequest expectedReq = new SyncRequest( 0, createMap123());
-		WireBody wireBody = new poset.WireBody(null, null, null, 1L, 10L, 0L, 9L, -1L);
-		SyncResponse expectedResp = new SyncResponse(1, false,
-				new poset.WireEvent[]{new poset.WireEvent(wireBody, null)},	createMap556());
+		SyncRequest expectedReq = getExpectedSyncRequest();
+		SyncResponse expectedResp = getExpectedSyncResponse();
 
 		ExecService.go(() -> {
 			while(true) {
@@ -185,7 +182,7 @@ public class NetTransportTest {
 		assertEquals("Length should match", maxPool, trans2.connPool.get(addr).length);
 	}
 
-	//@Test
+//	@Test
 	public void TestNetworkTransport() {
 
 		// Transport 1 is consumer

@@ -1,14 +1,11 @@
 package channel;
 
-import java.lang.reflect.Field;
-
 import org.jcsp.lang.One2OneChannel;
 import org.jcsp.lang.One2OneChannelInt;
 
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
-import sun.misc.Unsafe;
 
 public class ChannelUtils {
 	static {
@@ -28,11 +25,12 @@ public class ChannelUtils {
 	}
 
 	public static void run(Runnable run) {
-		new	org.jcsp.lang.CSProcess() {
-			@Override
-			public void run() {
-				run.run();
-			}
-		}.run();
+		ExecService.go(() -> run.run());
+//		new	org.jcsp.lang.CSProcess() {
+//			@Override
+//			public void run() {
+//				run.run();
+//			}
+//		}.run();
 	}
 }
