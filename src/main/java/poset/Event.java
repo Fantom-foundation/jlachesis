@@ -30,9 +30,12 @@ public class Event implements FlagtableContainer {
 			String[] parents, byte[] creator, long index,
 			Map<String,Long> flagTable) {
 
-		InternalTransaction[] internalTransactionPointers = new InternalTransaction[internalTransactions.length];
-		for (int i = 0; i< internalTransactions.length; ++i) {
-			internalTransactionPointers[i] = new InternalTransaction(internalTransactions[i]);
+		InternalTransaction[] internalTransactionPointers = null;
+		if (internalTransactions != null) {
+			internalTransactionPointers = new InternalTransaction[internalTransactions.length];
+			for (int i = 0; i< internalTransactions.length; ++i) {
+				internalTransactionPointers[i] = new InternalTransaction(internalTransactions[i]);
+			}
 		}
 
 		BlockSignature[] blockSignaturePointers = null;
@@ -52,7 +55,10 @@ public class Event implements FlagtableContainer {
 			blockSignaturePointers
 		);
 
-		Builder builder = PFlagTableWrapper.FlagTableWrapper.newBuilder().putAllBody(flagTable);
+		Builder builder = PFlagTableWrapper.FlagTableWrapper.newBuilder();
+		if (flagTable!= null) {
+			builder.putAllBody(flagTable);
+		}
 		byte[] ft = builder.build().toByteArray();
 
 		this.Message = new EventMessage();
@@ -197,7 +203,7 @@ public class Event implements FlagtableContainer {
 
 	//sha256 hash of body
 	public RetResult<byte[]> Hash() {
-		if (hash.length == 0) {
+		if (hash == null || hash.length == 0) {
 			RetResult<byte[]> hash2 = Message.Body.Hash();
 			byte[] hash = hash2.result;
 			error err = hash2.err;
@@ -210,7 +216,7 @@ public class Event implements FlagtableContainer {
 	}
 
 	public String Hex() {
-		if (hex.isEmpty()) {
+		if (hex == null || hex.isEmpty()) {
 			byte[] hash = Hash().result;
 //			hex = String.format("0x%X", hash);
 			hex = crypto.Utils.toHexString(hash);

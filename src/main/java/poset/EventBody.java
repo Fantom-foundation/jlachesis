@@ -1,8 +1,13 @@
 package poset;
 
+import java.util.Arrays;
+
+import com.google.protobuf.ByteString;
+
 import common.RetResult;
 import common.error;
 import crypto.hash;
+import poset.proto.EventBody.Builder;
 
 public class EventBody {
 	byte[][] Transactions; //  `protobuf:"bytes,1,rep,name=Transactions,json=transactions,proto3" json:"Transactions,omitempty"`
@@ -85,6 +90,10 @@ public class EventBody {
 //			return null, err
 //		}
 //		return bf.Bytes(), null
+
+		Builder builder = poset.proto.EventBody.newBuilder();
+		Arrays.stream(this.Transactions)
+		.forEachOrdered(transaction -> builder.addTransactions(ByteString.copyFrom(transaction)));
 
 		// TBD
 		return null;
