@@ -36,7 +36,7 @@ public class InmemTest {
 
 		Block block = new Block(0, 1, new byte[]{}, transactions);
 
-//		"#1 Send tx"
+		//"#1 Send tx"
 		byte[] tx_origin = "the test transaction".getBytes();
 
 		ExecService.go(() -> {
@@ -56,7 +56,7 @@ public class InmemTest {
 		proxy.SubmitTx(tx_origin);
 
 
-//		"#2 Commit block"
+		//"#2 Commit block"
 		RetResult<byte[]> commitBlock = proxy.CommitBlock(block);
 		byte[] stateHash = commitBlock.result;
 		error err = commitBlock.err;
@@ -65,7 +65,7 @@ public class InmemTest {
 		assertArrayEquals("state hash should match", goldStateHash(), stateHash);
 		assertArrayEquals("transactions should match", transactions, proxy.transactions);
 
-//		"#3 Get snapshot"
+		//"#3 Get snapshot"
 		RetResult<byte[]> getSnapshot = proxy.GetSnapshot(block.Index());
 		byte[] snapshot = getSnapshot.result;
 		err = getSnapshot.err;
@@ -73,7 +73,7 @@ public class InmemTest {
 		assertNull("No error when get snapshot", err);
 		assertArrayEquals("snapshot should match", goldSnapshot(), snapshot);
 
-//		"#4 Restore snapshot"
+		//"#4 Restore snapshot"
 		err = proxy.Restore(goldSnapshot());
 		assertNull("No error restore from snapshot", err);
 	}

@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Level;
 import org.jcsp.lang.Alternative;
@@ -70,7 +71,6 @@ public class NetworkTransport implements Transport {
 		if (logger == null) {
 			logger = Logger.getLogger(this.getClass());
 			logger.setLevel(Level.DEBUG);
-//			lachesis_log.NewLocal(logger, logger.Level.String())
 		}
 		this.connPool = new HashMap<String, netConn[]>();
 		this.consumeCh = Channel.one2one(); // make(chan RPC),
@@ -79,6 +79,9 @@ public class NetworkTransport implements Transport {
 		this.shutdownCh = Channel.one2one();
 		this.stream = stream;
 		this.timeout = timeout;
+		this.logger = logger;
+
+		this.connPoolLock = new ReentrantLock();
 
 //		go listen();
 		ExecService.go(() -> listen());
@@ -124,6 +127,7 @@ public class NetworkTransport implements Transport {
 		switch (alt.priSelect()) {
 		case SHUTDOWN:
 			shutdownCh.in().read();
+			return true;
 		default:
 			return false;
 		}
@@ -159,8 +163,7 @@ public class NetworkTransport implements Transport {
 
 		// Dial a new connection
 		logger.field("target", target)
-				.field("timeout", timeout)
-				.info("Dialing");
+			.field("timeout", timeout.toMillis()).info("Dialing");
 
 		RetResult<Socket> dialCall = stream.Dial(target, timeout);
 		Socket conn2 = dialCall.result;
@@ -220,6 +223,8 @@ public class NetworkTransport implements Transport {
 
 	// genericRPC handles a simple request/response RPC.
 	public error genericRPC(String target, int rpcType, Object args, Object resp) {
+		logger.field("target", target).field("rpcType", rpcType).debug("genericRPC");
+
 		// Get a conn
 		RetResult<netConn> connCall = getConn(target, timeout);
 		netConn conn = connCall.result;

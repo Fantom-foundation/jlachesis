@@ -13,6 +13,7 @@ import autils.Logger;
 import autils.time;
 import channel.ExecService;
 import channel.Selectors;
+import common.NetUtils;
 import common.RetResult;
 import common.error;
 import poset.Block;
@@ -34,12 +35,12 @@ public class GrpcTest {
 
 	//@Test
 	public void TestGrpcCalls() {
-		String addr = "127.0.0.1:58580" ; // utils.GetUnusedNetAddr(t);
+		String addr = NetUtils.GetUnusedNetAddr();
 		Logger logger = Logger.getLogger(this.getClass());
 
 		GrpcAppProxy s = new GrpcAppProxy(addr, Duration.ofSeconds(timeout), null) ;
 
-//		"#1 Send tx"
+		//"#1 Send tx"
 		byte[] gold = "123456".getBytes();
 
 		GrpcLachesisProxy c = new GrpcLachesisProxy(addr, null);
@@ -48,35 +49,24 @@ public class GrpcTest {
 
 		logger.debug("after SubmitTx() " +  new String(gold));
 
-		new Selectors<byte[]>(s.SubmitCh()) {
+		new TimedOutEventSelectors<byte[]>(s.SubmitCh()) {
 			public void onEvent() {
 				byte[] tx = ch.in().read();
 				logger.debug("onEvent() " +  new String(tx));
 				assertEquals("read transactions should match" , gold, tx);
 			}
-
-			public void onTimeOut() {
-				tim.setAlarm(tim.read() + timeout * 1000);
-				fail(errTimeout);
-			}
 		}.run();
 
-//		"#2 Receive block"
+		//"#2 Receive block"
 		Block block = new poset.Block();
 
 		ExecService.go( () -> {
-			new Selectors<Commit>(c.CommitCh()) {
+			new TimedOutEventSelectors<Commit>(c.CommitCh()) {
 				public void onEvent() {
 					Commit event = ch.in().read();
 					logger.debug("onEvent() event =" +  event);
-
-					assertEquals("read transactions should match" , block, event.getBlock());
+					assertEquals("read transactions should match", block, event.getBlock());
 					event.getRespChan().out().write( new CommitResponse (gold, null));
-				}
-
-				public void onTimeOut() {
-					tim.setAlarm(tim.read() + timeout * 1000);
-					fail(errTimeout);
 				}
 			}.run();
 		});
@@ -87,15 +77,14 @@ public class GrpcTest {
 		assertNull("No error", err);
 		assertArrayEquals("Result from commit should match", gold, answ);
 
-//		"#3 Receive snapshot query"
+		//"#3 Receive snapshot query"
 		long index = 1L;
 		ExecService.go(() -> {
 			new TimedOutEventSelectors<SnapshotRequest>(c.SnapshotRequestCh()) {
 				public void onEvent() {
 					SnapshotRequest event = ch.in().read();
 					logger.debug("onEvent() event =" +  event);
-
-					assertEquals("read transactions should match" , index, event.getBlockIndex());
+					assertEquals("read transactions should match", index, event.getBlockIndex());
 					event.getRespChan().out().write( new SnapshotResponse (gold, null));
 				}
 			}.run();
@@ -109,27 +98,11 @@ public class GrpcTest {
 
 		// "#4 Receive restore command"
 		ExecService.go(() -> {
-//			select {
-//			case event := <-c.RestoreCh():
-//				asserter.Equal(gold, event.Snapshot)
-//				event.RespChan <- proto.RestoreResponse{
-//					StateHash: gold,
-//					Error:     null,
-//				}
-//			case <-time.After(timeout):
-//				asserter.Fail(errTimeout)
-//			}
-
-			new Selectors<RestoreRequest>(c.RestoreCh()) {
+			new TimedOutEventSelectors<RestoreRequest>(c.RestoreCh()) {
 				public void onEvent() {
 					RestoreRequest event = ch.in().read();
-					assertEquals("Restore result should match" , block, event.getSnapshot());
+					assertEquals("Restore result should match", gold, event.getSnapshot());
 					event.getRespChan().out().write( new RestoreResponse (gold, null));
-				}
-
-				public void onTimeOut() {
-					tim.setAlarm(tim.read() + timeout * 1000);
-					fail(errTimeout);
 				}
 			}.run();
 		});
@@ -158,13 +131,13 @@ public class GrpcTest {
 
 	//@Test
 	public void TestGrpcReConnection() {
-		String addr = ":58584" ; // utils.GetUnusedNetAddr(t);
+		String addr = NetUtils.GetUnusedNetAddr();
 		Logger logger = common.TestUtils.NewTestLogger(this.getClass());
 
 		GrpcAppProxy s = new GrpcAppProxy(addr, Duration.ofSeconds(timeout), logger) ;
 		GrpcLachesisProxy c = new GrpcLachesisProxy(addr, logger);
 
-//		"#1 Send tx after connection"
+		// "#1 Send tx after connection"
 		runTest(s, c);
 
 		s = new GrpcAppProxy(addr, Duration.ofMillis(timeout/2 * 1000), logger);
@@ -172,7 +145,7 @@ public class GrpcTest {
 		final CSTimer tim = new CSTimer();
 		tim.setAlarm(tim.read() + timeout * 1000);
 
-//		"#2 Send tx after reconnection")
+		//"#2 Send tx after reconnection")
 		runTest(s, c);
 	}
 
@@ -182,22 +155,10 @@ public class GrpcTest {
 		error err = c.SubmitTx(gold);
 		assertNull("No error", err);
 
-//			select {
-//			case tx := <-s.SubmitCh():
-//				asserter.Equal(gold, tx)
-//			case <-time.After(timeout):
-//				asserter.Fail(errTimeout)
-//			}
-
-		new Selectors<byte[]>(s.SubmitCh()) {
+		new TimedOutEventSelectors<byte[]>(s.SubmitCh()) {
 			public void onEvent() {
 				byte[] tx = ch.in().read();
-				assertEquals("read transactions should match" , gold, tx);
-			}
-
-			public void onTimeOut() {
-				tim.setAlarm(tim.read() + timeout * 1000);
-				fail(errTimeout);
+				assertEquals("read transactions should match", gold, tx);
 			}
 		}.run();
 

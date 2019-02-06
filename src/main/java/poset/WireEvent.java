@@ -7,7 +7,10 @@ public class WireEvent {
 	String[] WitnessProof;
 
 	public WireEvent() {
-
+		Body = null;
+		Signature = null;
+		FlagTable = null;
+		WitnessProof = null;
 	}
 
 	public WireEvent(WireBody body, String signature) {

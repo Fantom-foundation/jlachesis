@@ -25,8 +25,8 @@ public class PeerTest {
 	@Test
 	public void TestJSONPeers() {
 		// Create a test dir
-		FileUtils.mkdirs("/tmp/lachesis_test/", FileUtils.MOD_755);
 		File file = Paths.get("/tmp/lachesis_test/" + "peers.json").toFile();
+		FileUtils.mkdirs(file.toString(), FileUtils.MOD_755);
 		if (file.exists()) {
 			file.delete();
 		}

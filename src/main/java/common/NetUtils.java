@@ -1,5 +1,6 @@
 package common;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 
 public class NetUtils {
@@ -26,5 +27,25 @@ public class NetUtils {
 			port = Integer.parseInt(tokens[1]);
 		}
 		return port;
+	}
+
+	public static String GetUnusedNetAddr() {
+		ServerSocket server = null;
+		try {
+			server= new ServerSocket(0, 50);
+			return String.format("127.0.0.1:%d", server.getLocalPort());
+		} catch (Exception e) {
+			// If there's an error it likely means no ports available
+			System.err.println("No port available. Something is wrong");
+			System.exit(1);
+		} finally {
+			try {
+				if (server != null)
+					server.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return null;
 	}
 }

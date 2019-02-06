@@ -57,7 +57,7 @@ public class NodeTest {
 //		// Start two nodes
 //		Peer[] ps = p.ToPeerSlice();
 //
-//		String address = utils.GetUnusedNetAddr(t);
+//		String address = NetUtils.GetUnusedNetAddr();
 //		RetResult<NetworkTransport> NewTCPTransportCall = TCPTransport.NewTCPTransport(address, null, 2,
 //				time.Second, testLogger);
 //
@@ -78,7 +78,7 @@ public class NodeTest {
 //		node0.RunAsync(false);
 //		defer node0.Shutdown();
 //
-//		peer1Trans, err := net.NewTCPTransport(utils.GetUnusedNetAddr(t), null, 2,
+//		peer1Trans, err := net.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
 //			time.Second, testLogger);
 //		if err != null {
 //			t.Fatalf("err: %v", err);
@@ -165,7 +165,7 @@ public class NodeTest {
 //		// Start two nodes
 //		Peer[] ps = p.ToPeerSlice();
 //
-//		peer0Trans, err := net.NewTCPTransport(utils.GetUnusedNetAddr(t), null, 2,
+//		peer0Trans, err := net.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
 //			time.Second, testLogger)
 //		if err != null {
 //			t.Fatalf("err: %v", err)
@@ -181,7 +181,7 @@ public class NodeTest {
 //		node0.RunAsync(false)
 //		defer node0.Shutdown()
 //
-//		peer1Trans, err := net.NewTCPTransport(utils.GetUnusedNetAddr(t), null, 2,
+//		peer1Trans, err := net.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
 //			time.Second, testLogger)
 //		if err != null {
 //			t.Fatalf("err: %v", err)
@@ -246,7 +246,7 @@ public class NodeTest {
 //
 //		Peer[] ps = p.ToPeerSlice();
 //
-//		net.NewTCPTransport(utils.GetUnusedNetAddr(t), null, 2,
+//		net.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
 //				time.Second, TestUtils.NewTestLogger(this.getClass()));
 //		peer0Trans, err :=
 //		assertNull("No err creating tcp transport", err);
@@ -263,7 +263,7 @@ public class NodeTest {
 //		node0.RunAsync(false)
 //		defer node0.Shutdown()
 //
-//		peer1Trans, err := net.NewTCPTransport(utils.GetUnusedNetAddr(t), null, 2,
+//		peer1Trans, err := net.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
 //			time.Second, common.NewTestLogger(t))
 //		if err != null {
 //			t.Fatalf("err: %v", err)
@@ -343,7 +343,7 @@ public class NodeTest {
 //				logger,
 //			)
 //
-//			trans, err := net.NewTCPTransport(utils.GetUnusedNetAddr(t),
+//			trans, err := net.NewTCPTransport(NetUtils.GetUnusedNetAddr(),
 //				null, 2, time.Second, logger)
 //			if err != null {
 //				t.Fatalf("failed to create transport for peer %d: %s", id, err)
