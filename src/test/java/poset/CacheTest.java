@@ -18,7 +18,7 @@ import peers.Peer;
 import peers.Peers;
 
 /**
- * Test of block
+ * Test of cache
  *
  * @author qn
  *
