@@ -88,7 +88,7 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 		this.commitCh = Channel.one2one(); // make(chan proto.Commit),
 		this.queryCh = Channel.one2one(); // make(chan proto.SnapshotRequest),
 		this.restoreCh = Channel.one2one(); // make(chan proto.RestoreRequest),
-		this.stream= new AtomicReference<LachesisNode_ConnectClient>();
+		this.stream = new AtomicReference<LachesisNode_ConnectClient>();
 
 //		this.conn = grpc.Dial(this.addr,
 //			grpc.WithInsecure(),
@@ -111,13 +111,16 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 			this.client = new LachesisNodeClient(addr, 0);
 		}
 
+		stream.set(this.client);
+		logger.field("addr", addr).field("stream", stream).field("stream1", stream.get()).debug("after creating client");
+
 		ExecService.go(() -> {
 			this.logger.info("reconnect_ticket " + Instant.now());
 			this.reconnect_ticket.out().write(Instant.now()); // <- time.Now();
 			this.logger.info("after reconnect_ticket " + Instant.now());
-
-			listen_events();
 		});
+
+		ExecService.go(() -> {listen_events();});
 	}
 
 	public error Close() {
@@ -198,9 +201,9 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 	public error reConnect() {
 		Instant disconn_time = Instant.now();
 
-		logger.debug("reConnect disconn_time =" + disconn_time);
+		logger.debug("reConnect() disconn_time =" + disconn_time);
 		Instant connect_time = reconnect_ticket.in().read();
-		logger.debug("reConnect connect_time =" + connect_time);
+		logger.debug("reConnect() connect_time =" + connect_time);
 
 		if (ZeroTime.equals(connect_time)) {
 			reconnect_ticket.out().write(ZeroTime);
@@ -245,6 +248,12 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 		// TODO
 //		stream = client.Connect(context.TODO(), grpc.MaxCallRecvMsgSize(Integer.MAX_VALUE),
 //				grpc.MaxCallSendMsgSize(Integer.MAX_VALUE));
+		logger
+			.field("stream", this.stream)
+			.field("client = ", this.client)
+			.debug("reConnect() setting stream again");
+		this.stream = new AtomicReference<LachesisNode_ConnectClient>();
+
 		RetResult<LachesisNode_ConnectClient> connect = client.Connect();
 		LachesisNode_ConnectClient stream = connect.result;
 		error err = connect.err;
@@ -263,14 +272,10 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 	}
 
 	public void listen_events() {
-		logger.info("Listening to events ..");
-
 		ToClient event;
 		error err;
 		UUID uuid;
 		while (true) {
-			logger.info("Listening to events .. looping");
-
 			RetResult<ToClient> recvFromServer = recvFromServer();
 			event = recvFromServer.result;
 			err = recvFromServer.err;
@@ -423,6 +428,8 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 	}
 
 	public RetResult<ToClient> streamRecv() {
+		// logger.field("stream", stream).debug("streamRecv()");
+
 		LachesisNode_ConnectClient v = stream.get();// stream.Load();
 		if (v == null) {
 			return new RetResult<ToClient>(null, ErrNeedReconnect);

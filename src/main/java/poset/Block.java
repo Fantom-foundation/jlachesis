@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+
 import autils.Appender;
 import common.RetResult;
 import common.RetResult3;
@@ -168,30 +170,29 @@ public class Block {
 //		return bf.Bytes(), null;
 
 		// TBD
-
 		return null;
 	}
 
-//	public RetResult<PBlock.Block> ProtoUnmarshal(byte[] data) {
-//		PBlock.Block block;
-//		try {
-//			block = PBlock.Block.parseFrom(data);
-//		} catch (InvalidProtocolBufferException e) {
-//			return new RetResult<>(null, error.Errorf(e.getMessage()));
-//		}
-//		return new RetResult<>(block, null);
-//	}
-
 	public RetResult<Block> ProtoUnmarshal(byte[] data) {
 		// TODO
-//		Block block;
+//		poset.proto.Block block = null;
 //		try {
-//			block = Block.parseFrom(data);
+//			block = poset.proto.Block.parseFrom(data);
 //		} catch (InvalidProtocolBufferException e) {
 //			return new RetResult<>(null, error.Errorf(e.getMessage()));
 //		}
-//		return new RetResult<>(block, null);
-
+//		if (block != null) {
+//			Block b = new Block();
+//			b.Body = null
+//			Signatures.clear();
+//			Hash = null;
+//			Hex = null;
+//			setStateHash(null);
+//			FrameHash = null;
+//
+//			return new RetResult<>(b, null);
+//
+//		}
 		return null;
 	}
 

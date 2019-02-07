@@ -2,8 +2,7 @@ package proxy.internal;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.log4j.Logger;
-
+import autils.Logger;
 import common.RetResult;
 import common.error;
 import io.grpc.ManagedChannel;
@@ -19,7 +18,7 @@ import proxy.proto.ToServer;
  */
 public class LachesisNodeClient implements LachesisNode_ConnectClient {
 
-	private static final Logger logger = Logger.getLogger(LachesisNodeClient.class.getName());
+	private static final Logger logger = Logger.getLogger(LachesisNodeClient.class);
 
 	private ManagedChannel channel;
 	private LachesisNodeStub nodeStub;
@@ -49,7 +48,6 @@ public class LachesisNodeClient implements LachesisNode_ConnectClient {
 	}
 
 	public error Send(ToServer msg) {
-
 		logger.debug("Send toServer = " + msg);
 
 		// TODO Auto-generated method stub
@@ -57,18 +55,18 @@ public class LachesisNodeClient implements LachesisNode_ConnectClient {
 		StreamObserver<ToServer> collect = nodeStub.connect(new StreamObserver<ToClient>() {
 			@Override
 			public void onNext(ToClient m) {
-				System.out.println("ToClient m: " + m.toString());
+				logger.debug("ToClient onNext() m: " + m.toString());
 
 			}
 
 			@Override
 			public void onError(Throwable t) {
-
+				logger.debug("ToClient onError()");
 			}
 
 			@Override
 			public void onCompleted() {
-
+				logger.debug("ToClient onCompleted()");
 			}
 		});
 
@@ -80,7 +78,6 @@ public class LachesisNodeClient implements LachesisNode_ConnectClient {
 	}
 
 	public RetResult<ToClient> Recv() {
-
 		logger.debug("Recv() ");
 
 		StreamObserver<ToServer> collect = nodeStub.connect(new StreamObserver<ToClient>() {
