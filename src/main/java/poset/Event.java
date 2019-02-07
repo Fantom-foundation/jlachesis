@@ -154,7 +154,8 @@ public class Event implements FlagtableContainer {
 		}
 
 		boolean hasTransactions = Message.Body.Transactions != null &&
-			(Message.Body.Transactions.length > 0 || Message.Body.InternalTransactions.length > 0);
+			(Message.Body.Transactions.length > 0 ||
+					(Message.Body.InternalTransactions != null && Message.Body.InternalTransactions.length > 0));
 
 		return hasTransactions;
 	}
@@ -298,7 +299,11 @@ public class Event implements FlagtableContainer {
 		return new RetResult<Map<String,Long>>(flagTable.Body, err);
 	}
 
-	// MergeFlagTable returns merged flag table object.
+	/**
+	 * MergeFlagTable returns merged flag table object.
+	 * @param dst
+	 * @return
+	 */
 	public RetResult<Map<String,Long>> MergeFlagTable(Map<String,Long> dst) {
 		FlagTableWrapper src = new FlagTableWrapper();
 		error err = src.fromByteArray(Message.FlagTable);
@@ -306,12 +311,7 @@ public class Event implements FlagtableContainer {
 			return new RetResult<Map<String,Long>>(null, err);
 		}
 
-		for (String id : dst.keySet()){
-			long flag = dst.get(id);
-			if (src.Body.get(id) == 0 && flag == 1) {
-				src.Body.put(id, (long) 1);
-			}
-		}
+		src.Body.putAll(dst);
 		return new RetResult<Map<String,Long>>(src.Body, err);
 	}
 
