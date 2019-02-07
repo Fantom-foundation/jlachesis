@@ -38,16 +38,6 @@ public class Root {
 		this.Others = new HashMap<String,RootEvent>();
 	}
 
-//	public Reset()         { *m = Root{} }
-//	public String() string { return proto.CompactTextString(m) }
-//
-//	public XXX_Unmarshal(b []byte) error {
-//		return xxx_messageInfo_Root.Unmarshal(m, b)
-//	}
-//	public XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-//		return xxx_messageInfo_Root.Marshal(b, m, deterministic)
-//	}
-
 	public long GetNextRound() {
 		return NextRound;
 	}

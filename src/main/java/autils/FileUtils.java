@@ -1,5 +1,7 @@
 package autils;
 
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -68,18 +70,21 @@ public class FileUtils {
 	 * @return
 	 */
 	public static RetResult<Path> mkdirs(String filePath, String mod) {
-		Path newDirectoryPath = Paths.get(filePath).getParent();
+		return mkdir(Paths.get(filePath).getParent(), mod);
+	}
+
+	public static RetResult<Path> mkdir(Path dirPath, String mod) {
 		error err = null;
 
-		if (!Files.exists(newDirectoryPath)) {
+		if (!Files.exists(dirPath)) {
 			FileAttribute<Set<PosixFilePermission>> fileAttributes = PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString(mod));
 			try {
-				newDirectoryPath = Files.createDirectory(newDirectoryPath, fileAttributes);
+				dirPath = Files.createDirectory(dirPath, fileAttributes);
 			} catch (IOException e) {
-				err = error.Errorf("error mkdir " + filePath + ", returned msg= " + e.getMessage());
+				err = error.Errorf("error mkdir " + dirPath + ", returned msg= " + e.getMessage());
 			}
 		}
-		return new RetResult<>(newDirectoryPath, err);
+		return new RetResult<>(dirPath, err);
 	}
 
 	/**
@@ -102,6 +107,19 @@ public class FileUtils {
 		}
 
 		return new RetResult<>(newFilePath, err);
+	}
+
+	public static error delete(String path) {
+		deleteRecursive(Paths.get(path).toFile());
+		return null;
+	}
+
+	static void deleteRecursive(File fileOrDirectory) {
+	    if (fileOrDirectory.isDirectory())
+	        for (File child : fileOrDirectory.listFiles())
+	            deleteRecursive(child);
+
+	    fileOrDirectory.delete();
 	}
 
 	public static error writeToFile(Path file, byte[] bytes) {
