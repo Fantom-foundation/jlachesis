@@ -32,7 +32,7 @@ public class CacheTest {
 		Peers participants = Peers.NewPeersFromSlice(new peers.Peer[]{
 			new Peer("0xaa", ""),
 			new Peer("0xbb", ""),
-			new Peer("0xcc", ""),
+			new Peer("0xcc", "")
 		});
 
 		ParticipantEventsCache pec = new ParticipantEventsCache(size, participants);
@@ -118,7 +118,7 @@ public class CacheTest {
 		}
 	}
 
-	//@Test
+	@Test
 	public void TestParticipantEventsCacheEdge() {
 		int size = 10;
 		long testSize = 11L;

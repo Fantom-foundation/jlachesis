@@ -3,7 +3,11 @@ package common;
 import java.util.ArrayList;
 import java.util.List;
 
+import autils.Logger;
+
 public class RollingIndex {
+	private static Logger logger = Logger.getLogger(RollingIndex.class);
+
 	String name;
 	int size;
 	long lastIndex;
@@ -21,6 +25,9 @@ public class RollingIndex {
 	}
 
 	public RetResult<Object[]> Get(long skipIndex) {
+		logger.field("skipIndex", skipIndex)
+			.field("items", items).debug("RollingIndex.Get()");
+
 		Object[] res = new Object[] {};
 
 		if (skipIndex <0 || skipIndex > lastIndex) {
@@ -30,6 +37,10 @@ public class RollingIndex {
 		long cachedItems = items.size();
 		// assume there are no gaps between indexes
 		long oldestCachedIndex = lastIndex - cachedItems + 1;
+
+		logger.field("cachedItems", cachedItems)
+			.field("oldestCachedIndex", oldestCachedIndex).debug("RollingIndex.Get()");
+
 		if (skipIndex + 1 < oldestCachedIndex) {
 			return new RetResult<Object[]>(res,
 					StoreErr.newStoreErr(name, StoreErrType.TooLate, Long.toString(skipIndex, 10)));
@@ -40,22 +51,36 @@ public class RollingIndex {
 
 		// TBD : equivalent with items[start:]?
 		res = items.subList((int) start, items.size()).toArray();
-//		res = Appender.slice(items, (int) start, items.size());
+//		res = Appender.sliceFromToEnd(items.toArray(), (int) start);
+
+		logger.field("start", start).field("res",  res).debug("RollingIndex.Get()");
+
 		return new RetResult<Object[]>(res, null);
 	}
 
 	public RetResult<Object> GetItem(long index) {
 		long numitems = items.size();
 		long oldestCached = lastIndex - numitems + 1;
+
+		logger.field("index", index)
+			.field("items", items)
+			.field("numitems", numitems)
+			.field("oldestCached", oldestCached).debug("GetItem()");
+
 		if (index < oldestCached) {
 			return new RetResult<Object>(null,
 					StoreErr.newStoreErr(name, StoreErrType.TooLate, Long.toString(index, 10)));
 		}
 		int findex = (int) (index - oldestCached);
+
+		logger.field("findex", findex).debug("GetItem()");
+
 		if (findex >= numitems) {
 			return new RetResult<Object>(null,
 					StoreErr.newStoreErr(name, StoreErrType.KeyNotFound, Long.toString(index, 10)));
 		}
+
+		logger.field("found item", items.get(findex)).debug("GetItem()");
 		return new RetResult<Object>(items.get(findex), null);
 	}
 

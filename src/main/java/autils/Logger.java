@@ -1,7 +1,7 @@
 package autils;
 
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.log4j.Level;
@@ -31,7 +31,7 @@ public class Logger {
 
 	public Logger field(String s, Object o) {
 		if (map == null) {
-			map = new HashMap<>();
+			map = new LinkedHashMap<>();
 		}
 		map.put(s, o);
 		return this;

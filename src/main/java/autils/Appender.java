@@ -2,7 +2,6 @@ package autils;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
-import java.util.stream.Stream;
 
 /**
  * An Appender provides a means to express the append and slide operations.

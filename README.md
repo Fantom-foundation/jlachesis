@@ -13,9 +13,11 @@ Check source code at: https://github.com/Fantom-foundation/jlachesis
 jLachesis aims to deliver a prototype that preserves the semantics of Lachesis protocol.
 We use this as a base for our other research projects.
 
+For the technical side, jLachesis uses Java 8+, Maven, Protocol Buffers, Grpc, Springboot and JUnit.
+
 # Requirements
 
-You will need the following to compile:
+You will need the followings to compile:
 
 Java jdk 1.8+
 Maven 2+
@@ -25,20 +27,25 @@ Code has been developed and tested mainly on Ubuntu 18.04 LTS.
 
 # Compile & run
 
-Basic maven:
+Compile command:
+
 mvn clean compile
 
-For code development, it's better to use an IDE (such as Eclipse).
+For code development, it's recommended to use an IDE (such as Eclipse).
 
 # Progress
 
 The conversion from GoLang code to Java is complete. The journey was extremely fun.
 
-Will put a tutorial to showcase as well as to give lessons learnt though the process.
+The technical challenge is mainly due to the syntatic sugar, the idioms
+and the libraries used between the two languages.
+
+We will shortly put a tutorial to showcase as well as to give lessons learnt through the process.
 
 # Contact
 
-The project is still in the early state. So we are welcome to any feedbacks.
-Any questions or suggestions about this project, please directly contact:
-Quan Nguyen: <quan>.<nguyen>@fantom.foundation
+The project is still in the early state. Any feedbacks or contributions are all welcome.
+
+For questions or suggestions about this project, please directly contact:
+Quan Nguyen: [quan.nguyen]@fantom.foundation
 

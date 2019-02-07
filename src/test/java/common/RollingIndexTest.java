@@ -1,4 +1,5 @@
 package common;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -114,7 +115,7 @@ public class RollingIndexTest {
 			convertedItems = Appender.append(convertedItems, item.toString());
 		}
 
-		assertEquals("expected and cached should be equal", expected1, convertedItems);
+		assertArrayEquals("expected and cached should be equal", expected1, convertedItems);
 
 
 		int skipIndex2 = 15;
@@ -131,7 +132,7 @@ public class RollingIndexTest {
 			convertedItems = Appender.append(convertedItems, item.toString());
 		}
 
-		assertEquals("expected and cached should be equal", expected2, convertedItems);
+		assertArrayEquals("expected and cached should be equal", expected2, convertedItems);
 
 		int skipIndex3 = 27;
 		String expected3 = null;

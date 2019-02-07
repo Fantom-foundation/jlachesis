@@ -2,6 +2,7 @@ package poset;
 
 import java.util.Map;
 
+import autils.Logger;
 import common.StoreErrType;
 import common.RetResult;
 import common.RollingIndexMap;
@@ -10,6 +11,8 @@ import common.error;
 import peers.Peer;
 
 public class ParticipantEventsCache {
+
+	private static Logger logger = Logger.getLogger(ParticipantEventsCache.class);
 	peers.Peers participants;
 	RollingIndexMap rim;
 
@@ -63,6 +66,8 @@ public class ParticipantEventsCache {
 	}
 
 	public RetResult<String> GetItem(String participant, long index) {
+		logger.field("participant", participant).field("index", index).debug("GetItem()");
+
 		RetResult<Long> participantID = participantID(participant);
 		long id = participantID.result;
 		error err = participantID.err;
@@ -72,6 +77,9 @@ public class ParticipantEventsCache {
 
 		RetResult<Object> getItem = rim.GetItem(id, index);
 		Object item = getItem.result;
+		logger.field("id", id).field("item", item).debug("GetItem()");
+
+
 		err = getItem.err;
 		if (err != null) {
 			return new  RetResult<String>("", err);
