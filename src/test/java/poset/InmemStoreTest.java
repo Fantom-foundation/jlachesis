@@ -215,11 +215,11 @@ public class InmemStoreTest {
 		err = getBlock.err;
 		assertNull("No error when GetBlock", err);
 
-		String val1Sig = storedBlock.Signatures.get(participants[0].hex);
+		String val1Sig = storedBlock.GetSignatures().get(participants[0].hex);
 		assertNotNull("Validator1 signature is stored in block", val1Sig);
 		assertEquals("Validator1 block signatures differ", sig1.Signature, val1Sig);
 
-		String val2Sig = storedBlock.Signatures.get(participants[1].hex);
+		String val2Sig = storedBlock.GetSignatures().get(participants[1].hex);
 		assertNotNull("Validator1 signature is stored in block", val2Sig);
 		assertEquals("Validator1 block signatures differ", sig2.Signature, val2Sig);
 	}

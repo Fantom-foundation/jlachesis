@@ -17,7 +17,6 @@ public class EventBody {
 	long Index; // `protobuf:"varint,5,opt,name=Index,json=index" json:"Index,omitempty"`
 	BlockSignature [] BlockSignatures; //     `protobuf:"bytes,6,rep,name=BlockSignatures,json=blockSignatures" json:"BlockSignatures,omitempty"`
 
-
 	public EventBody(byte[][] transactions, InternalTransaction[] internalTransactions, String[] parents,
 			byte[] creator, long index, BlockSignature[] blockSignatures) {
 		super();
@@ -28,7 +27,6 @@ public class EventBody {
 		Index = index;
 		BlockSignatures = blockSignatures;
 	}
-
 
 	public EventBody() {
 		super();
@@ -84,19 +82,39 @@ public class EventBody {
 	}
 
 	public RetResult<byte[]> ProtoMarshal() {
-//		proto.Buffer bf;
-//		bf.SetDeterministic(true)
-//		if err := bf.Marshal(e); err != null {
-//			return null, err
-//		}
-//		return bf.Bytes(), null
-
 		Builder builder = poset.proto.EventBody.newBuilder();
-		Arrays.stream(this.Transactions)
-		.forEachOrdered(transaction -> builder.addTransactions(ByteString.copyFrom(transaction)));
+		if (this.Transactions != null) {
+			Arrays.asList(this.Transactions)
+			.forEach(transaction -> builder.addTransactions(ByteString.copyFrom(transaction)));
+		}
+
+//		InternalTransaction[] InternalTransactions; // `protobuf:"bytes,2,rep,name=InternalTransactions,json=internalTransactions" json:"InternalTransactions,omitempty"`
+
+//		if (Parents != null) {
+//			Arrays.asList(this.Parents).forEach(
+//					parent ->
+//					{
+//						if (parent != null)
+//							builder.addParents(parent);
+//					});
+//		}
+
+//		builder.setCreator(ByteString.copyFrom(Creator));
+//		builder.setIndex(Index);
+
+		if (BlockSignatures != null) {
+			Arrays.asList(this.BlockSignatures).forEach(
+					block ->
+					{
+//						if (block != null)
+//							builder.addBlockSignatures(block);
+					});
+		}
+
+		byte[] byteArray = builder.build().toByteArray();
 
 		// TBD
-		return null;
+		return new RetResult<byte[]>(byteArray, null);
 	}
 
 	public error ProtoUnmarshal(byte[] data) {

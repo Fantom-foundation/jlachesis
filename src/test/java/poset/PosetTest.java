@@ -1,9 +1,16 @@
 package poset;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.security.KeyPair;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Test;
 
 import autils.Appender;
 import autils.Logger;
@@ -12,6 +19,7 @@ import common.TestUtils;
 import common.error;
 import peers.Peer;
 import peers.Peers;
+import static poset.Event.rootSelfParent;
 
 /**
  * Test for Poset
@@ -145,6 +153,13 @@ public class PosetTest {
 		String descendant, ancestor;
 		boolean val;
 		boolean err;
+		public ancestryItem(String descendant, String ancestor, boolean val, boolean err) {
+			super();
+			this.descendant = descendant;
+			this.ancestor = ancestor;
+			this.val = val;
+			this.err = err;
+		}
 	}
 
 	class roundItem {
@@ -189,6 +204,7 @@ public class PosetTest {
 	HashMap<String,String> index;
 	Event[] orderedEvents;
 	Peers participants;
+	Poset poset;
 
 	public void initPosetNodes(int n)  {
 		participants  = new Peers();
@@ -252,338 +268,327 @@ public class PosetTest {
 
 		return poset;
 	}
-//
-//	public initPosetFull(play[] plays, boolean db, int n, Logger logger) (Poset, HashMap<String,String>, Event[], TestNode[]) {
-//		nodes, index, orderedEvents, participants := initPosetNodes(n)
-//
-//		// Needed to have sorted nodes based on participants hash32
-//		for i, peer := range participants.ToPeerSlice() {
-//			event := NewEvent(null, null, null, String[]{rootSelfParent(peer.ID), ""},
-//				nodes[i].Pub, 0, HashMap<String,Long>{rootSelfParent(peer.ID): 1})
-//			nodes[i].signAndAddEvent(event, fmt.Sprintf("e%d", i),
-//				index, orderedEvents)
-//		}
-//
-//		playEvents(plays, nodes, index, orderedEvents)
-//
-//		poset := createPoset(t, db, orderedEvents, participants, logger)
-//
-//		// Add reference to each participants' root event
-//		for i, peer := range participants.ToPeerSlice() {
-//			root, err := poset.Store.GetRoot(peer.PubKeyHex)
-//			if err != null {
-//				panic(err)
-//			}
-//			index["r"+strconv.Itoa(i)] = root.SelfParent.Hash
-//		}
-//
-//		return poset, index, orderedEvents, nodes
-//	}
-//
-//	/*  */
-//
-//	/*
-//	|  e12  |
-//	|   | \ |
-//	|  s10 e20
-//	|   | / |
-//	|   /   |
-//	| / |   |
-//	s00 |  s20
-//	|   |   |
-//	e01 |   |
-//	| \ |   |
-//	e0  e1  e2
-//	|   |   |
-//	r0  r1  r2
-//	0   1   2
-//	*/
-//	public initPoset() (*Poset, HashMap<String,String>) {
-//		plays := []play{
-//			{0, 1, e0, e1, e01, null, null, String[]{e0, e1}},
-//			{2, 1, e2, "", s20, null, null, String[]{e2}},
-//			{1, 1, e1, "", s10, null, null, String[]{e1}},
-//			{0, 2, e01, "", s00, null, null, String[]{e0, e1}},
-//			{2, 2, s20, s00, e20, null, null, String[]{e0, e1, e2}},
-//			{1, 2, s10, e20, e12, null, null, String[]{e0, e1, e2}},
-//		}
-//
-//		p, index, orderedEvents, _ := initPosetFull(t, plays, false, n,
-//			testLogger(t))
-//
-//		for i, ev := range *orderedEvents {
-//			if err := p.Store.SetEvent(ev); err != null {
-//				t.Fatalf("%d: %s", i, err)
-//			}
-//		}
-//
-//		return p, index
-//	}
-//
-//	public TestAncestor() {
-//		p, index := initPoset(t)
-//
-//		expected := []ancestryItem{
-//			// first generation
-//			{e01, e0, true, false},
-//			{e01, e1, true, false},
-//			{s00, e01, true, false},
-//			{s20, e2, true, false},
-//			{e20, s00, true, false},
-//			{e20, s20, true, false},
-//			{e12, e20, true, false},
-//			{e12, s10, true, false},
-//			// second generation
-//			{s00, e0, true, false},
-//			{s00, e1, true, false},
-//			{e20, e01, true, false},
-//			{e20, e2, true, false},
-//			{e12, e1, true, false},
-//			{e12, s20, true, false},
-//			// third generation
-//			{e20, e0, true, false},
-//			{e20, e1, true, false},
-//			{e20, e2, true, false},
-//			{e12, e01, true, false},
-//			{e12, e0, true, false},
-//			{e12, e1, true, false},
-//			{e12, e2, true, false},
-//			// false positive
-//			{e01, e2, false, false},
-//			{s00, e2, false, false},
-//			{e0, "", false, true},
-//			{s00, "", false, true},
-//			{e12, "", false, true},
-//			// root events
-//			{e1, r1, true, false},
-//			{e20, r1, true, false},
-//			{e12, r0, true, false},
-//			{s20, r1, false, false},
-//			{r0, r1, false, false},
-//		}
-//
-//		for _, exp := range expected {
-//			a, err := p.ancestor(index[exp.descendant], index[exp.ancestor])
-//			if err != null && !exp.err {
-//				t.Fatalf("Error computing ancestor(%s, %s). Err: %v",
-//					exp.descendant, exp.ancestor, err)
-//			}
-//			if a != exp.val {
-//				t.Fatalf("ancestor(%s, %s) should be %v, not %v",
-//					exp.descendant, exp.ancestor, exp.val, a)
-//			}
-//		}
-//	}
-//
-//	public TestSelfAncestor() {
-//		p, index := initPoset(t)
-//
-//		expected := []ancestryItem{
-//			// 1 generation
-//			{e01, e0, true, false},
-//			{s00, e01, true, false},
-//			// 1 generation false negative
-//			{e01, e1, false, false},
-//			{e12, e20, false, false},
-//			{s20, e1, false, false},
-//			{s20, "", false, true},
-//			// 2 generations
-//			{e20, e2, true, false},
-//			{e12, e1, true, false},
-//			// 2 generations false negatives
-//			{e20, e0, false, false},
-//			{e12, e2, false, false},
-//			{e20, e01, false, false},
-//			// roots
-//			{e20, r2, true, false},
-//			{e1, r1, true, false},
-//			{e1, r0, false, false},
-//			{r1, r0, false, false},
-//		}
-//
-//		for _, exp := range expected {
-//			a, err := p.selfAncestor(index[exp.descendant], index[exp.ancestor])
-//			if err != null && !exp.err {
-//				t.Fatalf("Error computing selfAncestor(%s, %s). Err: %v",
-//					exp.descendant, exp.ancestor, err)
-//			}
-//			if a != exp.val {
-//				t.Fatalf("selfAncestor(%s, %s) should be %v, not %v",
-//					exp.descendant, exp.ancestor, exp.val, a)
-//			}
-//		}
-//	}
-//
-//	public TestSee() {
-//		p, index := initPoset(t)
-//
-//		expected := []ancestryItem{
-//			{e01, e0, true, false},
-//			{e01, e1, true, false},
-//			{e20, e0, true, false},
-//			{e20, e01, true, false},
-//			{e12, e01, true, false},
-//			{e12, e0, true, false},
-//			{e12, e1, true, false},
-//			{e12, s20, true, false},
-//		}
-//
-//		for _, exp := range expected {
-//			a, err := p.see(index[exp.descendant], index[exp.ancestor])
-//			if err != null && !exp.err {
-//				t.Fatalf("Error computing see(%s, %s). Err: %v",
-//					exp.descendant, exp.ancestor, err)
-//			}
-//			if a != exp.val {
-//				t.Fatalf("see(%s, %s) should be %v, not %v",
-//					exp.descendant, exp.ancestor, exp.val, a)
-//			}
-//		}
-//	}
-//
-//	public TestLamportTimestamp() {
-//		p, index := initPoset(t)
-//
-//		expectedTimestamps := HashMap<String,Long>{
-//			e0:  0,
-//			e1:  0,
-//			e2:  0,
-//			e01: 1,
-//			s10: 1,
-//			s20: 1,
-//			s00: 2,
-//			e20: 3,
-//			e12: 4,
-//		}
-//
-//		for e, ets := range expectedTimestamps {
-//			ts, err := p.lamportTimestamp(index[e])
-//			if err != null {
-//				t.Fatalf("Error computing lamportTimestamp(%s). Err: %s", e, err)
-//			}
-//			if ts != ets {
-//				t.Fatalf("%s LamportTimestamp should be %d, not %d", e, ets, ts)
-//			}
-//		}
-//	}
-//
-//	/*
-//	|    |    e20
-//	|    |   / |
-//	|    | /   |
-//	|    /     |
-//	|  / |     |
-//	e01  |     |
-//	| \  |     |
-//	|   \|     |
-//	|    |\    |
-//	|    |  \  |
-//	e0   e1 (a)e2
-//	0    1     2
-//
-//	Node 2 Forks; events a and e2 are both created by node2, they are not
-//	self-parent sand yet they are both ancestors of event e20
-//	*/
-//	public TestFork() {
-//		index := make(HashMap<String,String>)
-//		var nodes []TestNode
-//		participants := peers.NewPeers()
-//
-//		for i := 0; i < n; i++ {
-//			key, _ := crypto.GenerateECDSAKey()
-//			node := NewTestNode(key, i)
-//			nodes = append(nodes, node)
-//			participants.AddPeer(peers.NewPeer(node.PubHex, ""))
-//		}
-//
-//		store := NewInmemStore(participants, cacheSize)
-//		poset := NewPoset(participants, store, null, testLogger(t))
-//
-//		for i, node := range nodes {
-//			event := NewEvent(null, null, null, String[]{"", ""}, node.Pub, 0, null)
-//			event.Sign(node.Key)
-//			index[fmt.Sprintf("e%d", i)] = event.Hex()
-//			poset.InsertEvent(event, true)
-//		}
-//
-//		//a and e2 need to have different hashes
-//		eventA := NewEvent([][]byte{[]byte("yo")}, null, null, String[]{"", ""}, nodes[2].Pub, 0, null)
-//		eventA.Sign(nodes[2].Key)
-//		index["a"] = eventA.Hex()
-//		if err := poset.InsertEvent(eventA, true); err == null {
-//			t.Fatal("InsertEvent should return error for 'a'")
-//		}
-//
-//		event01 := NewEvent(null, null, null,
-//			String[]{index[e0], index[a]}, //e0 and a
-//			nodes[0].Pub, 1, null)
-//		event01.Sign(nodes[0].Key)
-//		index[e01] = event01.Hex()
-//		if err := poset.InsertEvent(event01, true); err == null {
-//			t.Fatalf("InsertEvent should return error for %s", e01)
-//		}
-//
-//		event20 := NewEvent(null, null, null,
-//			String[]{index[e2], index[e01]}, //e2 and e01
-//			nodes[2].Pub, 1, null)
-//		event20.Sign(nodes[2].Key)
-//		index[e20] = event20.Hex()
-//		if err := poset.InsertEvent(event20, true); err == null {
-//			t.Fatalf("InsertEvent should return error for %s", e20)
-//		}
-//	}
-//
-//	/*
-//	|  s11  |
-//	|   |   |
-//	|   f1  |
-//	|  /|   |
-//	| / s10 |
-//	|/  |   |
-//	e02 |   |
-//	| \ |   |
-//	|   \   |
-//	|   | \ |
-//	s00 |  e21
-//	|   | / |
-//	|  e10  s20
-//	| / |   |
-//	e0  e1  e2
-//	0   1    2
-//	*/
-//
-//	public initRoundPoset() (*Poset, HashMap<String,String>, []TestNode) {
-//		plays := []play{
-//			{1, 1, e1, e0, e10, null, null, String[]{e0, e1}},
-//			{2, 1, e2, "", s20, null, null, String[]{e2}},
-//			{0, 1, e0, "", s00, null, null, String[]{e0}},
-//			{2, 2, s20, e10, e21, null, null, String[]{e0, e1, e2}},
-//			{0, 2, s00, e21, e02, null, null, String[]{e0, e21}},
-//			{1, 2, e10, "", s10, null, null, String[]{e0, e1}},
-//			{1, 3, s10, e02, f1, null, null, String[]{e21, e02, e1}},
-//			{1, 4, f1, "", s11, [][]byte{[]byte("abc")}, null,
-//				String[]{e21, e02, f1}},
-//		}
-//
-//		p, index, _, nodes := initPosetFull(t, plays, false, n, testLogger(t))
-//
-//		return p, index, nodes
-//	}
-//
+
+	public void  initPosetFull(play[] plays, boolean db, int n, Logger logger) {
+		initPosetNodes(n);
+
+		// Needed to have sorted nodes based on participants hash32
+		Peer[] peerSlice = participants.ToPeerSlice();
+
+		for (int i = 0; i< peerSlice.length; ++i) {
+			Peer peer = peerSlice[i];
+
+			HashMap<String,Long> map = new HashMap<String,Long>();
+			map.put(rootSelfParent(peer.GetID()), 1L);
+			Event event = new Event(null, null, null, new String[]{rootSelfParent(peer.GetID()), ""},
+				nodes[i].Pub, 0, map);
+			nodes[i].signAndAddEvent(event, String.format("e%d", i),
+				index, orderedEvents);
+		}
+
+		playEvents(plays, nodes, index, orderedEvents);
+
+		poset = createPoset(db, orderedEvents, participants, logger);
+
+		peerSlice = participants.ToPeerSlice();
+		// Add reference to each participants' root event
+		for (int i = 0; i< peerSlice.length; ++i) {
+			Peer peer = peerSlice[i];
+			RetResult<Root> getRoot = poset.Store.GetRoot(peer.GetPubKeyHex());
+			Root root = getRoot.result;
+			error err  = getRoot.err;
+			assertNull("No error", err);
+			index.put("r"+i, root.SelfParent.Hash);
+		}
+	}
+
+	/*  */
+
+	/*
+	|  e12  |
+	|   | \ |
+	|  s10 e20
+	|   | / |
+	|   /   |
+	| / |   |
+	s00 |  s20
+	|   |   |
+	e01 |   |
+	| \ |   |
+	e0  e1  e2
+	|   |   |
+	r0  r1  r2
+	0   1   2
+	*/
+	public void initPoset() {
+		play[] plays = new play[]{
+			new play(0, 1, e0, e1, e01, null, null, new String[]{e0, e1}),
+			new play(2, 1, e2, "", s20, null, null, new String[]{e2}),
+			new play(1, 1, e1, "", s10, null, null, new String[]{e1}),
+			new play(0, 2, e01, "", s00, null, null, new String[]{e0, e1}),
+			new play(2, 2, s20, s00, e20, null, null, new String[]{e0, e1, e2}),
+			new play(1, 2, s10, e20, e12, null, null, new String[]{e0, e1, e2}),
+		};
+
+		initPosetFull(plays, false, n, testLogger());
+
+		for (int i = 0; i< orderedEvents.length; ++i) {
+			Event ev = orderedEvents[i];
+			error err = poset.Store.SetEvent(ev);
+			assertNull(String.format("No error for setting event at %d", i), err);
+		}
+	}
+
+	public void TestAncestor() {
+		initPoset();
+
+		ancestryItem[] expected = new  ancestryItem[]{
+			// first generation
+			new ancestryItem(e01, e0, true, false),
+			new ancestryItem(e01, e1, true, false),
+			new ancestryItem(s00, e01, true, false),
+			new ancestryItem(s20, e2, true, false),
+			new ancestryItem(e20, s00, true, false),
+			new ancestryItem(e20, s20, true, false),
+			new ancestryItem(e12, e20, true, false),
+			new ancestryItem(e12, s10, true, false),
+			// second generation
+			new ancestryItem(s00, e0, true, false),
+			new ancestryItem(s00, e1, true, false),
+			new ancestryItem(e20, e01, true, false),
+			new ancestryItem(e20, e2, true, false),
+			new ancestryItem(e12, e1, true, false),
+			new ancestryItem(e12, s20, true, false),
+			// third generation
+			new ancestryItem(e20, e0, true, false),
+			new ancestryItem(e20, e1, true, false),
+			new ancestryItem(e20, e2, true, false),
+			new ancestryItem(e12, e01, true, false),
+			new ancestryItem(e12, e0, true, false),
+			new ancestryItem(e12, e1, true, false),
+			new ancestryItem(e12, e2, true, false),
+			// false positive
+			new ancestryItem(e01, e2, false, false),
+			new ancestryItem(s00, e2, false, false),
+			new ancestryItem(e0, "", false, true),
+			new ancestryItem(s00, "", false, true),
+			new ancestryItem(e12, "", false, true),
+			// root events
+			new ancestryItem(e1, r1, true, false),
+			new ancestryItem(e20, r1, true, false),
+			new ancestryItem(e12, r0, true, false),
+			new ancestryItem(s20, r1, false, false),
+			new ancestryItem(r0, r1, false, false)
+		};
+
+		for (ancestryItem exp : expected) {
+			RetResult<Boolean> ancestorCall = poset.ancestor(index.get(exp.descendant), index.get(exp.ancestor));
+			boolean a = ancestorCall.result;
+			error err = ancestorCall.err;
+			assertNull(String.format("No error when computing ancestor(%s, %s). Err: %v",
+				exp.descendant, exp.ancestor), err);
+			assertEquals(String.format("ancestor(%s, %s) should match",
+				exp.descendant, exp.ancestor), exp.val, a);
+		}
+	}
+
+	//@Test
+	public void TestSelfAncestor() {
+		initPoset();
+
+		ancestryItem[] expected = new ancestryItem[]{
+			// 1 generation
+			new ancestryItem(e01, e0, true, false),
+			new ancestryItem(s00, e01, true, false),
+			// 1 generation false negative
+			new ancestryItem(e01, e1, false, false),
+			new ancestryItem(e12, e20, false, false),
+			new ancestryItem(s20, e1, false, false),
+			new ancestryItem(s20, "", false, true),
+			// 2 generations
+			new ancestryItem(e20, e2, true, false),
+			new ancestryItem(e12, e1, true, false),
+			// 2 generations false negatives
+			new ancestryItem(e20, e0, false, false),
+			new ancestryItem(e12, e2, false, false),
+			new ancestryItem(e20, e01, false, false),
+			// roots
+			new ancestryItem(e20, r2, true, false),
+			new ancestryItem(e1, r1, true, false),
+			new ancestryItem(e1, r0, false, false),
+			new ancestryItem(r1, r0, false, false)
+		};
+
+		for (ancestryItem exp : expected) {
+			RetResult<Boolean> selfAncestorCall = poset.selfAncestor(index.get(exp.descendant), index.get(exp.ancestor));
+			boolean a = selfAncestorCall.result;
+			error err = selfAncestorCall.err;
+			assertNull(String.format("No Error when computing selfAncestor(%s, %s)",
+				exp.descendant, exp.ancestor), err);
+			assertEquals(String.format("selfAncestor(%s, %s) should match",
+				exp.descendant, exp.ancestor), exp.val, a);
+		}
+	}
+
+	@Test
+	public void TestSee() {
+		initPoset();
+
+		ancestryItem[] expected = new ancestryItem[]{
+			new ancestryItem(e01, e0, true, false),
+			new ancestryItem(e01, e1, true, false),
+			new ancestryItem(e20, e0, true, false),
+			new ancestryItem(e20, e01, true, false),
+			new ancestryItem(e12, e01, true, false),
+			new ancestryItem(e12, e0, true, false),
+			new ancestryItem(e12, e1, true, false),
+			new ancestryItem(e12, s20, true, false)
+		};
+
+		for (ancestryItem exp : expected) {
+			RetResult<Boolean> see = poset.see(index.get(exp.descendant), index.get(exp.ancestor));
+			boolean a = see.result;
+			error err = see.err;
+			assertNull(String.format("No Error computing see(%s, %s)",
+				exp.descendant, exp.ancestor), err);
+			assertEquals(String.format("see(%s, %s) should equal",
+				exp.descendant, exp.ancestor), exp.val, a);
+		}
+	}
+
+	//@Test
+	public void TestLamportTimestamp() {
+		initPoset();
+
+		HashMap<String,Long> expectedTimestamps = new HashMap<String,Long>();
+		expectedTimestamps.put(e0,  0L);
+		expectedTimestamps.put(e1,  0L);
+		expectedTimestamps.put(e2,  0L);
+		expectedTimestamps.put(e01, 1L);
+		expectedTimestamps.put(s10, 1L);
+		expectedTimestamps.put(s20, 1L);
+		expectedTimestamps.put(s00, 2L);
+		expectedTimestamps.put(e20, 3L);
+		expectedTimestamps.put(e12, 4L);
+
+		for (String e : expectedTimestamps.keySet()) {
+			long ets = expectedTimestamps.get(e);
+			RetResult<Long> lamportTimestampCall = poset.lamportTimestamp(index.get(e));
+			long ts = lamportTimestampCall.result;
+			error err = lamportTimestampCall.err;
+			assertNull(String.format("No Error computing lamportTimestamp(%s)", e), err);
+			assertEquals(String.format("%s LamportTimestamp should equal", e), ets, ts);
+		}
+	}
+
+	/*
+	|    |    e20
+	|    |   / |
+	|    | /   |
+	|    /     |
+	|  / |     |
+	e01  |     |
+	| \  |     |
+	|   \|     |
+	|    |\    |
+	|    |  \  |
+	e0   e1 (a)e2
+	0    1     2
+
+	Node 2 Forks; events a and e2 are both created by node2, they are not
+	self-parent sand yet they are both ancestors of event e20
+	*/
+
+	@Test
+	public void TestFork() {
+		this.index = new HashMap<String,String>();
+		this.nodes = null;
+		this.participants = new Peers();
+
+		for (int i = 0; i < n; i++) {
+			KeyPair key = crypto.Utils.GenerateECDSAKeyPair().result;
+			TestNode node = new TestNode(key, i);
+			nodes = Appender.append(nodes, node);
+			participants.AddPeer(new Peer(node.PubHex, ""));
+		}
+
+		InmemStore store = new InmemStore(participants, cacheSize);
+		poset = new Poset(participants, store, null, testLogger());
+
+		for (int i =0; i< nodes.length; ++i) {
+			TestNode node = nodes[i];
+			Event event = new Event(null, null, null, new String[]{"", ""}, node.Pub, 0, null);
+			event.Sign(node.Key.getPrivate());
+			index.put(String.format("e%d", i), event.Hex());
+			poset.InsertEvent(event, true);
+		}
+
+		//a and e2 need to have different hashes
+		Event eventA = new Event(new byte[][]{"yo".getBytes()}, null, null, new String[]{"", ""},
+				nodes[2].Pub, 0, null);
+		eventA.Sign(nodes[2].Key.getPrivate());
+		index.put("a", eventA.Hex());
+		error err = poset.InsertEvent(eventA, true);
+		assertNotNull("InsertEvent should return error for 'a'", err);
+
+		Event event01 = new Event(null, null, null,
+			new String[]{index.get(e0), index.get(a)}, //e0 and a
+			nodes[0].Pub, 1, null);
+		event01.Sign(nodes[0].Key.getPrivate());
+		index.put(e01, event01.Hex());
+		err = poset.InsertEvent(event01, true);
+		assertNotNull(String.format("InsertEvent should return error for %s", e01), err);
+
+		Event event20 = new Event(null, null, null,
+			new String[]{index.get(e2), index.get(e01)}, //e2 and e01
+			nodes[2].Pub, 1, null);
+		event20.Sign(nodes[2].Key.getPrivate());
+		index.put(e20, event20.Hex());
+		err = poset.InsertEvent(event20, true);
+		assertNotNull(String.format("InsertEvent should return error for %s", e20), err);
+	}
+
+	/*
+	|  s11  |
+	|   |   |
+	|   f1  |
+	|  /|   |
+	| / s10 |
+	|/  |   |
+	e02 |   |
+	| \ |   |
+	|   \   |
+	|   | \ |
+	s00 |  e21
+	|   | / |
+	|  e10  s20
+	| / |   |
+	e0  e1  e2
+	0   1    2
+	*/
+
+	public void initRoundPoset() {
+		play[] plays = new play[]{
+			new play(1, 1, e1, e0, e10, null, null, new String[]{e0, e1}),
+			new play(2, 1, e2, "", s20, null, null, new String[]{e2}),
+			new play(0, 1, e0, "", s00, null, null, new String[]{e0}),
+			new play(2, 2, s20, e10, e21, null, null, new String[]{e0, e1, e2}),
+			new play(0, 2, s00, e21, e02, null, null, new String[]{e0, e21}),
+			new play(1, 2, e10, "", s10, null, null, new String[]{e0, e1}),
+			new play(1, 3, s10, e02, f1, null, null, new String[]{e21, e02, e1}),
+			new play(1, 4, f1, "", s11, new byte[][]{"abc".getBytes()}, null,
+					new String[]{e21, e02, f1}),
+		};
+		initPosetFull(plays, false, n, testLogger());
+	}
+
+//	@Test
 //	public void TestInsertEvent() {
-//		p, index, _ := initRoundPoset(t)
+//		initRoundPoset();
 //
-//		checkParents := public(e, selfAncestor, ancestor string) bool {
-//			ev, err := p.Store.GetEvent(index[e])
-//			if err != null {
-//				t.Fatal(err)
-//			}
-//			return ev.SelfParent() == selfAncestor && ev.OtherParent() == ancestor
-//		}
-//
-//		t.Run("Check Event Coordinates", public() {
-//
-//			e0Event, err := p.Store.GetEvent(index[e0])
+//		// "Check Event Coordinates"
+//		poset.Store.GetEvent(index[e0]);
+//			e0Event, err :=
 //			if err != null {
 //				t.Fatal(err)
 //			}
@@ -591,40 +596,40 @@ public class PosetTest {
 //			if !(e0Event.Message.SelfParentIndex == -1 &&
 //				e0Event.Message.OtherParentCreatorID == -1 &&
 //				e0Event.Message.OtherParentIndex == -1 &&
-//				e0Event.Message.CreatorID == p.Participants.ByPubKey[e0Event.Creator()].ID) {
+//				e0Event.Message.CreatorID == poset.Participants.ByPubKey[e0Event.Creator()].ID) {
 //				t.Fatalf("Invalid wire info on %s", e0)
 //			}
 //
-//			e21Event, err := p.Store.GetEvent(index[e21])
+//			e21Event, err := poset.Store.GetEvent(index[e21])
 //			if err != null {
 //				t.Fatal(err)
 //			}
 //
-//			e10Event, err := p.Store.GetEvent(index[e10])
+//			e10Event, err := poset.Store.GetEvent(index[e10])
 //			if err != null {
 //				t.Fatal(err)
 //			}
 //
 //			if !(e21Event.Message.SelfParentIndex == 1 &&
-//				e21Event.Message.OtherParentCreatorID == p.Participants.ByPubKey[e10Event.Creator()].ID &&
+//				e21Event.Message.OtherParentCreatorID == poset.Participants.ByPubKey[e10Event.Creator()].ID &&
 //				e21Event.Message.OtherParentIndex == 1 &&
-//				e21Event.Message.CreatorID == p.Participants.ByPubKey[e21Event.Creator()].ID) {
+//				e21Event.Message.CreatorID == poset.Participants.ByPubKey[e21Event.Creator()].ID) {
 //				t.Fatalf("Invalid wire info on %s", e21)
 //			}
 //
-//			f1Event, err := p.Store.GetEvent(index[f1])
+//			f1Event, err := poset.Store.GetEvent(index[f1])
 //			if err != null {
 //				t.Fatal(err)
 //			}
 //
 //			if !(f1Event.Message.SelfParentIndex == 2 &&
-//				f1Event.Message.OtherParentCreatorID == p.Participants.ByPubKey[e0Event.Creator()].ID &&
+//				f1Event.Message.OtherParentCreatorID == poset.Participants.ByPubKey[e0Event.Creator()].ID &&
 //				f1Event.Message.OtherParentIndex == 2 &&
-//				f1Event.Message.CreatorID == p.Participants.ByPubKey[f1Event.Creator()].ID) {
+//				f1Event.Message.CreatorID == poset.Participants.ByPubKey[f1Event.Creator()].ID) {
 //				t.Fatalf("Invalid wire info on %s", f1)
 //			}
 //
-//			e0CreatorID := strconv.FormatInt(p.Participants.ByPubKey[e0Event.Creator()].ID, 10)
+//			e0CreatorID := strconv.FormatInt(poset.Participants.ByPubKey[e0Event.Creator()].ID, 10)
 //
 //			type Hierarchy struct {
 //				ev, selfAncestor, ancestor string
@@ -643,7 +648,7 @@ public class PosetTest {
 //					t.Fatal(v.ev + " selfParent not good")
 //				}
 //			}
-//		})
+//		});
 //
 //		t.Run("Check UndeterminedEvents", public() {
 //
@@ -661,7 +666,7 @@ public class PosetTest {
 //				index[s11]}
 //
 //			for i, eue := range expectedUndeterminedEvents {
-//				if ue := p.UndeterminedEvents[i]; ue != eue {
+//				if ue := poset.UndeterminedEvents[i]; ue != eue {
 //					t.Fatalf("UndeterminedEvents[%d] should be %s, not %s",
 //						i, eue, ue)
 //				}
@@ -671,27 +676,38 @@ public class PosetTest {
 //			// 3 Events with index 0,
 //			// 1 Event with non-empty Transactions
 //			// = 4 Loaded Events
-//			if ple := p.PendingLoadedEvents; ple != 4 {
+//			if ple := poset.PendingLoadedEvents; ple != 4 {
 //				t.Fatalf("PendingLoadedEvents should be 4, not %d", ple)
 //			}
 //		})
 //	}
 //
+//
+//	private boolean checkParents(e, selfAncestor, ancestor string) {
+//		ev, err := p.Store.GetEvent(index[e])
+//		if err != null {
+//			t.Fatal(err)
+//		}
+//		return ev.SelfParent() == selfAncestor && ev.OtherParent() == ancestor;
+//	}
+//
+//
+//	@Test
 //	public void TestReadWireInfo() {
-//		p, index, _ := initRoundPoset();
+//		initRoundPoset();
 //
 //		for k, evh := range index {
 //			if k[0] == 'r' {
 //				continue
 //			}
-//			ev, err := p.Store.GetEvent(evh)
+//			ev, err := poset.Store.GetEvent(evh)
 //			if err != null {
 //				t.Fatal(err)
 //			}
 //
 //			evWire := ev.ToWire()
 //
-//			evFromWire, err := p.ReadWireInfo(evWire)
+//			evFromWire, err := poset.ReadWireInfo(evWire)
 //			if err != null {
 //				t.Fatal(err)
 //			}
@@ -751,7 +767,7 @@ public class PosetTest {
 //		}
 //
 //		for _, exp := range expected {
-//			a, err := p.stronglySee(index[exp.descendant], index[exp.ancestor])
+//			a, err := poset.stronglySee(index[exp.descendant], index[exp.ancestor])
 //			if err != null && !exp.err {
 //				t.Fatalf("Error computing stronglySee(%s, %s). Err: %v",
 //					exp.descendant, exp.ancestor, err)
@@ -773,13 +789,13 @@ public class PosetTest {
 //			Witness: true, Famous: Trilean_UNDEFINED}
 //		round0Witnesses[index[e2]] = &RoundEvent{
 //			Witness: true, Famous: Trilean_UNDEFINED}
-//		p.Store.SetRound(0, RoundInfo{
+//		poset.Store.SetRound(0, RoundInfo{
 //			Message: RoundInfoMessage{Events: round0Witnesses}})
 //
 //		round1Witnesses := make(map[string]*RoundEvent)
 //		round1Witnesses[index[f1]] = &RoundEvent{
 //			Witness: true, Famous: Trilean_UNDEFINED}
-//		p.Store.SetRound(1, RoundInfo{
+//		poset.Store.SetRound(1, RoundInfo{
 //			Message: RoundInfoMessage{Events: round1Witnesses}})
 //
 //		expected := []ancestryItem{
@@ -793,7 +809,7 @@ public class PosetTest {
 //		}
 //
 //		for _, exp := range expected {
-//			a, err := p.witness(index[exp.ancestor])
+//			a, err := poset.witness(index[exp.ancestor])
 //			if err != null {
 //				t.Fatalf("Error computing witness(%s). Err: %v",
 //					exp.ancestor, err)
@@ -815,7 +831,7 @@ public class PosetTest {
 //			Witness: true, Famous: Trilean_UNDEFINED}
 //		round0Witnesses[index[e2]] = &RoundEvent{
 //			Witness: true, Famous: Trilean_UNDEFINED}
-//		p.Store.SetRound(0, RoundInfo{Message: RoundInfoMessage{
+//		poset.Store.SetRound(0, RoundInfo{Message: RoundInfoMessage{
 //			Events: round0Witnesses}})
 //
 //		round1Witnesses := make(map[string]*RoundEvent)
@@ -825,7 +841,7 @@ public class PosetTest {
 //			Witness: true, Famous: Trilean_UNDEFINED}
 //		round1Witnesses[index[f1]] = &RoundEvent{
 //			Witness: true, Famous: Trilean_UNDEFINED}
-//		p.Store.SetRound(1, RoundInfo{
+//		poset.Store.SetRound(1, RoundInfo{
 //			Message: RoundInfoMessage{Events: round1Witnesses}})
 //
 //		expected := []roundItem{
@@ -843,7 +859,7 @@ public class PosetTest {
 //		}
 //
 //		for _, exp := range expected {
-//			r, err := p.round(index[exp.event])
+//			r, err := poset.round(index[exp.event])
 //			if err != null {
 //				t.Fatalf("Error computing round(%s). Err: %v", exp.event, err)
 //			}
@@ -864,7 +880,7 @@ public class PosetTest {
 //			Witness: true, Famous: Trilean_UNDEFINED}
 //		round0Witnesses[index[e2]] = &RoundEvent{
 //			Witness: true, Famous: Trilean_UNDEFINED}
-//		p.Store.SetRound(0, RoundInfo{
+//		poset.Store.SetRound(0, RoundInfo{
 //			Message: RoundInfoMessage{Events: round0Witnesses}})
 //
 //		round1Witnesses := make(map[string]*RoundEvent)
@@ -874,23 +890,23 @@ public class PosetTest {
 //			Witness: true, Famous: Trilean_UNDEFINED}
 //		round1Witnesses[index[f1]] = &RoundEvent{
 //			Witness: true, Famous: Trilean_UNDEFINED}
-//		p.Store.SetRound(1,
+//		poset.Store.SetRound(1,
 //			RoundInfo{Message: RoundInfoMessage{Events: round1Witnesses}})
 //
-//		if d, err := p.roundDiff(index[s11], index[e21]); d != 1 {
+//		if d, err := poset.roundDiff(index[s11], index[e21]); d != 1 {
 //			if err != null {
 //				t.Fatalf("RoundDiff(%s, %s) returned an error: %s", s11, e02, err)
 //			}
 //			t.Fatalf("RoundDiff(%s, %s) should be 1 not %d", s11, e02, d)
 //		}
 //
-//		if d, err := p.roundDiff(index[f1], index[s11]); d != -1 {
+//		if d, err := poset.roundDiff(index[f1], index[s11]); d != -1 {
 //			if err != null {
 //				t.Fatalf("RoundDiff(%s, %s) returned an error: %s", s11, f1, err)
 //			}
 //			t.Fatalf("RoundDiff(%s, %s) should be -1 not %d", s11, f1, d)
 //		}
-//		if d, err := p.roundDiff(index[e02], index[e21]); d != 0 {
+//		if d, err := poset.roundDiff(index[e02], index[e21]); d != 0 {
 //			if err != null {
 //				t.Fatalf("RoundDiff(%s, %s) returned an error: %s", e20, e21, err)
 //			}
@@ -901,15 +917,15 @@ public class PosetTest {
 //	public TestDivideRounds() {
 //		p, index, _ := initRoundPoset(t)
 //
-//		if err := p.DivideRounds(); err != null {
+//		if err := poset.DivideRounds(); err != null {
 //			t.Fatal(err)
 //		}
 //
-//		if l := p.Store.LastRound(); l != 2 {
+//		if l := poset.Store.LastRound(); l != 2 {
 //			t.Fatalf("last round should be 2 not %d", l)
 //		}
 //
-//		round0, err := p.Store.GetRound(0)
+//		round0, err := poset.Store.GetRound(0)
 //		if err != null {
 //			t.Fatal(err)
 //		}
@@ -926,7 +942,7 @@ public class PosetTest {
 //			t.Fatalf("round 0 witnesses should contain %s", e2)
 //		}
 //
-//		round1, err := p.Store.GetRound(1)
+//		round1, err := poset.Store.GetRound(1)
 //		if err != null {
 //			t.Fatal(err)
 //		}
@@ -937,7 +953,7 @@ public class PosetTest {
 //			t.Fatalf("round 1 witnesses should contain %s", f1)
 //		}
 //
-//		round2, err := p.Store.GetRound(2)
+//		round2, err := poset.Store.GetRound(2)
 //		if err != null {
 //			t.Fatal(err)
 //		}
@@ -959,7 +975,7 @@ public class PosetTest {
 //				Decided: false,
 //			},
 //		}
-//		for i, pd := range p.PendingRounds {
+//		for i, pd := range poset.PendingRounds {
 //			if !reflect.DeepEqual(*pd, expectedPendingRounds[i]) {
 //				t.Fatalf("pendingRounds[%d] should be %v, not %v",
 //					i, expectedPendingRounds[i], *pd)
@@ -985,7 +1001,7 @@ public class PosetTest {
 //		}
 //
 //		for e, et := range expectedTimestamps {
-//			ev, err := p.Store.GetEvent(index[e])
+//			ev, err := poset.Store.GetEvent(index[e])
 //			if err != null {
 //				t.Fatal(err)
 //			}
@@ -1001,9 +1017,9 @@ public class PosetTest {
 //
 //	public TestCreateRoot() {
 //		p, index, _ := initRoundPoset(t)
-//		p.DivideRounds()
+//		poset.DivideRounds()
 //
-//		participants := p.Participants.ToPeerSlice()
+//		participants := poset.Participants.ToPeerSlice()
 //
 //		baseRoot := NewBaseRoot(participants[0].ID)
 //
@@ -1039,11 +1055,11 @@ public class PosetTest {
 //		}
 //
 //		for evh, expRoot := range expected {
-//			ev, err := p.Store.GetEvent(index[evh])
+//			ev, err := poset.Store.GetEvent(index[evh])
 //			if err != null {
 //				t.Fatal(err)
 //			}
-//			root, err := p.createRoot(ev)
+//			root, err := poset.createRoot(ev)
 //			if err != null {
 //				t.Fatalf("Error creating %s Root: %v", evh, err)
 //			}
@@ -1103,7 +1119,7 @@ public class PosetTest {
 //	public TestCreateRootBis() {
 //		p, index := initDentedPoset(t)
 //
-//		participants := p.Participants.ToPeerSlice()
+//		participants := poset.Participants.ToPeerSlice()
 //
 //		root := NewBaseRootEvent(participants[1].ID)
 //		expected := map[string]Root{
@@ -1118,11 +1134,11 @@ public class PosetTest {
 //		}
 //
 //		for evh, expRoot := range expected {
-//			ev, err := p.Store.GetEvent(index[evh])
+//			ev, err := poset.Store.GetEvent(index[evh])
 //			if err != null {
 //				t.Fatal(err)
 //			}
-//			root, err := p.createRoot(ev)
+//			root, err := poset.createRoot(ev)
 //			if err != null {
 //				t.Fatalf("Error creating %s Root: %v", evh, err)
 //			}
@@ -1152,7 +1168,7 @@ public class PosetTest {
 //
 //		//create a block and signatures manually
 //		block := NewBlock(0, 1, []byte("framehash"),
-//			[][]byte{[]byte("block tx")})
+//			new byte[][]{[]byte("block tx")})
 //		err := poset.Store.SetBlock(block)
 //		if err != null {
 //			t.Fatalf("error setting block. Err: %s", err)
@@ -1170,7 +1186,7 @@ public class PosetTest {
 //	public TestInsertEventsWithBlockSignatures() {
 //		p, nodes, index := initBlockPoset(t)
 //
-//		block, err := p.Store.GetBlock(0)
+//		block, err := poset.Store.GetBlock(0)
 //		if err != null {
 //			t.Fatalf("error retrieving block 0. %s", err)
 //		}
@@ -1211,28 +1227,28 @@ public class PosetTest {
 //					pl.index, null)
 //				e.Sign(nodes[pl.to].Key)
 //				index[pl.name] = e.Hex()
-//				if err := p.InsertEvent(e, true); err != null {
+//				if err := poset.InsertEvent(e, true); err != null {
 //					t.Fatalf("error inserting event %s: %s\n", pl.name, err)
 //				}
 //			}
 //
 //			// Check SigPool
-//			if l := len(p.SigPool); l != 3 {
+//			if l := len(poset.SigPool); l != 3 {
 //				t.Fatalf("block signature pool should contain 3 signatures,"+
 //					" not %d", l)
 //			}
 //
 //			// Process SigPool
-//			p.ProcessSigPool()
+//			poset.ProcessSigPool()
 //
 //			// Check that the block contains 3 signatures
-//			block, _ := p.Store.GetBlock(0)
+//			block, _ := poset.Store.GetBlock(0)
 //			if l := len(block.Signatures); l != 2 {
 //				t.Fatalf("block 0 should contain 2 signatures, not %d", l)
 //			}
 //
 //			// Check that SigPool was cleared
-//			if l := len(p.SigPool); l != 0 {
+//			if l := len(poset.SigPool); l != 0 {
 //				t.Fatalf("block signature pool should contain 0 signatures,"+
 //					" not %d", l)
 //			}
@@ -1243,7 +1259,7 @@ public class PosetTest {
 //				// The Event should be inserted
 //				// The block signature is simply ignored
 //
-//				block1 := NewBlock(1, 2, []byte("framehash"), [][]byte{})
+//				block1 := NewBlock(1, 2, []byte("framehash"), new byte[][]{})
 //				sig, _ := block1.Sign(nodes[2].Key)
 //
 //				// unknown block
@@ -1263,12 +1279,12 @@ public class PosetTest {
 //					pl.index, null)
 //				e.Sign(nodes[pl.to].Key)
 //				index[pl.name] = e.Hex()
-//				if err := p.InsertEvent(e, true); err != null {
+//				if err := poset.InsertEvent(e, true); err != null {
 //					t.Fatalf("ERROR inserting event %s: %s", pl.name, err)
 //				}
 //
 //				// check that the event was recorded
-//				_, err := p.Store.GetEvent(index[e21])
+//				_, err := poset.Store.GetEvent(index[e21])
 //				if err != null {
 //					t.Fatalf("ERROR fetching Event %s: %s", e21, err)
 //				}
@@ -1297,12 +1313,12 @@ public class PosetTest {
 //					pl.index, null)
 //				e.Sign(nodes[pl.to].Key)
 //				index[pl.name] = e.Hex()
-//				if err := p.InsertEvent(e, true); err != null {
+//				if err := poset.InsertEvent(e, true); err != null {
 //					t.Fatalf("ERROR inserting event %s: %s\n", pl.name, err)
 //				}
 //
 //				// check that the signature was not appended to the block
-//				block, _ := p.Store.GetBlock(0)
+//				block, _ := poset.Store.GetBlock(0)
 //				if l := len(block.Signatures); l > 3 {
 //					t.Fatalf("Block 0 should contain 3 signatures, not %d", l)
 //				}
@@ -1372,24 +1388,24 @@ public class PosetTest {
 //	public initConsensusPoset(db bool, t testing.TB) (*Poset, HashMap<String,String>) {
 //		plays := []play{
 //			{1, 1, e1, e0, e10, null, null, String[]{e0, e1}},
-//			{2, 1, e2, e10, f2, [][]byte{[]byte(f2)}, null, String[]{e0, e1, e2}},
+//			{2, 1, e2, e10, f2, new byte[][]{[]byte(f2)}, null, String[]{e0, e1, e2}},
 //			{2, 2, f2, "", f2b, null, null, String[]{f2}},
 //			{0, 1, e0, f2b, f0, null, null, String[]{e0, f2}},
 //			{1, 2, e10, f0, f1, null, null, String[]{f2, f0, e1}},
-//			{1, 3, f1, "", g1, [][]byte{[]byte(g1)}, null, String[]{f2, f0, f1}},
+//			{1, 3, f1, "", g1, new byte[][]{[]byte(g1)}, null, String[]{f2, f0, f1}},
 //			{0, 2, f0, g1, g0, null, null, String[]{g1, f0}},
 //			{2, 3, f2b, g1, g2, null, null, String[]{g1, f2}},
 //			{1, 4, g1, g0, g10, null, null, String[]{g1, f0}},
 //			{0, 3, g0, f2, g0x, null, null, String[]{g0, g1, f2b}},
 //			{2, 4, g2, g10, h2, null, null, String[]{g1, g0, g2}},
 //			{0, 4, g0x, h2, h0, null, null, String[]{h2, g0, g1}},
-//			{0, 5, h0, "", h0b, [][]byte{[]byte(h0b)}, null, String[]{h0, h2}},
+//			{0, 5, h0, "", h0b, new byte[][]{[]byte(h0b)}, null, String[]{h0, h2}},
 //			{1, 5, g10, h0b, h10, null, null, String[]{h0, h2, g1}},
 //			{0, 6, h0b, h10, i0, null, null, String[]{h10, h0, h2}},
 //			{2, 5, h2, h10, i2, null, null, String[]{h10, h0, h2}},
-//			{1, 6, h10, i0, i1, [][]byte{[]byte(i1)}, null, String[]{i0, h10, h0, h2}},
+//			{1, 6, h10, i0, i1, new byte[][]{[]byte(i1)}, null, String[]{i0, h10, h0, h2}},
 //			{2, 6, i2, i1, j2, null, null, String[]{i1, i0, i2}},
-//			{0, 7, i0, j2, j0, [][]byte{[]byte(j0)}, null, String[]{i0, j2}},
+//			{0, 7, i0, j2, j0, new byte[][]{[]byte(j0)}, null, String[]{i0, j2}},
 //			{1, 7, i1, j0, j1, null, null, String[]{i1, i0, j0, j2}},
 //			{0, 8, j0, j1, k0, null, null, String[]{j1, j0, j2}},
 //			{2, 7, j2, j1, k2, null, null, String[]{j1, j0, j2}},
@@ -1409,7 +1425,7 @@ public class PosetTest {
 //	public TestDivideRoundsBis() {
 //		p, index := initConsensusPoset(false, t)
 //
-//		if err := p.DivideRounds(); err != null {
+//		if err := poset.DivideRounds(); err != null {
 //			t.Fatal(err)
 //		}
 //
@@ -1452,7 +1468,7 @@ public class PosetTest {
 //		}
 //
 //		for e, et := range expectedTimestamps {
-//			ev, err := p.Store.GetEvent(index[e])
+//			ev, err := poset.Store.GetEvent(index[e])
 //			if err != null {
 //				t.Fatal(err)
 //			}
@@ -1469,12 +1485,12 @@ public class PosetTest {
 //	public TestDecideFame() {
 //		p, index := initConsensusPoset(false, t)
 //
-//		p.DivideRounds()
-//		if err := p.DecideFame(); err != null {
+//		poset.DivideRounds()
+//		if err := poset.DecideFame(); err != null {
 //			t.Fatal(err)
 //		}
 //
-//		round0, err := p.Store.GetRound(0)
+//		round0, err := poset.Store.GetRound(0)
 //		if err != null {
 //			t.Fatal(err)
 //		}
@@ -1491,7 +1507,7 @@ public class PosetTest {
 //			t.Fatalf("%s should be famous; got %v", e2, f)
 //		}
 //
-//		round1, err := p.Store.GetRound(1)
+//		round1, err := poset.Store.GetRound(1)
 //		if err != null {
 //			t.Fatal(err)
 //		}
@@ -1508,7 +1524,7 @@ public class PosetTest {
 //			t.Fatalf("%s should be famous; got %v", f1, f)
 //		}
 //
-//		round2, err := p.Store.GetRound(2)
+//		round2, err := poset.Store.GetRound(2)
 //		if err != null {
 //			t.Fatal(err)
 //		}
@@ -1525,7 +1541,7 @@ public class PosetTest {
 //			t.Fatalf("%s should be famous; got %v", g2, f)
 //		}
 //
-//		round3, err := p.Store.GetRound(3)
+//		round3, err := poset.Store.GetRound(3)
 //		if err != null {
 //			t.Fatal(err)
 //		}
@@ -1542,7 +1558,7 @@ public class PosetTest {
 //			t.Fatalf("%s should be famous; got %v", h10, f)
 //		}
 //
-//		round4, err := p.Store.GetRound(4)
+//		round4, err := poset.Store.GetRound(4)
 //		if err != null {
 //			t.Fatal(err)
 //		}
@@ -1570,7 +1586,7 @@ public class PosetTest {
 //			{Index: 7, Decided: false},
 //			{Index: 8, Decided: false},
 //		}
-//		for i, pd := range p.PendingRounds {
+//		for i, pd := range poset.PendingRounds {
 //			if !reflect.DeepEqual(*pd, expectedPendingRounds[i]) {
 //				t.Fatalf("pendingRounds[%d] should be %v, not %v",
 //					i, expectedPendingRounds[i], *pd)
@@ -1581,14 +1597,14 @@ public class PosetTest {
 //	public TestDecideRoundReceived() {
 //		p, index := initConsensusPoset(false, t)
 //
-//		p.DivideRounds()
-//		p.DecideFame()
-//		if err := p.DecideRoundReceived(); err != null {
+//		poset.DivideRounds()
+//		poset.DecideFame()
+//		if err := poset.DecideRoundReceived(); err != null {
 //			t.Fatal(err)
 //		}
 //
 //		for name, hash := range index {
-//			e, _ := p.Store.GetEvent(hash)
+//			e, _ := poset.Store.GetEvent(hash)
 //
 //			switch rune(name[0]) {
 //			case rune('e'):
@@ -1602,7 +1618,7 @@ public class PosetTest {
 //			}
 //		}
 //
-//		round0, err := p.Store.GetRound(0)
+//		round0, err := poset.Store.GetRound(0)
 //		if err != null {
 //			t.Fatalf("could not retrieve Round 0. %s", err)
 //		}
@@ -1610,7 +1626,7 @@ public class PosetTest {
 //			t.Fatalf("round 0 should contain 0 ConsensusEvents, not %d", ce)
 //		}
 //
-//		round1, err := p.Store.GetRound(1)
+//		round1, err := poset.Store.GetRound(1)
 //		if err != null {
 //			t.Fatalf("could not retrieve Round 1. %s", err)
 //		}
@@ -1618,7 +1634,7 @@ public class PosetTest {
 //			t.Fatalf("round 1 should contain 4 ConsensusEvents, not %d", ce)
 //		}
 //
-//		round2, err := p.Store.GetRound(2)
+//		round2, err := poset.Store.GetRound(2)
 //		if err != null {
 //			t.Fatalf("could not retrieve Round 2. %s", err)
 //		}
@@ -1646,7 +1662,7 @@ public class PosetTest {
 //		}
 //
 //		for i, eue := range expectedUndeterminedEvents {
-//			if ue := p.UndeterminedEvents[i]; ue != eue {
+//			if ue := poset.UndeterminedEvents[i]; ue != eue {
 //				t.Fatalf("undetermined event %d should be %s, not %s", i, eue, ue)
 //			}
 //		}
@@ -1655,14 +1671,14 @@ public class PosetTest {
 //	public TestProcessDecidedRounds() {
 //		p, index := initConsensusPoset(false, t)
 //
-//		p.DivideRounds()
-//		p.DecideFame()
-//		p.DecideRoundReceived()
-//		if err := p.ProcessDecidedRounds(); err != null {
+//		poset.DivideRounds()
+//		poset.DecideFame()
+//		poset.DecideRoundReceived()
+//		if err := poset.ProcessDecidedRounds(); err != null {
 //			t.Fatal(err)
 //		}
 //
-//		consensusEvents := p.Store.ConsensusEvents()
+//		consensusEvents := poset.Store.ConsensusEvents()
 //
 //		for i, e := range consensusEvents {
 //			t.Logf("consensus[%d]: %s\n", i, getName(index, e))
@@ -1672,11 +1688,11 @@ public class PosetTest {
 //			t.Fatalf("length of consensus should be 12 not %d", l)
 //		}
 //
-//		if ple := p.PendingLoadedEvents; ple != 3 {
+//		if ple := poset.PendingLoadedEvents; ple != 3 {
 //			t.Fatalf("pending loaded events number should be 3, not %d", ple)
 //		}
 //
-//		block0, err := p.Store.GetBlock(0)
+//		block0, err := poset.Store.GetBlock(0)
 //		if err != null {
 //			t.Fatalf("store should contain a block with Index 0: %v", err)
 //		}
@@ -1696,14 +1712,14 @@ public class PosetTest {
 //			t.Fatalf("transaction 0 from block0 should be '%s', not %s", f2, tx)
 //		}
 //
-//		frame1, err := p.GetFrame(block0.RoundReceived())
+//		frame1, err := poset.GetFrame(block0.RoundReceived())
 //		frame1Hash, err := frame1.Hash()
 //		if !reflect.DeepEqual(block0.GetFrameHash(), frame1Hash) {
 //			t.Fatalf("frame hash from block0 should be %v, not %v",
 //				frame1Hash, block0.GetFrameHash())
 //		}
 //
-//		block1, err := p.Store.GetBlock(1)
+//		block1, err := poset.Store.GetBlock(1)
 //		if err != null {
 //			t.Fatalf("store should contain a block with Index 1: %v", err)
 //		}
@@ -1724,7 +1740,7 @@ public class PosetTest {
 //			t.Fatalf("transaction 0 from block1 should be '%s', not %s", g1, tx)
 //		}
 //
-//		frame2, err := p.GetFrame(block1.RoundReceived())
+//		frame2, err := poset.GetFrame(block1.RoundReceived())
 //		frame2Hash, err := frame2.Hash()
 //		if !reflect.DeepEqual(block1.GetFrameHash(), frame2Hash) {
 //			t.Fatalf("frame hash from block1 should be %v, not %v",
@@ -1738,14 +1754,14 @@ public class PosetTest {
 //			{Index: 7, Decided: false},
 //			{Index: 8, Decided: false},
 //		}
-//		for i, pd := range p.PendingRounds {
+//		for i, pd := range poset.PendingRounds {
 //			if !reflect.DeepEqual(*pd, expRounds[i]) {
 //				t.Fatalf("pending round %d should be %v, not %v", i,
 //					expRounds[i], *pd)
 //			}
 //		}
 //
-//		if v := p.AnchorBlock; v != null {
+//		if v := poset.AnchorBlock; v != null {
 //			t.Fatalf("anchor block should be null, not %v", v)
 //		}
 //
@@ -1758,17 +1774,17 @@ public class PosetTest {
 //			p, _ := initConsensusPoset(false, b);
 //			b.StartTimer();
 //
-//			p.DivideRounds();
-//			p.DecideFame();
-//			p.DecideRoundReceived();
-//			p.ProcessDecidedRounds();
+//			poset.DivideRounds();
+//			poset.DecideFame();
+//			poset.DecideRoundReceived();
+//			poset.ProcessDecidedRounds();
 //		}
 //	}
 //
 //	public void TestKnown() {
 //		p, _ := initConsensusPoset(false);
 //
-//		participants := p.Participants.ToPeerSlice();
+//		participants := poset.Participants.ToPeerSlice();
 //
 //		expectedKnown := HashMap<Long,Long>{
 //			participants[0].ID: 10,
@@ -1776,8 +1792,8 @@ public class PosetTest {
 //			participants[2].ID: 9,
 //		}
 //
-//		known := p.Store.KnownEvents()
-//		for i := range p.Participants.ToIDSlice() {
+//		known := poset.Store.KnownEvents()
+//		for i := range poset.Participants.ToIDSlice() {
 //			if l := known[int64(i)]; l != expectedKnown[int64(i)] {
 //				t.Fatalf("known event %d should be %d, not %d", i,
 //					expectedKnown[int64(i)], l)
@@ -1788,12 +1804,12 @@ public class PosetTest {
 //	public TestGetFrame() {
 //		p, index := initConsensusPoset(false);
 //
-//		participants := p.Participants.ToPeerSlice()
+//		participants := poset.Participants.ToPeerSlice()
 //
-//		p.DivideRounds()
-//		p.DecideFame()
-//		p.DecideRoundReceived()
-//		p.ProcessDecidedRounds()
+//		poset.DivideRounds()
+//		poset.DecideFame()
+//		poset.DecideRoundReceived()
+//		poset.ProcessDecidedRounds()
 //
 //		t.Run("round 1", public() {
 //			expRoots := make([]Root, n)
@@ -1801,7 +1817,7 @@ public class PosetTest {
 //			expRoots[1] = NewBaseRoot(participants[1].ID)
 //			expRoots[2] = NewBaseRoot(participants[2].ID)
 //
-//			frame, err := p.GetFrame(1)
+//			frame, err := poset.GetFrame(1)
 //			if err != null {
 //				t.Fatal(err)
 //			}
@@ -1816,7 +1832,7 @@ public class PosetTest {
 //
 //			hashes := String[]{index[e0], index[e1], index[e2], index[e10]}
 //			for _, eh := range hashes {
-//				e, err := p.Store.GetEvent(eh)
+//				e, err := poset.Store.GetEvent(eh)
 //				if err != null {
 //					t.Fatal(err)
 //				}
@@ -1900,7 +1916,7 @@ public class PosetTest {
 //				},
 //			}
 //
-//			frame, err := p.GetFrame(2)
+//			frame, err := poset.GetFrame(2)
 //			if err != null {
 //				t.Fatal(err)
 //			}
@@ -1919,7 +1935,7 @@ public class PosetTest {
 //			}
 //			var expEvents []Event
 //			for _, eh := range expectedEventsHashes {
-//				e, err := p.Store.GetEvent(eh)
+//				e, err := poset.Store.GetEvent(eh)
 //				if err != null {
 //					t.Fatal(err)
 //				}
@@ -1941,7 +1957,7 @@ public class PosetTest {
 //				compareEventMessages(t, messages[k], msg, index)
 //			}
 //
-//			block0, err := p.Store.GetBlock(0)
+//			block0, err := poset.Store.GetBlock(0)
 //			if err != null {
 //				t.Fatalf("store should contain a block with Index 0: %v", err)
 //			}
@@ -1962,19 +1978,19 @@ public class PosetTest {
 //	public TestResetFromFrame() {
 //		p, index := initConsensusPoset(false);
 //
-//		participants := p.Participants.ToPeerSlice()
+//		participants := poset.Participants.ToPeerSlice()
 //
-//		p.DivideRounds()
-//		p.DecideFame()
-//		p.DecideRoundReceived()
-//		p.ProcessDecidedRounds()
+//		poset.DivideRounds()
+//		poset.DecideFame()
+//		poset.DecideRoundReceived()
+//		poset.ProcessDecidedRounds()
 //
-//		block, err := p.Store.GetBlock(1)
+//		block, err := poset.Store.GetBlock(1)
 //		if err != null {
 //			t.Fatal(err)
 //		}
 //
-//		frame, err := p.GetFrame(block.RoundReceived())
+//		frame, err := poset.GetFrame(block.RoundReceived())
 //		if err != null {
 //			t.Fatal(err)
 //		}
@@ -1985,8 +2001,8 @@ public class PosetTest {
 //		unmarshalledFrame := new(Frame)
 //		unmarshalledFrame.ProtoUnmarshal(marshalledFrame)
 //
-//		p2 := NewPoset(p.Participants,
-//			NewInmemStore(p.Participants, cacheSize),
+//		p2 := NewPoset(poset.Participants,
+//			NewInmemStore(poset.Participants, cacheSize),
 //			null,
 //			testLogger(t))
 //		err = p2.Reset(block, *unmarshalledFrame)
@@ -2028,7 +2044,7 @@ public class PosetTest {
 //				t.Fatal(err)
 //			}
 //
-//			pRound1, err := p.Store.GetRound(2)
+//			pRound1, err := poset.Store.GetRound(2)
 //			if err != null {
 //				t.Fatal(err)
 //			}
@@ -2056,7 +2072,7 @@ public class PosetTest {
 //					t.Fatalf("Error computing %s Round: %d",
 //						getName(index, ev.Hex()), p2r)
 //				}
-//				hr, _ := p.round(ev.Hex())
+//				hr, _ := poset.round(ev.Hex())
 //				if p2r != hr {
 //
 //					t.Fatalf("p2[%v].Round should be %d, not %d",
@@ -2068,7 +2084,7 @@ public class PosetTest {
 //					t.Fatalf("Error computing %s LamportTimestamp: %d",
 //						getName(index, ev.Hex()), p2s)
 //				}
-//				hs, _ := p.lamportTimestamp(ev.Hex())
+//				hs, _ := poset.lamportTimestamp(ev.Hex())
 //				if p2s != hs {
 //					t.Fatalf("p2[%v].LamportTimestamp should be %d, not %d",
 //						getName(index, ev.Hex()), hs, p2s)
@@ -2099,14 +2115,14 @@ public class PosetTest {
 //		t.Run("TestContinueAfterReset", public() {
 //			// Insert remaining Events into the Reset poset
 //			for r := int64(2); r <= int64(2); r++ {
-//				round, err := p.Store.GetRound(r)
+//				round, err := poset.Store.GetRound(r)
 //				if err != null {
 //					t.Fatal(err)
 //				}
 //
 //				var events []Event
 //				for _, e := range round.RoundEvents() {
-//					ev, err := p.Store.GetEvent(e)
+//					ev, err := poset.Store.GetEvent(e)
 //					if err != null {
 //						t.Fatal(err)
 //					}
@@ -2130,7 +2146,7 @@ public class PosetTest {
 //			p2.ProcessDecidedRounds()
 //
 //			for r := int64(2); r <= 2; r++ {
-//				pRound, err := p.Store.GetRound(r)
+//				pRound, err := poset.Store.GetRound(r)
 //				if err != null {
 //					t.Fatal(err)
 //				}
@@ -2158,12 +2174,12 @@ public class PosetTest {
 //		// Initialize a first Poset with a DB backend
 //		// Add events and run consensus methods on it
 //		p, _ := initConsensusPoset(true, t)
-//		p.DivideRounds()
-//		p.DecideFame()
-//		p.DecideRoundReceived()
-//		p.ProcessDecidedRounds()
+//		poset.DivideRounds()
+//		poset.DecideFame()
+//		poset.DecideRoundReceived()
+//		poset.ProcessDecidedRounds()
 //
-//		p.Store.Close()
+//		poset.Store.Close()
 //		defer os.RemoveAll(badgerDir)
 //
 //		// Now we want to create a new Poset based on the database of the previous
@@ -2178,38 +2194,38 @@ public class PosetTest {
 //			t.Fatal(err)
 //		}
 //
-//		hConsensusEvents := p.Store.ConsensusEvents()
+//		hConsensusEvents := poset.Store.ConsensusEvents()
 //		nhConsensusEvents := np.Store.ConsensusEvents()
 //		if len(hConsensusEvents) != len(nhConsensusEvents) {
 //			t.Fatalf("Bootstrapped poset should contain %d consensus events,"+
 //				"not %d", len(hConsensusEvents), len(nhConsensusEvents))
 //		}
 //
-//		hKnown := p.Store.KnownEvents()
+//		hKnown := poset.Store.KnownEvents()
 //		nhKnown := np.Store.KnownEvents()
 //		if !reflect.DeepEqual(hKnown, nhKnown) {
 //			t.Fatalf("Bootstrapped poset's Known should be %#v, not %#v",
 //				hKnown, nhKnown)
 //		}
 //
-//		if *p.LastConsensusRound != *np.LastConsensusRound {
+//		if *poset.LastConsensusRound != *np.LastConsensusRound {
 //			t.Fatalf("Bootstrapped poset's LastConsensusRound should be %#v,"+
-//				" not %#v", *p.LastConsensusRound, *np.LastConsensusRound)
+//				" not %#v", *poset.LastConsensusRound, *np.LastConsensusRound)
 //		}
 //
-//		if p.LastCommitedRoundEvents != np.LastCommitedRoundEvents {
+//		if poset.LastCommitedRoundEvents != np.LastCommitedRoundEvents {
 //			t.Fatalf("Bootstrapped poset's LastCommitedRoundEvents should be %#v,"+
-//				" not %#v", p.LastCommitedRoundEvents, np.LastCommitedRoundEvents)
+//				" not %#v", poset.LastCommitedRoundEvents, np.LastCommitedRoundEvents)
 //		}
 //
-//		if p.ConsensusTransactions != np.ConsensusTransactions {
+//		if poset.ConsensusTransactions != np.ConsensusTransactions {
 //			t.Fatalf("Bootstrapped poset's ConsensusTransactions should be %#v,"+
-//				" not %#v", p.ConsensusTransactions, np.ConsensusTransactions)
+//				" not %#v", poset.ConsensusTransactions, np.ConsensusTransactions)
 //		}
 //
-//		if p.PendingLoadedEvents != np.PendingLoadedEvents {
+//		if poset.PendingLoadedEvents != np.PendingLoadedEvents {
 //			t.Fatalf("Bootstrapped poset's PendingLoadedEvents should be %#v,"+
-//				" not %#v", p.PendingLoadedEvents, np.PendingLoadedEvents)
+//				" not %#v", poset.PendingLoadedEvents, np.PendingLoadedEvents)
 //		}
 //	}
 //
@@ -2269,74 +2285,74 @@ public class PosetTest {
 //		0	 1	  2	   3
 //	*/
 //
-//	public initFunkyPoset(, logger *logrus.Logger, full bool) (*Poset, HashMap<String,String>) {
+//	public initFunkyPoset(, Logger logger, full bool) (*Poset, HashMap<String,String>) {
 //		nodes, index, orderedEvents, participants := initPosetNodes(4)
 //
 //		for i, peer := range participants.ToPeerSlice() {
 //			name := fmt.Sprintf("w0%d", i)
-//			event := NewEvent([][]byte{[]byte(name)}, null,
+//			event := NewEvent(new byte[][]{[]byte(name)}, null,
 //				null, String[]{rootSelfParent(peer.ID), ""}, nodes[i].Pub, 0,
 //				HashMap<String,Long>{rootSelfParent(peer.ID): 1})
 //			nodes[i].signAndAddEvent(event, name, index, orderedEvents)
 //		}
 //
 //		plays := []play{
-//			{2, 1, w02, w03, a23, [][]byte{[]byte(a23)},
+//			{2, 1, w02, w03, a23, new byte[][]{[]byte(a23)},
 //				null, String[]{w02, w03}},
-//			{1, 1, w01, a23, a12, [][]byte{[]byte(a12)},
+//			{1, 1, w01, a23, a12, new byte[][]{[]byte(a12)},
 //				null, String[]{w01, w02, w03}},
-//			{0, 1, w00, "", a00, [][]byte{[]byte(a00)},
+//			{0, 1, w00, "", a00, new byte[][]{[]byte(a00)},
 //				null, String[]{w00}},
-//			{1, 2, a12, a00, a10, [][]byte{[]byte(a10)},
+//			{1, 2, a12, a00, a10, new byte[][]{[]byte(a10)},
 //				null, String[]{w00, a12}},
-//			{2, 2, a23, a12, a21, [][]byte{[]byte(a21)},
+//			{2, 2, a23, a12, a21, new byte[][]{[]byte(a21)},
 //				null, String[]{a12, w02, w03}},
-//			{3, 1, w03, a21, w13, [][]byte{[]byte(w13)},
+//			{3, 1, w03, a21, w13, new byte[][]{[]byte(w13)},
 //				null, String[]{a12, a21, w03}},
-//			{2, 3, a21, w13, w12, [][]byte{[]byte(w12)},
+//			{2, 3, a21, w13, w12, new byte[][]{[]byte(w12)},
 //				null, String[]{a12, a21, w13}},
-//			{1, 3, a10, w12, w11, [][]byte{[]byte(w11)},
+//			{1, 3, a10, w12, w11, new byte[][]{[]byte(w11)},
 //				null, String[]{w12, a12}},
-//			{0, 2, a00, w11, w10, [][]byte{[]byte(w10)},
+//			{0, 2, a00, w11, w10, new byte[][]{[]byte(w10)},
 //				null, String[]{w11, w12, w00}},
-//			{2, 4, w12, w11, b21, [][]byte{[]byte(b21)},
+//			{2, 4, w12, w11, b21, new byte[][]{[]byte(b21)},
 //				null, String[]{w11, w12}},
-//			{3, 2, w13, b21, w23, [][]byte{[]byte(w23)},
+//			{3, 2, w13, b21, w23, new byte[][]{[]byte(w23)},
 //				null, String[]{w11, w12, w13}},
-//			{1, 4, w11, w23, w21, [][]byte{[]byte(w21)},
+//			{1, 4, w11, w23, w21, new byte[][]{[]byte(w21)},
 //				null, String[]{w11, w12, w23}},
-//			{0, 3, w10, "", b00, [][]byte{[]byte(b00)},
+//			{0, 3, w10, "", b00, new byte[][]{[]byte(b00)},
 //				null, String[]{w10, w11, w12}},
-//			{1, 5, w21, b00, c10, [][]byte{[]byte(c10)},
+//			{1, 5, w21, b00, c10, new byte[][]{[]byte(c10)},
 //				null, String[]{b00, w21}},
-//			{2, 5, b21, c10, w22, [][]byte{[]byte(w22)},
+//			{2, 5, b21, c10, w22, new byte[][]{[]byte(w22)},
 //				null, String[]{b00, w21, w11, w12}},
-//			{0, 4, b00, w22, w20, [][]byte{[]byte(w20)},
+//			{0, 4, b00, w22, w20, new byte[][]{[]byte(w20)},
 //				null, String[]{b00, w21, w22}},
-//			{1, 6, c10, w20, w31, [][]byte{[]byte(w31)},
+//			{1, 6, c10, w20, w31, new byte[][]{[]byte(w31)},
 //				null, String[]{w20, b00, w21}},
-//			{2, 6, w22, w31, w32, [][]byte{[]byte(w32)},
+//			{2, 6, w22, w31, w32, new byte[][]{[]byte(w32)},
 //				null, String[]{w31, w20, w22, b00, w21}},
-//			{0, 5, w20, w32, w30, [][]byte{[]byte(w30)},
+//			{0, 5, w20, w32, w30, new byte[][]{[]byte(w30)},
 //				null, String[]{w32, w31, w20}},
-//			{3, 3, w23, w32, w33, [][]byte{[]byte(w33)},
+//			{3, 3, w23, w32, w33, new byte[][]{[]byte(w33)},
 //				null, String[]{w23, w11, w12, w32, w31, w20}},
-//			{1, 7, w31, w33, d13, [][]byte{[]byte(d13)},
+//			{1, 7, w31, w33, d13, new byte[][]{[]byte(d13)},
 //				null, String[]{w33, w31, w20}},
-//			{0, 6, w30, d13, w40, [][]byte{[]byte(w40)},
+//			{0, 6, w30, d13, w40, new byte[][]{[]byte(w40)},
 //				null, String[]{w30, d13, w33}},
-//			{1, 8, d13, w40, w41, [][]byte{[]byte(w41)},
+//			{1, 8, d13, w40, w41, new byte[][]{[]byte(w41)},
 //				null, String[]{w40, d13, w33}},
-//			{2, 7, w32, w41, w42, [][]byte{[]byte(w42)},
+//			{2, 7, w32, w41, w42, new byte[][]{[]byte(w42)},
 //				null, String[]{w41, w40, w32, w31, w20}},
-//			{3, 4, w33, w42, w43, [][]byte{[]byte(w43)},
+//			{3, 4, w33, w42, w43, new byte[][]{[]byte(w43)},
 //				null, String[]{w42, w41, w40, w33}},
 //		}
 //		if full {
 //			newPlays := []play{
-//				{2, 8, w42, w43, e23, [][]byte{[]byte(e23)},
+//				{2, 8, w42, w43, e23, new byte[][]{[]byte(e23)},
 //					null, String[]{w43, w42, w41, w40}},
-//				{1, 9, w41, e23, w51, [][]byte{[]byte(w51)},
+//				{1, 9, w41, e23, w51, new byte[][]{[]byte(w51)},
 //					null, String[]{e23, w43, w41, w40}},
 //			}
 //			plays = append(plays, newPlays...)
@@ -2352,20 +2368,20 @@ public class PosetTest {
 //	public TestFunkyPosetFame() {
 //		p, index := initFunkyPoset(t, common.NewTestLogger(t), false)
 //
-//		if err := p.DivideRounds(); err != null {
+//		if err := poset.DivideRounds(); err != null {
 //			t.Fatal(err)
 //		}
-//		if err := p.DecideFame(); err != null {
+//		if err := poset.DecideFame(); err != null {
 //			t.Fatal(err)
 //		}
 //
-//		l := p.Store.LastRound()
+//		l := poset.Store.LastRound()
 //		if l != 7 {
 //			t.Fatalf("last round should be 7 not %d", l)
 //		}
 //
 //		for r := int64(0); r < l+1; r++ {
-//			round, err := p.Store.GetRound(r)
+//			round, err := poset.Store.GetRound(r)
 //			if err != null {
 //				t.Fatal(err)
 //			}
@@ -2387,24 +2403,24 @@ public class PosetTest {
 //			{Index: 7, Decided: false},
 //		}
 //
-//		for i, pd := range p.PendingRounds {
+//		for i, pd := range poset.PendingRounds {
 //			if !reflect.DeepEqual(*pd, expPendingRounds[i]) {
 //				t.Fatalf("pending round %d should be %v, not %v", i,
 //					expPendingRounds[i], *pd)
 //			}
 //		}
 //
-//		if err := p.DecideRoundReceived(); err != null {
+//		if err := poset.DecideRoundReceived(); err != null {
 //			t.Fatal(err)
 //		}
-//		if err := p.ProcessDecidedRounds(); err != null {
+//		if err := poset.ProcessDecidedRounds(); err != null {
 //			t.Fatal(err)
 //		}
 //
-//		for i := 5; i < len(p.PendingRounds)+5; i++ {
-//			if !reflect.DeepEqual(*p.PendingRounds[i-5], expPendingRounds[i]) {
+//		for i := 5; i < len(poset.PendingRounds)+5; i++ {
+//			if !reflect.DeepEqual(*poset.PendingRounds[i-5], expPendingRounds[i]) {
 //				t.Fatalf("pending round %d should be %v, not %v", i,
-//					expPendingRounds[i], *p.PendingRounds[i-5])
+//					expPendingRounds[i], *poset.PendingRounds[i-5])
 //			}
 //		}
 //	}
@@ -2412,26 +2428,26 @@ public class PosetTest {
 //	public TestFunkyPosetBlocks() {
 //		p, index := initFunkyPoset(t, common.NewTestLogger(t), true)
 //
-//		if err := p.DivideRounds(); err != null {
+//		if err := poset.DivideRounds(); err != null {
 //			t.Fatal(err)
 //		}
-//		if err := p.DecideFame(); err != null {
+//		if err := poset.DecideFame(); err != null {
 //			t.Fatal(err)
 //		}
-//		if err := p.DecideRoundReceived(); err != null {
+//		if err := poset.DecideRoundReceived(); err != null {
 //			t.Fatal(err)
 //		}
-//		if err := p.ProcessDecidedRounds(); err != null {
+//		if err := poset.ProcessDecidedRounds(); err != null {
 //			t.Fatal(err)
 //		}
 //
-//		l := p.Store.LastRound()
+//		l := poset.Store.LastRound()
 //		if l != 7 {
 //			t.Fatalf("last round should be 7 not %d", l)
 //		}
 //
 //		for r := int64(0); r < l+1; r++ {
-//			round, err := p.Store.GetRound(r)
+//			round, err := poset.Store.GetRound(r)
 //			if err != null {
 //				t.Fatal(err)
 //			}
@@ -2447,7 +2463,7 @@ public class PosetTest {
 //			{Index: 6, Decided: false},
 //			{Index: 7, Decided: false},
 //		}
-//		for i, pd := range p.PendingRounds {
+//		for i, pd := range poset.PendingRounds {
 //			if !reflect.DeepEqual(*pd, expPendingRounds[i]) {
 //				t.Fatalf("pending round %d should be %v, not %v",
 //					i, expPendingRounds[i], *pd)
@@ -2457,7 +2473,7 @@ public class PosetTest {
 //		expBlockTxCounts := HashMap<Long,Long>{0: 4, 1: 3, 2: 5, 3: 7, 4: 3}
 //
 //		for bi := int64(0); bi < 5; bi++ {
-//			b, err := p.Store.GetBlock(bi)
+//			b, err := poset.Store.GetBlock(bi)
 //			if err != null {
 //				t.Fatal(err)
 //			}
@@ -2474,32 +2490,32 @@ public class PosetTest {
 //	public TestFunkyPosetFrames() {
 //		p, index := initFunkyPoset(t, common.NewTestLogger(t), true)
 //
-//		participants := p.Participants.ToPeerSlice()
+//		participants := poset.Participants.ToPeerSlice()
 //
-//		if err := p.DivideRounds(); err != null {
+//		if err := poset.DivideRounds(); err != null {
 //			t.Fatal(err)
 //		}
-//		if err := p.DecideFame(); err != null {
+//		if err := poset.DecideFame(); err != null {
 //			t.Fatal(err)
 //		}
-//		if err := p.DecideRoundReceived(); err != null {
+//		if err := poset.DecideRoundReceived(); err != null {
 //			t.Fatal(err)
 //		}
-//		if err := p.ProcessDecidedRounds(); err != null {
+//		if err := poset.ProcessDecidedRounds(); err != null {
 //			t.Fatal(err)
 //		}
 //
 //		for bi := int64(0); bi < 5; bi++ {
-//			block, err := p.Store.GetBlock(bi)
+//			block, err := poset.Store.GetBlock(bi)
 //			if err != null {
 //				t.Fatal(err)
 //			}
 //
-//			frame, err := p.GetFrame(block.RoundReceived())
+//			frame, err := poset.GetFrame(block.RoundReceived())
 //			for k, em := range frame.Events {
 //				e := em.ToEvent()
 //				ev := &e
-//				r, _ := p.round(ev.Hex())
+//				r, _ := poset.round(ev.Hex())
 //				t.Logf("frame %d events %d: %s, round %d",
 //					frame.Round, k, getName(index, ev.Hex()), r)
 //			}
@@ -2684,12 +2700,12 @@ public class PosetTest {
 //		}
 //
 //		for bi := int64(0); bi < 5; bi++ {
-//			block, err := p.Store.GetBlock(bi)
+//			block, err := poset.Store.GetBlock(bi)
 //			if err != null {
 //				t.Fatal(err)
 //			}
 //
-//			frame, err := p.GetFrame(block.RoundReceived())
+//			frame, err := poset.GetFrame(block.RoundReceived())
 //			if err != null {
 //				t.Fatal(err)
 //			}
@@ -2703,18 +2719,18 @@ public class PosetTest {
 //	public TestFunkyPosetReset() {
 //		p, index := initFunkyPoset(t, common.NewTestLogger(t), true)
 //
-//		p.DivideRounds()
-//		p.DecideFame()
-//		p.DecideRoundReceived()
-//		p.ProcessDecidedRounds()
+//		poset.DivideRounds()
+//		poset.DecideFame()
+//		poset.DecideRoundReceived()
+//		poset.ProcessDecidedRounds()
 //
 //		for bi := int64(0); bi < 3; bi++ {
-//			block, err := p.Store.GetBlock(bi)
+//			block, err := poset.Store.GetBlock(bi)
 //			if err != null {
 //				t.Fatal(err)
 //			}
 //
-//			frame, err := p.GetFrame(block.RoundReceived())
+//			frame, err := poset.GetFrame(block.RoundReceived())
 //			if err != null {
 //				t.Fatal(err)
 //			}
@@ -2725,8 +2741,8 @@ public class PosetTest {
 //			unmarshalledFrame := new(Frame)
 //			unmarshalledFrame.ProtoUnmarshal(marshalledFrame)
 //
-//			p2 := NewPoset(p.Participants,
-//				NewInmemStore(p.Participants, cacheSize),
+//			p2 := NewPoset(poset.Participants,
+//				NewInmemStore(poset.Participants, cacheSize),
 //				null,
 //				testLogger(t))
 //			err = p2.Reset(block, *unmarshalledFrame)
@@ -2824,60 +2840,59 @@ public class PosetTest {
 //		0	 1	  2	   3
 //	*/
 //
-//	public initSparsePoset(
-//		, logger *logrus.Logger) (*Poset, HashMap<String,String>) {
-//		nodes, index, orderedEvents, participants := initPosetNodes(4)
+//	public initSparsePoset(Logger logger) {
+//		initPosetNodes(4);
 //
 //		for i, peer := range participants.ToPeerSlice() {
 //			name := fmt.Sprintf("w0%d", i)
-//			event := NewEvent([][]byte{[]byte(name)}, null,
+//			event := NewEvent(new byte[][]{[]byte(name)}, null,
 //				null, String[]{rootSelfParent(peer.ID), ""}, nodes[i].Pub, 0,
 //				HashMap<String,Long>{rootSelfParent(peer.ID): 1})
 //			nodes[i].signAndAddEvent(event, name, index, orderedEvents)
 //		}
 //
 //		plays := []play{
-//			{1, 1, w01, w00, e10, [][]byte{[]byte(e10)},
+//			{1, 1, w01, w00, e10, new byte[][]{[]byte(e10)},
 //				null, String[]{w00, w01}},
-//			{2, 1, w02, e10, e21, [][]byte{[]byte(e21)},
+//			{2, 1, w02, e10, e21, new byte[][]{[]byte(e21)},
 //				null, String[]{w00, w01, w02}},
-//			{3, 1, w03, e21, e32, [][]byte{[]byte(e32)},
+//			{3, 1, w03, e21, e32, new byte[][]{[]byte(e32)},
 //				null, String[]{e21, w03}},
-//			{0, 1, w00, e32, w10, [][]byte{[]byte(w10)},
+//			{0, 1, w00, e32, w10, new byte[][]{[]byte(w10)},
 //				null, String[]{e21, e32, w00}},
-//			{1, 2, e10, w10, w11, [][]byte{[]byte(w11)},
+//			{1, 2, e10, w10, w11, new byte[][]{[]byte(w11)},
 //				null, String[]{w10, e32, e21, w01, w00}},
-//			{0, 2, w10, w11, f01, [][]byte{[]byte(f01)},
+//			{0, 2, w10, w11, f01, new byte[][]{[]byte(f01)},
 //				null, String[]{w11, w10, e32, e21}},
-//			{2, 2, e21, f01, w12, [][]byte{[]byte(w12)},
+//			{2, 2, e21, f01, w12, new byte[][]{[]byte(w12)},
 //				null, String[]{f01, w11, e21}},
-//			{3, 2, e32, w12, w13, [][]byte{[]byte(w13)},
+//			{3, 2, e32, w12, w13, new byte[][]{[]byte(w13)},
 //				null, String[]{w12, f01, w11, e32, e21}},
-//			{1, 3, w11, w13, w21, [][]byte{[]byte(w21)},
+//			{1, 3, w11, w13, w21, new byte[][]{[]byte(w21)},
 //				null, String[]{w13, w11}},
-//			{2, 3, w12, w21, w22, [][]byte{[]byte(w22)},
+//			{2, 3, w12, w21, w22, new byte[][]{[]byte(w22)},
 //				null, String[]{w21, w13, w12, f01, w11}},
-//			{3, 3, w13, w22, w23, [][]byte{[]byte(w23)},
+//			{3, 3, w13, w22, w23, new byte[][]{[]byte(w23)},
 //				null, String[]{w22, w21, w13}},
-//			{1, 4, w21, w23, g13, [][]byte{[]byte(g13)},
+//			{1, 4, w21, w23, g13, new byte[][]{[]byte(g13)},
 //				null, String[]{w23, w21, w13}},
-//			{2, 4, w22, g13, w32, [][]byte{[]byte(w32)},
+//			{2, 4, w22, g13, w32, new byte[][]{[]byte(w32)},
 //				null, String[]{g13, w23, w22, w21, w13}},
-//			{3, 4, w23, w32, w33, [][]byte{[]byte(w33)},
+//			{3, 4, w23, w32, w33, new byte[][]{[]byte(w33)},
 //				null, String[]{w32, g13, w23}},
-//			{1, 5, g13, w33, w31, [][]byte{[]byte(w31)},
+//			{1, 5, g13, w33, w31, new byte[][]{[]byte(w31)},
 //				null, String[]{w33, g13, w23}},
-//			{2, 5, w32, w31, h21, [][]byte{[]byte(h21)},
+//			{2, 5, w32, w31, h21, new byte[][]{[]byte(h21)},
 //				null, String[]{w31, w33, w32, g13, w23}},
-//			{3, 5, w33, h21, w43, [][]byte{[]byte(w43)},
+//			{3, 5, w33, h21, w43, new byte[][]{[]byte(w43)},
 //				null, String[]{h21, w31, w33}},
-//			{1, 6, w31, w43, w41, [][]byte{[]byte(w41)},
+//			{1, 6, w31, w43, w41, new byte[][]{[]byte(w41)},
 //				null, String[]{w43, w31, w33}},
-//			{2, 6, h21, w41, w42, [][]byte{[]byte(w42)},
+//			{2, 6, h21, w41, w42, new byte[][]{[]byte(w42)},
 //				null, String[]{w41, w43, h21, w31, w33}},
-//			{3, 6, w43, w42, i32, [][]byte{[]byte(i32)},
+//			{3, 6, w43, w42, i32, new byte[][]{[]byte(i32)},
 //				null, String[]{w42, w41, w43}},
-//			{1, 7, w41, i32, w51, [][]byte{[]byte(w51)},
+//			{1, 7, w41, i32, w51, new byte[][]{[]byte(w51)},
 //				null, String[]{i32, w41, w43}},
 //		}
 //
@@ -2892,28 +2907,28 @@ public class PosetTest {
 //	public TestSparsePosetFrames() {
 //		p, index := initSparsePoset(t, common.NewTestLogger(t))
 //
-//		participants := p.Participants.ToPeerSlice()
+//		participants := poset.Participants.ToPeerSlice()
 //
-//		if err := p.DivideRounds(); err != null {
+//		if err := poset.DivideRounds(); err != null {
 //			t.Fatal(err)
 //		}
-//		if err := p.DecideFame(); err != null {
+//		if err := poset.DecideFame(); err != null {
 //			t.Fatal(err)
 //		}
-//		if err := p.DecideRoundReceived(); err != null {
+//		if err := poset.DecideRoundReceived(); err != null {
 //			t.Fatal(err)
 //		}
-//		if err := p.ProcessDecidedRounds(); err != null {
+//		if err := poset.ProcessDecidedRounds(); err != null {
 //			t.Fatal(err)
 //		}
 //
 //		for bi := int64(0); bi < 5; bi++ {
-//			block, err := p.Store.GetBlock(bi)
+//			block, err := poset.Store.GetBlock(bi)
 //			if err != null {
 //				t.Fatal(err)
 //			}
 //
-//			frame, err := p.GetFrame(block.RoundReceived())
+//			frame, err := poset.GetFrame(block.RoundReceived())
 //			for k, ev := range frame.Events {
 //				ev.Body.Hash()
 //				hash, err := ev.Body.Hash()
@@ -2921,7 +2936,7 @@ public class PosetTest {
 //					t.Fatal(err)
 //				}
 //				hex := fmt.Sprintf("0x%X", hash)
-//				r, err := p.round(hex)
+//				r, err := poset.round(hex)
 //				if err != null {
 //					t.Fatal(err)
 //				}
@@ -3125,12 +3140,12 @@ public class PosetTest {
 //		}
 //
 //		for bi := int64(0); bi < 5; bi++ {
-//			block, err := p.Store.GetBlock(bi)
+//			block, err := poset.Store.GetBlock(bi)
 //			if err != null {
 //				t.Fatal(err)
 //			}
 //
-//			frame, err := p.GetFrame(block.RoundReceived())
+//			frame, err := poset.GetFrame(block.RoundReceived())
 //			if err != null {
 //				t.Fatal(err)
 //			}
@@ -3144,18 +3159,18 @@ public class PosetTest {
 //	public TestSparsePosetReset() {
 //		p, index := initSparsePoset(t, common.NewTestLogger(t))
 //
-//		p.DivideRounds()
-//		p.DecideFame()
-//		p.DecideRoundReceived()
-//		p.ProcessDecidedRounds()
+//		poset.DivideRounds()
+//		poset.DecideFame()
+//		poset.DecideRoundReceived()
+//		poset.ProcessDecidedRounds()
 //
 //		for bi := 0; bi < 5; bi++ {
-//			block, err := p.Store.GetBlock(int64(bi))
+//			block, err := poset.Store.GetBlock(int64(bi))
 //			if err != null {
 //				t.Fatal(err)
 //			}
 //
-//			frame, err := p.GetFrame(block.RoundReceived())
+//			frame, err := poset.GetFrame(block.RoundReceived())
 //			if err != null {
 //				t.Fatal(err)
 //			}
@@ -3166,8 +3181,8 @@ public class PosetTest {
 //			unmarshalledFrame := new(Frame)
 //			unmarshalledFrame.ProtoUnmarshal(marshalledFrame)
 //
-//			p2 := NewPoset(p.Participants,
-//				NewInmemStore(p.Participants, cacheSize),
+//			p2 := NewPoset(poset.Participants,
+//				NewInmemStore(poset.Participants, cacheSize),
 //				null,
 //				testLogger(t))
 //			err = p2.Reset(block, *unmarshalledFrame)
@@ -3213,10 +3228,10 @@ public class PosetTest {
 //
 //	}
 //
-//	public compareRoundWitnesses(p, p2 *Poset, index HashMap<String,String>, round int64, check bool, ) {
+//	public void compareRoundWitnesses(Poset p, Poset p2, HashMap<String,String> index, long round, boolean check) {
 //
 //		for i := round; i <= 5; i++ {
-//			pRound, err := p.Store.GetRound(i)
+//			pRound, err := poset.Store.GetRound(i)
 //			if err != null {
 //				t.Fatal(err)
 //			}
@@ -3245,96 +3260,91 @@ public class PosetTest {
 //		}
 //
 //	}
-//
-//	public Event[] getDiff(Poset p, HashMap<Long,Long> known) {
-//		Event[] diff;
-//		for id, ct := range known {
-//			pk := p.Participants.ById[id].PubKeyHex
-//			// get participant Events with index > ct
-//			participantEvents, err := p.Store.ParticipantEvents(pk, ct)
-//			if err != null {
-//				t.Fatal(err)
-//			}
-//			for _, e := range participantEvents {
-//				ev, err := p.Store.GetEvent(e)
-//				if err != null {
-//					t.Fatal(err)
-//				}
-//				diff = append(diff, ev)
-//			}
-//		}
-//		sort.Sort(ByTopologicalOrder(diff))
-//		return diff
-//	}
-//
-//	public String getName( HashMap<String,String> index, String hash)  {
-//		for (String name : index.keySet()) {
-//			h = index.get(name);
-//			if h.equals(hash) {
-//				return name;
-//			}
-//		}
-//		return "";
-//	}
-//
-//	public void compareRootEvents(RootEvent x, RootEvent exp, HashMap<String,String> index) {
-//		if x.Hash != exp.Hash || x.Index != exp.Index ||
-//			x.CreatorID != exp.CreatorID || x.Round != exp.Round ||
-//			x.LamportTimestamp != exp.LamportTimestamp {
-//			t.Fatalf("expected root event %s: %v, got %s: %v",
-//				getName(index, exp.Hash), exp, getName(index, x.Hash), x)
-//		}
-//	}
-//
-//	public void compareOtherParents(HashMap<String,RootEvent> x, HashMap<String,RootEvent> exp,
-//		HashMap<String,String> index) {
-//		if len(x) != len(exp) {
-//			t.Fatalf("expected number of other parents: %d, got: %d",
-//				len(exp), len(x));
-//		}
-//
-//		String[] others;
-//		for k := range x {
-//			others = append(others, getName(index, k));
-//		}
-//
-//		for k, v := range exp {
-//			root, ok := x[k];
-//			if !ok {
-//				t.Fatalf("root %v not exists in other roots: %s", v, others);
-//			}
-//			compareRootEvents(t, root, v, index);
-//		}
-//	}
-//
-//	public compareRoots(Root x, Root exp, HashMap<String,String> index) {
-//		compareRootEvents(t, x.SelfParent, exp.SelfParent, index);
-//		compareOtherParents(t, x.Others, exp.Others, index);
-//		if exp.NextRound != x.NextRound {
-//			t.Fatalf("expected next round: %d, got: %d",
-//				exp.NextRound, x.NextRound);
-//		}
-//	}
-//
-//	public compareEventMessages(EventMessage x, EventMessage exp, HashMap<String,String> index) {
-//		if !reflect.DeepEqual(x.WitnessProof, exp.WitnessProof) ||
-//			!bytes.Equal(x.FlagTable, exp.FlagTable) ||
-//			x.Signature != exp.Signature {
-//			hash, _ := exp.Body.Hash();
+
+	public Event[] getDiff(Poset p, HashMap<Long,Long> known) {
+		Event[] diff = null;
+		for (long id: known.keySet()) {
+			long ct = known.get(id);
+			String pk = poset.Participants.ById(id).GetPubKeyHex();
+			// get participant Events with index > ct
+			RetResult<String[]> pEventsCall = poset.Store.ParticipantEvents(pk, ct);
+			String[] participantEvents = pEventsCall.result;
+			error err = pEventsCall.err;
+			assertNull("No error", err);
+
+			for (String e : participantEvents) {
+				RetResult<Event> getEvent = poset.Store.GetEvent(e);
+				Event ev = getEvent.result;
+				err = getEvent.err;
+				assertNull("No error", err);
+				diff = Appender.append(diff, ev);
+			}
+		}
+		Arrays.sort(diff, new EventComparatorByTopologicalOrder());
+		return diff;
+	}
+
+	public String getName(Map<String,String> index, String hash)  {
+		for (String name : index.keySet()) {
+			String h = index.get(name);
+			if (h.equals(hash)) {
+				return name;
+			}
+		}
+		return "";
+	}
+
+	public void compareRootEvents(RootEvent x, RootEvent exp, Map<String,String> index) {
+		if (x.Hash != exp.Hash || x.Index != exp.Index ||
+			x.CreatorID != exp.CreatorID || x.Round != exp.Round ||
+			x.LamportTimestamp != exp.LamportTimestamp) {
+			fail(String.format("expected root event %s: %v, got %s: %v",
+				getName(index, exp.Hash), exp, getName(index, x.Hash), x));
+		}
+	}
+
+	public void compareOtherParents(Map<String,RootEvent> x, Map<String,RootEvent> exp,
+		Map<String,String> index) {
+		assertEquals("expected number of other parents", exp.size(), x.size());
+
+		String[] others = null;
+		for (String k : x.keySet()) {
+			others = Appender.append(others, getName(index, k));
+		}
+
+		for (String k : exp.keySet()) {
+			RootEvent v = exp.get(k);
+			RootEvent root = x.get(k);
+			assertNotNull(String.format("root %v exists in other roots", v), root);
+			compareRootEvents(root, v, index);
+		}
+	}
+
+	public void compareRoots(Root x, Root exp, HashMap<String,String> index) {
+		compareRootEvents(x.SelfParent, exp.SelfParent, index);
+		compareOtherParents(x.Others, exp.Others, index);
+		assertEquals("expected next round should match", exp.NextRound, x.NextRound);
+	}
+
+	public void compareEventMessages(EventMessage x, EventMessage exp, HashMap<String,String> index) {
+		if (!x.WitnessProof.equals(exp.WitnessProof) ||
+			!x.FlagTable.equals(exp.FlagTable) ||
+			!x.Signature.equals(exp.Signature)) {
+			byte[] hash = exp.Body.Hash().result;
 //			hex := fmt.Sprintf("0x%X", hash);
-//			t.Fatalf("expcted message to event %s: %v, got: %v",
-//				getName(index, hex), exp, x);
-//		}
-//		compareEventBody(t, x.Body, exp.Body);
-//	}
-//
-//	public compareEventBody(EventBody x, EventBody exp) {
-//		if x.Index != exp.Index || !bytes.Equal(x.Creator, exp.Creator) ||
-//			!reflect.DeepEqual(x.BlockSignatures, exp.BlockSignatures) ||
-//			!reflect.DeepEqual(x.InternalTransactions, exp.InternalTransactions) ||
-//			!reflect.DeepEqual(x.Parents, exp.Parents) ||
-//			!reflect.DeepEqual(x.Transactions, exp.Transactions) {
-//			t.Fatalf("expcted event body: %v, got: %v", exp, x);
-//		}
-//	}
+			String hex = crypto.Utils.toHexString(hash);
+			assertEquals(String.format("message to event %s should match", getName(index, hex)), exp, x);
+		}
+		compareEventBody(x.Body, exp.Body);
+	}
+
+	public void compareEventBody(EventBody x, EventBody exp) {
+		if (x.Index != exp.Index || !x.Creator.equals(exp.Creator) ||
+			!x.BlockSignatures.equals(exp.BlockSignatures) ||
+			!x.InternalTransactions.equals(exp.InternalTransactions) ||
+			!x.Parents.equals(exp.Parents) ||
+			!x.Transactions.equals(exp.Transactions)) {
+			assertEquals("Event body should match", exp, x);
+		}
+	}
 }

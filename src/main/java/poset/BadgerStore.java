@@ -718,7 +718,7 @@ public class BadgerStore implements Store {
 		error  err = null;
 		if (blockBytes == null) {
 			err = StoreErr.newStoreErr("Block", StoreErrType.KeyNotFound, Arrays.toString(key));
-			return new RetResult<Block>(new Block(), err);
+			return new RetResult<Block>(null, err);
 		}
 
 		Block block = new Block();
@@ -726,7 +726,7 @@ public class BadgerStore implements Store {
 		block = protoUnmarshal.result;
 		err = protoUnmarshal.err;
 		if (err != null) {
-			return new RetResult<>(new Block(), err);
+			return new RetResult<>(null, err);
 		}
 
 		return new RetResult<>(block, null);

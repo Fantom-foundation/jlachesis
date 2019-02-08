@@ -292,7 +292,7 @@ public class InmemStore implements Store {
 	public RetResult<Block> GetBlock(long index) {
 		Block res = blockCache.get(index);
 		if ( res == null) {
-			return new RetResult<Block>( new Block(), StoreErr.newStoreErr("BlockCache", StoreErrType.KeyNotFound, Long.toString(index, 10)));
+			return new RetResult<Block>( null, StoreErr.newStoreErr("BlockCache", StoreErrType.KeyNotFound, Long.toString(index, 10)));
 		}
 		return new RetResult<Block>( res, null);
 	}

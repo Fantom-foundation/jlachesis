@@ -7,23 +7,36 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import autils.Appender;
+import common.IProto;
 import common.RetResult;
 import common.RetResult3;
 import common.error;
 
 public class Block {
-	BlockBody Body;
-	Map<String,String> Signatures;
-	byte[] Hash;
-	String Hex;
+	private BlockBody Body;
+	private Map<String,String> Signatures;
+	private byte[] Hash;
+	private String Hex;
 	private byte[] StateHash;
-	byte[] FrameHash;
+	private byte[] FrameHash;
 
 	public Block() {
+		Body = null;
+		Signatures = null;
+		Hash = null;
+		Hex = null;
+		StateHash = null;
+		FrameHash = null;
+	}
 
+	public Block(long blockIndex, long roundReceived, byte[] frameHash, byte[][] txs)  {
+		this.Body = new BlockBody (blockIndex, roundReceived, txs);
+		this.FrameHash = frameHash;
+		this.Signatures = new HashMap<String,String>();
 	}
 
 	public void Reset() {
@@ -31,7 +44,7 @@ public class Block {
 		Signatures.clear();
 		Hash = null;
 		Hex = null;
-		setStateHash(null);
+		StateHash = null;
 		FrameHash = null;
 	}
 
@@ -78,26 +91,12 @@ public class Block {
 		return null;
 	}
 
-
-//	public String String(){
-//		//return proto.CompactTextString(m);
-//		return Body + ",sign:" + Signatures + Hash + "," + Hex + "," + StateHash + "," + FrameHash;
-//	}
-
-
-	public boolean equals(Block that) {
-		return this.Body.equals(that.Body) &&
-			this.Signatures.equals(that.Signatures) &&
-			Utils.BytesEquals(this.Hash, that.Hash) &&
-			this.Hex == that.Hex;
-	}
-
 	public static RetResult<Block> NewBlockFromFrame(long blockIndex, Frame frame) {
 		RetResult<byte[]> hash2 = frame.Hash();
 		byte[] frameHash = hash2.result;
 		error err = hash2.err;
 		if (err != null) {
-			return new RetResult<Block>(new Block(), err);
+			return new RetResult<Block>(null, err);
 		}
 
 		byte[][] transactions = null;
@@ -110,11 +109,11 @@ public class Block {
 		return new RetResult<Block>(new Block(blockIndex, frame.Round, frameHash, transactions), null);
 	}
 
-
-	public Block(long blockIndex, long roundReceived, byte[] frameHash, byte[][] txs)  {
-		this.Body = new BlockBody (blockIndex, roundReceived, txs);
-		this.FrameHash = frameHash;
-		this.Signatures = new HashMap<String,String>();
+	public boolean equals(Block that) {
+		return this.Body.equals(that.Body) &&
+			this.Signatures.equals(that.Signatures) &&
+			Utils.BytesEquals(this.Hash, that.Hash) &&
+			this.Hex == that.Hex;
 	}
 
 	public long Index() {
@@ -159,6 +158,78 @@ public class Block {
 
 	public void AppendTransactions(byte[][] txs) {
 		Body.Transactions = Appender.append(Body.Transactions, txs);
+	}
+
+	public IProto<Block, poset.proto.Block> marshaller() {
+		return new IProto<Block, poset.proto.Block>() {
+			@Override
+			public poset.proto.Block toProto() {
+				poset.proto.Block.Builder builder = poset.proto.Block.newBuilder();
+				if (Body != null) {
+					poset.proto.BlockBody pBlockBody = Body.marshaller().toProto();
+					builder.setBody(pBlockBody);
+				}
+				if (Signatures != null) {
+					builder.clearSignatures().putAllSignatures(Signatures);
+				}
+				if (Hash != null) {
+					builder.setHash(ByteString.copyFrom(Hash));
+				}
+				if (Hex != null) {
+					builder.setHex(Hex);
+				}
+				if (StateHash != null) {
+					builder.setStateHash(ByteString.copyFrom(StateHash));
+				}
+				if (FrameHash != null) {
+					builder.setFrameHash(ByteString.copyFrom(FrameHash));
+				}
+				return builder.build();
+			}
+
+			@Override
+			public void fromProto(poset.proto.Block pBlock) {
+				poset.proto.BlockBody pBody = pBlock.getBody();
+				Body = null;
+				if (pBody != null) {
+					Body = new BlockBody();
+					Body.marshaller().fromProto(pBody);
+				}
+
+				Signatures = pBlock.getSignaturesMap();
+				Hash = pBlock.getHash().toByteArray();
+				Hex = pBlock.getHex();
+				StateHash = pBlock.getStateHash().toByteArray();
+				FrameHash = pBlock.getFrameHash().toByteArray();
+			}
+
+			@Override
+			public RetResult<poset.proto.Block> parseFrom(byte[] data) {
+				try {
+					poset.proto.Block block = poset.proto.Block.parseFrom(data);
+					return new RetResult<>(block, null);
+				} catch (InvalidProtocolBufferException e) {
+					return new RetResult<>(null, error.Errorf(e.getMessage()));
+				}
+			}
+
+			@Override
+			public RetResult<byte[]> protoMarshal() {
+				return new RetResult<>(toProto().toByteArray(), null);
+			}
+
+			@Override
+			public error protoUnmarshal(byte[] data) {
+				RetResult<poset.proto.Block> protBlock = parseFrom(data);
+				error err = protBlock.err;
+				if (err != null) {
+					return err;
+				}
+				poset.proto.Block pBlock = protBlock.result;
+				fromProto(pBlock);
+				return null;
+			}
+		};
 	}
 
 	public RetResult<byte[]> ProtoMarshal() {

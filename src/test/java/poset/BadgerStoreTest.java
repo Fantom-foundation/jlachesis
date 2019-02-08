@@ -385,11 +385,11 @@ public class BadgerStoreTest {
 		err = dbGetBlock.err;
 		assertNull("No error", err);
 
-		String val1Sig = storedBlock.Signatures.get(participants[0].hex);
+		String val1Sig = storedBlock.GetSignatures().get(participants[0].hex);
 		assertNotNull("Validator1 signature is stored in block", val1Sig);
 		assertEquals("Validator1 block signatures matches", val1Sig, sig1.Signature);
 
-		String val2Sig = storedBlock.Signatures.get(participants[1].hex);
+		String val2Sig = storedBlock.GetSignatures().get(participants[1].hex);
 		assertNotNull("Validator2 signature not stored in block", val2Sig);
 		assertEquals("Validator2 block signatures matches", val2Sig, sig2.Signature);
 
@@ -617,11 +617,11 @@ public class BadgerStoreTest {
 		err = getBlock2.err;
 		assertNull("No error", err);
 
-		String val1Sig = storedBlock.Signatures.get(participants[0].hex);
+		String val1Sig = storedBlock.GetSignatures().get(participants[0].hex);
 		assertNotNull("Validator1 signature is stored in block", val1Sig);
 		assertEquals("Validator1 block signatures should match", val1Sig, sig1.Signature);
 
-		String val2Sig = storedBlock.Signatures.get(participants[1].hex);
+		String val2Sig = storedBlock.GetSignatures().get(participants[1].hex);
 		assertNotNull("Validator2 signature not stored in block", val2Sig);
 		assertEquals("Validator2 block signatures should match", val2Sig, sig2.Signature);
 

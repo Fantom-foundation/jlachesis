@@ -1883,13 +1883,13 @@ public class Poset {
 						.warn("Saving Block");
 				}
 
-				if (block.Signatures.size() > trustCount &&
+				if (block.GetSignatures().size() > trustCount &&
 					(AnchorBlock < 0 ||
 						block.Index() > AnchorBlock)) {
 					setAnchorBlock(block.Index());
 					logger
 						.field("block_index", block.Index())
-						.field("signatures",  block.Signatures.size())
+						.field("signatures",  block.GetSignatures().size())
 						.field("trustCount",  trustCount)
 						.debug("Setting AnchorBlock");
 				}
@@ -1908,21 +1908,21 @@ public class Poset {
 	public RetResult3<Block,Frame> GetAnchorBlockWithFrame() {
 
 		if (AnchorBlock < 0) {
-			return new RetResult3<Block,Frame>(new Block(), new Frame(), error.Errorf("no Anchor Block"));
+			return new RetResult3<Block,Frame>(null, null, error.Errorf("no Anchor Block"));
 		}
 
 		RetResult<Block> getBlock = Store.GetBlock(AnchorBlock);
 		Block block = getBlock.result;
 		error err = getBlock.err;
 		if (err != null) {
-			return new RetResult3<Block,Frame>(new Block(), new Frame(), err);
+			return new RetResult3<Block,Frame>(null, null, err);
 		}
 
 		RetResult<Frame> getFrame = GetFrame(block.RoundReceived());
 		Frame frame = getFrame.result;
 		err = getFrame.err;
 		if ( err != null) {
-			return new RetResult3<Block,Frame>(new Block(), new Frame(), err);
+			return new RetResult3<Block,Frame>(null, null, err);
 		}
 
 		return new RetResult3<Block,Frame>(block, frame, null);
