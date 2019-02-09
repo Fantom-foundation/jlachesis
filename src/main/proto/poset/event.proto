@@ -3,7 +3,6 @@ package poset.proto;
 import "peers/peer.proto";
 
 option java_multiple_files = true;
-option java_outer_classname = "PEvent";
 
 enum TransactionType {
   PEER_ADD = 0;
@@ -43,11 +42,11 @@ message EventMessage {
 }
 
 message Event {
-	EventMessage Message = 1;
-	int64 Round = 2;
-	int64 LamportTimestamp = 3;
-	int64 RoundReceived = 4;
-	string Creator = 5;
-	bytes Hash = 6;
-	string Hex = 7;
+  EventMessage Message = 1;
+  int64 Round = 2;
+  int64 LamportTimestamp = 3;
+  int64 RoundReceived = 4;
+  string Creator = 5;
+  bytes Hash = 6;
+  string Hex = 7;
 }

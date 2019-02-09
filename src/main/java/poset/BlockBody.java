@@ -78,7 +78,7 @@ public class BlockBody {
 	public boolean equals(BlockBody that) {
 		return this.Index == that.Index &&
 			this.RoundReceived == that.RoundReceived &&
-			Utils.ByteArraysEquals(this.Transactions, that.Transactions);
+			Utils.byteArraysEquals(this.Transactions, that.Transactions);
 	}
 
 	public RetResult<byte[]> Hash() {

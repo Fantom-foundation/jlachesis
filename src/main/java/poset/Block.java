@@ -111,8 +111,8 @@ public class Block {
 	public boolean equals(Block that) {
 		return this.Body.equals(that.Body) &&
 			this.Signatures.equals(that.Signatures) &&
-			Utils.BytesEquals(this.Hash, that.Hash) &&
-			this.Hex == that.Hex;
+			Utils.bytesEquals(this.Hash, that.Hash) &&
+			this.Hex.equals(that.Hex);
 	}
 
 	public long Index() {

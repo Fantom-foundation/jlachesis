@@ -68,7 +68,7 @@ public  final class RoundInfoMessage extends
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return poset.proto.PRoundInfo.internal_static_poset_proto_RoundInfoMessage_descriptor;
+    return poset.proto.RoundInfoOuterClass.internal_static_poset_proto_RoundInfoMessage_descriptor;
   }
 
   @SuppressWarnings({"rawtypes"})
@@ -84,7 +84,7 @@ public  final class RoundInfoMessage extends
   }
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return poset.proto.PRoundInfo.internal_static_poset_proto_RoundInfoMessage_fieldAccessorTable
+    return poset.proto.RoundInfoOuterClass.internal_static_poset_proto_RoundInfoMessage_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
             poset.proto.RoundInfoMessage.class, poset.proto.RoundInfoMessage.Builder.class);
   }
@@ -95,7 +95,7 @@ public  final class RoundInfoMessage extends
         java.lang.String, poset.proto.RoundEvent> defaultEntry =
             com.google.protobuf.MapEntry
             .<java.lang.String, poset.proto.RoundEvent>newDefaultInstance(
-                poset.proto.PRoundInfo.internal_static_poset_proto_RoundInfoMessage_EventsEntry_descriptor, 
+                poset.proto.RoundInfoOuterClass.internal_static_poset_proto_RoundInfoMessage_EventsEntry_descriptor, 
                 com.google.protobuf.WireFormat.FieldType.STRING,
                 "",
                 com.google.protobuf.WireFormat.FieldType.MESSAGE,
@@ -323,7 +323,7 @@ public  final class RoundInfoMessage extends
       poset.proto.RoundInfoMessageOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return poset.proto.PRoundInfo.internal_static_poset_proto_RoundInfoMessage_descriptor;
+      return poset.proto.RoundInfoOuterClass.internal_static_poset_proto_RoundInfoMessage_descriptor;
     }
 
     @SuppressWarnings({"rawtypes"})
@@ -350,7 +350,7 @@ public  final class RoundInfoMessage extends
     }
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return poset.proto.PRoundInfo.internal_static_poset_proto_RoundInfoMessage_fieldAccessorTable
+      return poset.proto.RoundInfoOuterClass.internal_static_poset_proto_RoundInfoMessage_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               poset.proto.RoundInfoMessage.class, poset.proto.RoundInfoMessage.Builder.class);
     }
@@ -378,7 +378,7 @@ public  final class RoundInfoMessage extends
 
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return poset.proto.PRoundInfo.internal_static_poset_proto_RoundInfoMessage_descriptor;
+      return poset.proto.RoundInfoOuterClass.internal_static_poset_proto_RoundInfoMessage_descriptor;
     }
 
     public poset.proto.RoundInfoMessage getDefaultInstanceForType() {

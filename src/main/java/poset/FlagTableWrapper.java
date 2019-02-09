@@ -4,8 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import common.IProto;
-import poset.proto.PFlagTableWrapper;
-import poset.proto.PFlagTableWrapper.FlagTableWrapper.Builder;
+import poset.proto.FlagTableWrapper.Builder;
 
 public class FlagTableWrapper {
 	Map<String,Long> Body; //  `protobuf:"bytes,1,rep,name=Body,proto3" json:"Body,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
@@ -25,11 +24,11 @@ public class FlagTableWrapper {
 		return Body;
 	}
 
-	public IProto<FlagTableWrapper, PFlagTableWrapper.FlagTableWrapper> marshaller() {
-		return new IProto<FlagTableWrapper, PFlagTableWrapper.FlagTableWrapper>() {
+	public IProto<FlagTableWrapper, poset.proto.FlagTableWrapper> marshaller() {
+		return new IProto<FlagTableWrapper, poset.proto.FlagTableWrapper>() {
 			@Override
-			public PFlagTableWrapper.FlagTableWrapper toProto() {
-				Builder builder = PFlagTableWrapper.FlagTableWrapper.newBuilder();
+			public poset.proto.FlagTableWrapper toProto() {
+				Builder builder = poset.proto.FlagTableWrapper.newBuilder();
 				if (Body != null) {
 					builder.putAllBody(Body);
 				}
@@ -37,15 +36,15 @@ public class FlagTableWrapper {
 			}
 
 			@Override
-			public void fromProto(PFlagTableWrapper.FlagTableWrapper pBlock) {
+			public void fromProto(poset.proto.FlagTableWrapper pBlock) {
 				if (pBlock.getBodyMap() != null) {
 					Body.putAll(pBlock.getBodyMap());
 				}
 			}
 
 			@Override
-			public com.google.protobuf.Parser<poset.proto.PFlagTableWrapper.FlagTableWrapper> parser() {
-				return PFlagTableWrapper.FlagTableWrapper.parser();
+			public com.google.protobuf.Parser<poset.proto.FlagTableWrapper> parser() {
+				return poset.proto.FlagTableWrapper.parser();
 			}
 		};
 	}

@@ -86,12 +86,12 @@ public  final class RootEvent extends
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return poset.proto.PRoot.internal_static_poset_proto_RootEvent_descriptor;
+    return poset.proto.RootOuterClass.internal_static_poset_proto_RootEvent_descriptor;
   }
 
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return poset.proto.PRoot.internal_static_poset_proto_RootEvent_fieldAccessorTable
+    return poset.proto.RootOuterClass.internal_static_poset_proto_RootEvent_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
             poset.proto.RootEvent.class, poset.proto.RootEvent.Builder.class);
   }
@@ -360,12 +360,12 @@ public  final class RootEvent extends
       poset.proto.RootEventOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return poset.proto.PRoot.internal_static_poset_proto_RootEvent_descriptor;
+      return poset.proto.RootOuterClass.internal_static_poset_proto_RootEvent_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return poset.proto.PRoot.internal_static_poset_proto_RootEvent_fieldAccessorTable
+      return poset.proto.RootOuterClass.internal_static_poset_proto_RootEvent_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               poset.proto.RootEvent.class, poset.proto.RootEvent.Builder.class);
     }
@@ -402,7 +402,7 @@ public  final class RootEvent extends
 
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return poset.proto.PRoot.internal_static_poset_proto_RootEvent_descriptor;
+      return poset.proto.RootOuterClass.internal_static_poset_proto_RootEvent_descriptor;
     }
 
     public poset.proto.RootEvent getDefaultInstanceForType() {

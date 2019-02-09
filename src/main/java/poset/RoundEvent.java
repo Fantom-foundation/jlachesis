@@ -1,5 +1,8 @@
 package poset;
 
+import com.google.protobuf.Parser;
+
+import common.IProto;
 import poset.proto.Trilean;
 
 public class RoundEvent {
@@ -8,21 +11,43 @@ public class RoundEvent {
 	Trilean Famous; // `protobuf:"varint,3,opt,name=Famous,proto3,enum=poset.Trilean" json:"Famous,omitempty"`
 
 	public RoundEvent() {
-
+		// TODO: just add these inits
+		Consensus = false;
+		Witness = false;
+		Famous = Trilean.UNDEFINED;
 	}
 
 	public RoundEvent(boolean witness) {
 		this.Witness= witness;
+		// TODO: just add these inits
+		Consensus = false;
+		Famous = Trilean.UNDEFINED;
 	}
-//	public Reset()         { *m = RoundEvent{} }
-//	public String() string { return proto.CompactTextString(m) }
 
-//	public XXX_Unmarshal(b []byte) error {
-//		return xxx_messageInfo_RoundEvent.Unmarshal(m, b)
-//	}
-//	public XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-//		return xxx_messageInfo_RoundEvent.Marshal(b, m, deterministic)
-//	}
+	public IProto<RoundEvent, poset.proto.RoundEvent> marshaller() {
+		return new IProto<RoundEvent, poset.proto.RoundEvent>() {
+			@Override
+			public poset.proto.RoundEvent toProto() {
+				poset.proto.RoundEvent.Builder builder = poset.proto.RoundEvent.newBuilder();
+				builder.setConsensus(Consensus)
+				.setWitness(Witness)
+				.setFamous(Famous);
+				return builder.build();
+			}
+
+			@Override
+			public void fromProto(poset.proto.RoundEvent proto) {
+				Consensus = proto.getConsensus();
+				Witness = proto.getWitness();
+				Famous = proto.getFamous();
+			}
+
+			@Override
+			public Parser<poset.proto.RoundEvent> parser() {
+				return poset.proto.RoundEvent.parser();
+			}
+		};
+	}
 
 	public boolean GetConsensus() {
 		return Consensus;

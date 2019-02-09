@@ -87,7 +87,7 @@ public class BlockSignature {
 	}
 
 	public boolean equals(BlockSignature that) {
-		return Utils.BytesEquals(this.Validator, that.Validator) &&
+		return Utils.bytesEquals(this.Validator, that.Validator) &&
 			this.Index == that.Index &&
 			this.Signature.equals(that.Signature);
 	}

@@ -93,8 +93,8 @@ public class Frame {
 
 	public boolean equals(Frame that) {
 		return this.Round == that.Round &&
-			Utils.RootListEquals(this.Roots, that.Roots) &&
-			Utils.EventListEquals(this.Events, that.Events);
+			Utils.arrayEquals(this.Roots, that.Roots) &&
+			Utils.arrayEquals(this.Events, that.Events);
 	}
 
 	public long GetRound() {

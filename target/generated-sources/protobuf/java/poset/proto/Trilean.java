@@ -84,7 +84,7 @@ public enum Trilean
   }
   public static final com.google.protobuf.Descriptors.EnumDescriptor
       getDescriptor() {
-    return poset.proto.PRoundInfo.getDescriptor().getEnumTypes().get(0);
+    return poset.proto.RoundInfoOuterClass.getDescriptor().getEnumTypes().get(0);
   }
 
   private static final Trilean[] VALUES = values();

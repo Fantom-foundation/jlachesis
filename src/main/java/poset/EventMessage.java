@@ -174,9 +174,9 @@ public class EventMessage {
 
 	public boolean equals(EventMessage that) {
 		return this.Body.equals(that.Body) &&
-		this.Signature == that.Signature &&
-		Utils.BytesEquals(this.FlagTable, that.FlagTable) &&
-		Utils.ListEquals(this.WitnessProof, that.WitnessProof);
+		this.Signature.equals(that.Signature) &&
+		Utils.bytesEquals(this.FlagTable, that.FlagTable) &&
+		Utils.arrayEquals(this.WitnessProof, that.WitnessProof);
 }
 
 	@Override

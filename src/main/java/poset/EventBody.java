@@ -74,12 +74,12 @@ public class EventBody {
 
 
 	public boolean equals(EventBody that) {
-		return Utils.ByteArraysEquals(this.Transactions, that.Transactions) &&
-				Utils.InternalTransactionListEquals(this.InternalTransactions, that.InternalTransactions) &&
-				Utils.<String>ListEquals(this.Parents, that.Parents) &&
-				Utils.BytesEquals(this.Creator, that.Creator) &&
+		return Utils.byteArraysEquals(this.Transactions, that.Transactions) &&
+				Utils.arrayEquals(this.InternalTransactions, that.InternalTransactions) &&
+				Utils.<String>arrayEquals(this.Parents, that.Parents) &&
+				Utils.bytesEquals(this.Creator, that.Creator) &&
 				this.Index == that.Index &&
-				Utils.BlockSignatureListEquals(this.BlockSignatures, that.BlockSignatures);
+				Utils.arrayEquals(this.BlockSignatures, that.BlockSignatures);
 	}
 
 	public IProto<EventBody, poset.proto.EventBody> marshaller() {

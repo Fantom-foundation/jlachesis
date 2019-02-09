@@ -14,7 +14,10 @@ public class Root {
 
 	public Root()
 	{
-
+		// TODO add these inits. ok?
+		NextRound = -1;
+		SelfParent = null;
+		Others = null;
 	}
 
 	public Root(long nextRound, RootEvent selfParent, Map<String, RootEvent> others) {

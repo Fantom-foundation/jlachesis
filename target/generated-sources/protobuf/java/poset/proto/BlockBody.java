@@ -79,12 +79,12 @@ public  final class BlockBody extends
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return poset.proto.PBlock.internal_static_poset_proto_BlockBody_descriptor;
+    return poset.proto.BlockOuterClass.internal_static_poset_proto_BlockBody_descriptor;
   }
 
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return poset.proto.PBlock.internal_static_poset_proto_BlockBody_fieldAccessorTable
+    return poset.proto.BlockOuterClass.internal_static_poset_proto_BlockBody_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
             poset.proto.BlockBody.class, poset.proto.BlockBody.Builder.class);
   }
@@ -308,12 +308,12 @@ public  final class BlockBody extends
       poset.proto.BlockBodyOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return poset.proto.PBlock.internal_static_poset_proto_BlockBody_descriptor;
+      return poset.proto.BlockOuterClass.internal_static_poset_proto_BlockBody_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return poset.proto.PBlock.internal_static_poset_proto_BlockBody_fieldAccessorTable
+      return poset.proto.BlockOuterClass.internal_static_poset_proto_BlockBody_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               poset.proto.BlockBody.class, poset.proto.BlockBody.Builder.class);
     }
@@ -346,7 +346,7 @@ public  final class BlockBody extends
 
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return poset.proto.PBlock.internal_static_poset_proto_BlockBody_descriptor;
+      return poset.proto.BlockOuterClass.internal_static_poset_proto_BlockBody_descriptor;
     }
 
     public poset.proto.BlockBody getDefaultInstanceForType() {

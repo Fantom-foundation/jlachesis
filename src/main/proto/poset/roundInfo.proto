@@ -2,7 +2,6 @@ syntax = "proto3";
 package poset.proto;
 
 option java_multiple_files = true;
-option java_outer_classname = "PRoundInfo";
 
 enum Trilean {
   UNDEFINED = 0;
@@ -18,4 +17,9 @@ message RoundEvent {
 
 message RoundInfoMessage {
   map<string, RoundEvent> Events = 1;
+}
+
+message RoundInfo {
+  RoundInfoMessage Message = 1;
+  bool Queued = 2;
 }

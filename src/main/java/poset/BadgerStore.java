@@ -647,7 +647,7 @@ public class BadgerStore implements Store {
 		}
 
 		RoundInfo roundInfo = new RoundInfo ();
-		err = roundInfo.ProtoUnmarshal(roundBytes);
+		err = roundInfo.marshaller().protoUnmarshal(roundBytes);
 		if (err != null) {
 			return new RetResult<>(new RoundInfo(), err);
 		}
@@ -660,7 +660,7 @@ public class BadgerStore implements Store {
 //		defer tx.Discard();
 
 		byte[] key = roundKey(index);
-		RetResult<byte[]> protoMarshal = round.ProtoMarshal();
+		RetResult<byte[]> protoMarshal = round.marshaller().protoMarshal();
 		byte[] val = protoMarshal.result;
 		error err = protoMarshal.err;
 		if (err != null) {

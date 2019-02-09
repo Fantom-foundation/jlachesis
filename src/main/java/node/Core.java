@@ -394,7 +394,7 @@ public class Core {
 		if (err != null) {
 			return err;
 		}
-		if (!Utils.BytesEquals(block.GetFrameHash(), frameHash)) {
+		if (!Utils.bytesEquals(block.GetFrameHash(), frameHash)) {
 			return error.Errorf("invalid Frame Hash");
 		}
 

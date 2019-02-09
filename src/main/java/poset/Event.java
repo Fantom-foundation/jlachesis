@@ -13,8 +13,7 @@ import common.RetResult;
 import common.RetResult3;
 import common.error;
 import node.FlagtableContainer;
-import poset.proto.PFlagTableWrapper;
-import poset.proto.PFlagTableWrapper.FlagTableWrapper.Builder;
+import poset.proto.FlagTableWrapper.Builder;
 
 public class Event implements FlagtableContainer {
 	EventMessage Message;
@@ -59,7 +58,7 @@ public class Event implements FlagtableContainer {
 			blockSignaturePointers
 		);
 
-		Builder builder = PFlagTableWrapper.FlagTableWrapper.newBuilder();
+		Builder builder = poset.proto.FlagTableWrapper.newBuilder();
 		if (flagTable!= null) {
 			builder.putAllBody(flagTable);
 		}

@@ -1,9 +1,8 @@
 package poset;
 
-import java.util.Map;
+import com.google.protobuf.Parser;
 
-import common.RetResult;
-import common.error;
+import common.IProto;
 import poset.proto.Trilean;
 
 public class RoundInfo {
@@ -11,7 +10,9 @@ public class RoundInfo {
 	boolean queued;
 
 	public RoundInfo() {
-		this.Message = new RoundInfoMessage();
+		Message = new RoundInfoMessage();
+		// TODO just add this init. ok?
+		queued = false;
 	}
 
 	public void AddEvent(String x, boolean witness) {
@@ -55,23 +56,14 @@ public class RoundInfo {
 
 	//return witnesses
 	public String[] Witnesses() {
-		String[] res = Message.Events.keySet().stream().filter( x ->
+		String[] res = Message.Events.keySet().stream().map( x ->
 			Message.Events.get(x).Witness
 		).toArray(String[]::new);
 		return res;
-
-//		ArrayList<String> res = new ArrayList<String>();
-//		for (String x : Message.Events.keySet()) {
-//			RoundEvent e = Message.Events.get(x);
-//			if (e.Witness) {
-//				res.add(x);
-//			}
-//		}
-//		return res.toArray(new String[res.size()]);
 	}
 
 	public String[] RoundEvents() {
-		String[] res = Message.Events.keySet().stream().filter( x ->
+		String[] res = Message.Events.keySet().stream().map( x ->
 			!(Message.Events.get(x).Consensus)
 		).toArray(String[]::new);
 		return res;
@@ -79,7 +71,7 @@ public class RoundInfo {
 
 	//return consensus events
 	public String[] ConsensusEvents() {
-		String[] res = Message.Events.keySet().stream().filter( x ->
+		String[] res = Message.Events.keySet().stream().map( x ->
 			Message.Events.get(x).Consensus
 		).toArray(String[]::new);
 		return res;
@@ -87,7 +79,7 @@ public class RoundInfo {
 
 	//return famous witnesses
 	public String[] FamousWitnesses() {
-		String[] res = Message.Events.keySet().stream().filter( x -> {
+		String[] res = Message.Events.keySet().stream().map( x -> {
 			RoundEvent e = Message.Events.get(x);
 			return (e.Witness && e.Famous == Trilean.TRUE);
 		}).toArray(String[]::new);
@@ -99,41 +91,42 @@ public class RoundInfo {
 		return w != null && w.Witness && w.Famous != Trilean.UNDEFINED;
 	}
 
-	public RetResult<byte[]> ProtoMarshal() {
-//		proto.Buffer bf;
-//		bf.SetDeterministic(true)
-//		err := bf.Marshal(&Message);
-//		if  (err != null) {
-//			return new RetResult<byte[]>(null, err);
-//		}
-//		return RetResult<byte[]>(bf.Bytes(), null);
+	public IProto<RoundInfo, poset.proto.RoundInfo> marshaller() {
+		return new IProto<RoundInfo, poset.proto.RoundInfo>() {
+			@Override
+			public poset.proto.RoundInfo toProto() {
+				poset.proto.RoundInfo.Builder builder = poset.proto.RoundInfo.newBuilder();
+				if (Message != null) {
+					builder.setMessage(Message.marshaller().toProto());
+				}
+				builder.setQueued(queued);
+				return builder.build();
+			}
 
-		// TBD
+			@Override
+			public void fromProto(poset.proto.RoundInfo proto) {
+				poset.proto.RoundInfoMessage msg = proto.getMessage();
+				Message = null;
+				if (msg != null) {
+					Message = new RoundInfoMessage();
+					Message.marshaller().fromProto(msg);
+				}
+				queued = proto.getQueued();
+			}
 
-		return null;
-	}
-
-	public error ProtoUnmarshal(byte[] data) {
-//		return proto.Unmarshal(data, Message);
-		// TBD
-
-		return null;
+			@Override
+			public Parser<poset.proto.RoundInfo> parser() {
+				return poset.proto.RoundInfo.parser();
+			}
+		};
 	}
 
 	public boolean IsQueued() {
 		return queued;
 	}
 
-
-
 	public boolean equals(RoundInfo that) {
 		return this.queued == that.queued &&
-			EqualsMapStringRoundEvent(this.Message.Events, that.Message.Events);
-	}
-
-	public static boolean EqualsMapStringRoundEvent(
-			Map<String,RoundEvent> thisMap,
-			Map<String,RoundEvent> thatMap) {
-		return thisMap.equals(thatMap);
+			this.Message.Events.equals(that.Message.Events);
 	}
 }
