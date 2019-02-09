@@ -204,10 +204,6 @@ public class Peers {
 		return ByPubKey.get(pub);
 	}
 
-	public ReadWriteLock getLock() {
-		return lock;
-	}
-
 	public Peer[] getSorted() {
 		return Sorted;
 	}

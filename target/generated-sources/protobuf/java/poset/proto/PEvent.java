@@ -34,6 +34,11 @@ public final class PEvent {
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_poset_proto_EventMessage_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_poset_proto_Event_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_poset_proto_Event_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -59,9 +64,13 @@ public final class PEvent {
       "\014WitnessProof\030\004 \003(\t\022\027\n\017SelfParentIndex\030\005" +
       " \001(\003\022\034\n\024OtherParentCreatorID\030\006 \001(\003\022\030\n\020Ot" +
       "herParentIndex\030\007 \001(\003\022\021\n\tCreatorID\030\010 \001(\003\022" +
-      "\030\n\020TopologicalIndex\030\t \001(\003*0\n\017Transaction" +
-      "Type\022\014\n\010PEER_ADD\020\000\022\017\n\013PEER_REMOVE\020\001B\nB\006P" +
-      "EventP\001b\006proto3"
+      "\030\n\020TopologicalIndex\030\t \001(\003\"\237\001\n\005Event\022*\n\007M" +
+      "essage\030\001 \001(\0132\031.poset.proto.EventMessage\022" +
+      "\r\n\005Round\030\002 \001(\003\022\030\n\020LamportTimestamp\030\003 \001(\003" +
+      "\022\025\n\rRoundReceived\030\004 \001(\003\022\017\n\007Creator\030\005 \001(\t",
+      "\022\014\n\004Hash\030\006 \001(\014\022\013\n\003Hex\030\007 \001(\t*0\n\017Transacti" +
+      "onType\022\014\n\010PEER_ADD\020\000\022\017\n\013PEER_REMOVE\020\001B\nB" +
+      "\006PEventP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -100,6 +109,12 @@ public final class PEvent {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_poset_proto_EventMessage_descriptor,
         new java.lang.String[] { "Body", "Signature", "FlagTable", "WitnessProof", "SelfParentIndex", "OtherParentCreatorID", "OtherParentIndex", "CreatorID", "TopologicalIndex", });
+    internal_static_poset_proto_Event_descriptor =
+      getDescriptor().getMessageTypes().get(4);
+    internal_static_poset_proto_Event_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_poset_proto_Event_descriptor,
+        new java.lang.String[] { "Message", "Round", "LamportTimestamp", "RoundReceived", "Creator", "Hash", "Hex", });
     peers.proto.PPeer.getDescriptor();
   }
 

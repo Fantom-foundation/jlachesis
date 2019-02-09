@@ -41,3 +41,13 @@ message EventMessage {
   int64 CreatorID = 8;
   int64 TopologicalIndex = 9;
 }
+
+message Event {
+	EventMessage Message = 1;
+	int64 Round = 2;
+	int64 LamportTimestamp = 3;
+	int64 RoundReceived = 4;
+	string Creator = 5;
+	bytes Hash = 6;
+	string Hex = 7;
+}

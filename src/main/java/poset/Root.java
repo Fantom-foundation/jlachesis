@@ -3,8 +3,9 @@ package poset;
 import java.util.HashMap;
 import java.util.Map;
 
-import common.RetResult;
-import common.error;
+import com.google.protobuf.Parser;
+
+import common.IProto;
 
 public class Root {
 	long NextRound; //  `protobuf:"varint,1,opt,name=NextRound,proto3" json:"NextRound,omitempty"`
@@ -38,6 +39,54 @@ public class Root {
 		this.Others = new HashMap<String,RootEvent>();
 	}
 
+	public IProto<Root, poset.proto.Root> marshaller() {
+		return new IProto<Root, poset.proto.Root>() {
+			@Override
+			public poset.proto.Root toProto() {
+				poset.proto.Root.Builder builder = poset.proto.Root.newBuilder();
+				builder.setNextRound(NextRound);
+				if (SelfParent != null) {
+					builder.setSelfParent(SelfParent.marshaller().toProto());
+				}
+
+				if (Others != null) {
+					Others.forEach((s,r) -> {
+						builder.putOthers(s, r.marshaller().toProto());
+					});
+				}
+				return builder.build();
+			}
+
+			@Override
+			public void fromProto(poset.proto.Root proto) {
+				NextRound = proto.getNextRound();
+
+				poset.proto.RootEvent sParent = proto.getSelfParent();
+				SelfParent = null;
+				if (sParent != null) {
+					SelfParent = new RootEvent();
+					SelfParent.marshaller().fromProto(sParent);
+				}
+
+				Map<String, poset.proto.RootEvent> othersMap = proto.getOthersMap();
+				Others = null;
+				if (othersMap != null) {
+					Others = new HashMap<String,RootEvent>();
+					othersMap.forEach((s,r) -> {
+						RootEvent re = new RootEvent();
+						re.marshaller().fromProto(r);
+						Others.put(s, re);
+					});
+				}
+			}
+
+			@Override
+			public Parser<poset.proto.Root> parser() {
+				return poset.proto.Root.parser();
+			}
+		};
+	}
+
 	public long GetNextRound() {
 		return NextRound;
 	}
@@ -57,26 +106,6 @@ public class Root {
 	public boolean Equals(Root that) {
 		return this.NextRound == that.NextRound &&
 			this.SelfParent.equals(that.SelfParent) &&
-			EqualsMapStringRootEvent(this.Others, that.Others);
-	}
-
-	public RetResult<byte[]> ProtoMarshal() {
-//		proto.Buffer bf;
-//		bf.SetDeterministic(true);
-//		if err := bf.Marshal(root); err != null {
-//			return null, err;
-//		}
-//		return bf.Bytes(), null;
-
-		// TBD
-
-		return null;
-	}
-
-	public error ProtoUnmarshal(byte[] data) {
-//		return proto.Unmarshal(data, root);
-		// TBD
-
-		return null;
+			this.Others.equals(that.Others);
 	}
 }

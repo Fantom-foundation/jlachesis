@@ -469,7 +469,7 @@ public class BadgerStore implements Store {
 		}
 
 		Event event = new Event();
-		err = event.ProtoUnmarshal(eventBytes);
+		err = event.marshaller().protoUnmarshal(eventBytes);
 		if  (err != null) {
 			return new RetResult<Event>(new Event(), err);
 		}
@@ -484,7 +484,7 @@ public class BadgerStore implements Store {
 //		defer tx.Discard();
 		for (Event event : events) {
 			String eventHex = event.Hex();
-			RetResult<byte[]> eventProto = event.ProtoMarshal();
+			RetResult<byte[]> eventProto = event.marshaller().protoMarshal();
 			byte[] val = eventProto.result;
 			error err = eventProto.err;
 			if (err != null) {
@@ -529,7 +529,7 @@ public class BadgerStore implements Store {
 			}
 
 			Event event = new Event();
-			err = event.ProtoUnmarshal(eventBytes);
+			err = event.marshaller().protoUnmarshal(eventBytes);
 			if (err != null){
 				break;
 			}
@@ -598,7 +598,7 @@ public class BadgerStore implements Store {
 
 		for (String participant : roots.keySet()) {
 			Root root = roots.get(participant);
-			RetResult<byte[]> rootMarshal = root.ProtoMarshal();
+			RetResult<byte[]> rootMarshal = root.marshaller().protoMarshal();
 			byte[] val = rootMarshal.result;
 			error err = rootMarshal.err;
 			if (err != null) {
@@ -625,7 +625,7 @@ public class BadgerStore implements Store {
 		}
 
 		Root root = new Root();
-		err = root.ProtoUnmarshal(rootBytes);
+		err = root.marshaller().protoUnmarshal(rootBytes);
 		if (err != null) {
 			return new RetResult<>(new Root(), err);
 		}
@@ -760,7 +760,7 @@ public class BadgerStore implements Store {
 		}
 
 		Frame frame = new Frame();
-		err = frame.ProtoUnmarshal(frameBytes);
+		err = frame.marshaller().protoUnmarshal(frameBytes);
 		if (err != null) {
 			return new RetResult<Frame>(new Frame(), err);
 		}
@@ -773,7 +773,7 @@ public class BadgerStore implements Store {
 //		defer tx.Discard();
 
 		byte[] key = frameKey(frame.Round);
-		RetResult<byte[]> protoMarshal = frame.ProtoMarshal();
+		RetResult<byte[]> protoMarshal = frame.marshaller().protoMarshal();
 		byte[] val = protoMarshal.result;
 		error err = protoMarshal.err;
 		if (err != null) {

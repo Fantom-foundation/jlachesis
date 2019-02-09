@@ -5,6 +5,10 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Map;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.Parser;
+
+import common.IProto;
 import common.RetResult;
 import common.RetResult3;
 import common.error;
@@ -77,8 +81,6 @@ public class Event implements FlagtableContainer {
 
 
 	public Event(EventMessage eventMessage) {
-
-		// TODO Auto-generated constructor stub
 		// TBD add stub
 		this.Message = new EventMessage();
 		this.Message.Body = eventMessage.Body;
@@ -315,6 +317,50 @@ public class Event implements FlagtableContainer {
 		return new RetResult<Map<String,Long>>(src.Body, err);
 	}
 
+
+	public IProto<Event, poset.proto.Event> marshaller() {
+		return new IProto<Event, poset.proto.Event>() {
+			@Override
+			public poset.proto.Event toProto() {
+				poset.proto.Event.Builder builder = poset.proto.Event.newBuilder();
+				if (Message != null) {
+					builder.setMessage(Message.marshaller().toProto());
+				}
+				builder.setRound(round)
+				.setLamportTimestamp(lamportTimestamp)
+				.setRoundReceived(roundReceived)
+				.setCreator(creator)
+				.setHex(hex);
+				if (hex != null) {
+					builder.setHash(ByteString.copyFrom(hash));
+				}
+				return builder.build();
+			}
+
+			@Override
+			public void fromProto(poset.proto.Event proto) {
+				poset.proto.EventMessage msg = proto.getMessage();
+				Message = null;
+				if (msg != null) {
+					Message = new EventMessage();
+					Message.marshaller().fromProto(msg);
+				}
+
+				round = proto.getRound();
+				lamportTimestamp = proto.getLamportTimestamp();
+				roundReceived = proto.getRoundReceived();
+				creator = proto.getCreator();
+				hash = proto.getHash().toByteArray();
+				hex = proto.getHex();
+			}
+
+			@Override
+			public Parser<poset.proto.Event> parser() {
+				return poset.proto.Event.parser();
+			}
+		};
+	}
+
 	public long CreatorID() {
 		return Message.CreatorID;
 	}
@@ -353,16 +399,5 @@ public class Event implements FlagtableContainer {
 
 	public static String rootSelfParent(long participantID) {
 		return String.format("Root%d", participantID);
-	}
-
-
-	public error ProtoUnmarshal(byte[] eventBytes) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public RetResult<byte[]> ProtoMarshal() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

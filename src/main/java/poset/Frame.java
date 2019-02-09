@@ -1,5 +1,10 @@
 package poset;
 
+import java.util.Arrays;
+
+import com.google.protobuf.Parser;
+
+import common.IProto;
 import common.RetResult;
 import common.error;
 import crypto.hash;
@@ -23,27 +28,61 @@ public class Frame {
 		Events = events;
 	}
 
+	public IProto<Frame, poset.proto.Frame> marshaller() {
+		return new IProto<Frame, poset.proto.Frame>() {
+			@Override
+			public poset.proto.Frame toProto() {
+				poset.proto.Frame.Builder builder = poset.proto.Frame.newBuilder();
+				builder.setRound(Round);
 
-	public RetResult<byte[]> ProtoMarshal() {
-//		proto.Buffer bf;
-//		bSetDeterministic(true);
-//		if err := bMarshal(f); err != null {
-//			return null, err;
-//		}
-//		return bBytes(), null;
+				if (Roots != null) {
+					Arrays.asList(Roots).forEach(root -> {
+						builder.addRoots(root.marshaller().toProto());
+					});
+				}
+				builder.setRound(Round);
+				if (Events != null) {
+					Arrays.asList(Events).forEach(event -> {
+						builder.addEvents(event.marshaller().toProto());
+					});
+				}
+				return builder.build();
+			}
 
-		// TBD
-		return null;
-	}
+			@Override
+			public void fromProto(poset.proto.Frame proto) {
+				Round = proto.getRound();
 
-	public error ProtoUnmarshal(byte[] data) {
-//		return proto.Unmarshal(data, f);
-		// TBD
-		return null;
+				int rootCount = proto.getRootsCount();
+				Roots = null;
+				if (rootCount > 0) {
+					Roots = new Root[rootCount];
+					for (int i =0; i < rootCount; ++i) {
+						Roots[i] = new Root();
+						Roots[i].marshaller().fromProto(proto.getRoots(i));
+					}
+				}
+
+				int eventCount = proto.getEventsCount();
+				Events = null;
+				if (eventCount > 0) {
+					Events = new EventMessage[eventCount];
+					for (int i =0; i < eventCount; ++i) {
+						Events[i] = new EventMessage();
+						Events[i].marshaller().fromProto(proto.getEvents(i));
+					}
+				}
+			}
+
+			@Override
+			public Parser<poset.proto.Frame> parser() {
+				return poset.proto.Frame.parser();
+			}
+		};
 	}
 
 	public RetResult<byte[]> Hash() {
-		RetResult<byte[]> protoMarshal = ProtoMarshal();
+		RetResult<byte[]> protoMarshal = marshaller().protoMarshal();
 		byte[] hashBytes = protoMarshal.result;
 		error err = protoMarshal.err;
 		if (err != null) {

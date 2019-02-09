@@ -1,5 +1,8 @@
 package poset;
 
+import com.google.protobuf.Parser;
+
+import common.IProto;
 
 /*
 Roots constitute the base of a Poset. Each Participant is assigned a Root on
@@ -89,19 +92,41 @@ public class RootEvent {
 	}
 
 	public boolean equals(RootEvent that) {
-		return this.Hash == that.Hash &&
+		return this.Hash.equals(that.Hash) &&
 			this.CreatorID == that.CreatorID &&
 			this.Index == that.Index &&
 			this.LamportTimestamp == that.LamportTimestamp &&
 			this.Round == that.Round;
 	}
 
-//	public XXX_Unmarshal(b []byte) error {
-//		return xxx_messageInfo_RootEvent.Unmarshal(m, b)
-//	}
-//	public XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-//		return xxx_messageInfo_RootEvent.Marshal(b, m, deterministic)
-//	}
+	public IProto<RootEvent, poset.proto.RootEvent> marshaller() {
+		return new IProto<RootEvent, poset.proto.RootEvent>() {
+			@Override
+			public poset.proto.RootEvent toProto() {
+				poset.proto.RootEvent.Builder builder = poset.proto.RootEvent.newBuilder();
+				builder.setHash(Hash)
+				.setCreatorID(CreatorID)
+				.setIndex(Index)
+				.setLamportTimestamp(LamportTimestamp)
+				.setRound(Round);
+				return builder.build();
+			}
+
+			@Override
+			public void fromProto(poset.proto.RootEvent proto) {
+				Hash = proto.getHash();
+				CreatorID = proto.getCreatorID();
+				Index = proto.getIndex();
+				LamportTimestamp = proto.getLamportTimestamp();
+				Round = proto.getRound();
+			}
+
+			@Override
+			public Parser<poset.proto.RootEvent> parser() {
+				return poset.proto.RootEvent.parser();
+			}
+		};
+	}
 
 	public String GetHash() {
 		return Hash;

@@ -2,6 +2,11 @@ package poset;
 
 import java.util.Arrays;
 
+import com.google.protobuf.ByteString;
+import com.google.protobuf.Parser;
+
+import common.IProto;
+
 public class EventMessage {
 	EventBody Body; // `protobuf:"bytes,1,opt,name=Body,json=body" json:"Body,omitempty"`
 	String Signature; //     `protobuf:"bytes,2,opt,name=Signature,json=signature" json:"Signature,omitempty"`
@@ -69,6 +74,61 @@ public class EventMessage {
 		OtherParentIndex = -1;
 		CreatorID = -1;
 		TopologicalIndex = -1;
+	}
+
+	public IProto<EventMessage, poset.proto.EventMessage> marshaller() {
+		return new IProto<EventMessage, poset.proto.EventMessage>() {
+			@Override
+			public poset.proto.EventMessage toProto() {
+				poset.proto.EventMessage.Builder builder = poset.proto.EventMessage.newBuilder();
+				if (Body != null) {
+					builder.setBody(Body.marshaller().toProto());
+				}
+				if (Signature != null) {
+					builder.setSignature(Signature);
+				}
+				if (FlagTable != null) {
+					builder.setFlagTable(ByteString.copyFrom(FlagTable));
+				}
+				if (WitnessProof != null) {
+					Arrays.asList(WitnessProof).forEach(witnessProof -> {
+						builder.addWitnessProof(witnessProof);
+					});
+				}
+
+				builder.setSelfParentIndex(SelfParentIndex)
+					.setOtherParentCreatorID(OtherParentCreatorID)
+					.setOtherParentIndex(OtherParentIndex)
+					.setCreatorID(CreatorID)
+					.setTopologicalIndex(TopologicalIndex);
+
+				return builder.build();
+			}
+
+			@Override
+			public void fromProto(poset.proto.EventMessage proto) {
+				poset.proto.EventBody body = proto.getBody();
+				Body = null;
+				if (body != null) {
+					Body = new EventBody();
+					Body.marshaller().fromProto(body);
+				}
+
+				Signature = proto.getSignature();
+				FlagTable = proto.getFlagTable().toByteArray();
+				WitnessProof = (String[]) proto.getWitnessProofList().toArray();
+				SelfParentIndex = proto.getSelfParentIndex();
+				OtherParentCreatorID = proto.getOtherParentCreatorID();
+				OtherParentIndex = proto.getOtherParentIndex();
+				CreatorID = proto.getCreatorID();
+				TopologicalIndex = proto.getTopologicalIndex();
+			}
+
+			@Override
+			public Parser<poset.proto.EventMessage> parser() {
+				return poset.proto.EventMessage.parser();
+			}
+		};
 	}
 
 	public EventBody GetBody() {

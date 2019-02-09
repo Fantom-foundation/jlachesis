@@ -73,14 +73,14 @@ public class EventTest {
 		error err = event.Sign(key.getPrivate());
 		assertNull("No Error signing Event", err);
 
-		RetResult<byte[]> protoMarshal = event.ProtoMarshal();
+		RetResult<byte[]> protoMarshal = event.marshaller().protoMarshal();
 		byte[] raw = protoMarshal.result;
 		err = protoMarshal.err;
 		assertNull("No Error marshalling Event", err);
 
 
 		Event newEvent = new Event();
-		err = newEvent.ProtoUnmarshal(raw);
+		err = newEvent.marshaller().protoUnmarshal(raw);
 		assertNull("No Error unmarshalling Event", err);
 		assertEquals("Events should equal", newEvent.Message, event.Message);
 	}
