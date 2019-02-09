@@ -87,7 +87,7 @@ public  final class Root extends
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return poset.proto.RootOuterClass.internal_static_poset_proto_Root_descriptor;
+    return poset.proto.PRoot.internal_static_poset_proto_Root_descriptor;
   }
 
   @SuppressWarnings({"rawtypes"})
@@ -103,7 +103,7 @@ public  final class Root extends
   }
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return poset.proto.RootOuterClass.internal_static_poset_proto_Root_fieldAccessorTable
+    return poset.proto.PRoot.internal_static_poset_proto_Root_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
             poset.proto.Root.class, poset.proto.Root.Builder.class);
   }
@@ -145,7 +145,7 @@ public  final class Root extends
         java.lang.String, poset.proto.RootEvent> defaultEntry =
             com.google.protobuf.MapEntry
             .<java.lang.String, poset.proto.RootEvent>newDefaultInstance(
-                poset.proto.RootOuterClass.internal_static_poset_proto_Root_OthersEntry_descriptor, 
+                poset.proto.PRoot.internal_static_poset_proto_Root_OthersEntry_descriptor, 
                 com.google.protobuf.WireFormat.FieldType.STRING,
                 "",
                 com.google.protobuf.WireFormat.FieldType.MESSAGE,
@@ -401,7 +401,7 @@ public  final class Root extends
       poset.proto.RootOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return poset.proto.RootOuterClass.internal_static_poset_proto_Root_descriptor;
+      return poset.proto.PRoot.internal_static_poset_proto_Root_descriptor;
     }
 
     @SuppressWarnings({"rawtypes"})
@@ -428,7 +428,7 @@ public  final class Root extends
     }
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return poset.proto.RootOuterClass.internal_static_poset_proto_Root_fieldAccessorTable
+      return poset.proto.PRoot.internal_static_poset_proto_Root_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               poset.proto.Root.class, poset.proto.Root.Builder.class);
     }
@@ -464,7 +464,7 @@ public  final class Root extends
 
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return poset.proto.RootOuterClass.internal_static_poset_proto_Root_descriptor;
+      return poset.proto.PRoot.internal_static_poset_proto_Root_descriptor;
     }
 
     public poset.proto.Root getDefaultInstanceForType() {

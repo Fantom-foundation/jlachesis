@@ -44,7 +44,7 @@ public class InternalTransaction {
 
 
 	public boolean equals(InternalTransaction that) {
-		return this.Peer.equals(that.Peer) && this.Type == that.Type;
+		return this.Peer.equals(that.Peer) && this.Type.equals(that.Type);
 	}
 
 	public IProto<InternalTransaction, poset.proto.InternalTransaction> marshaller() {

@@ -29,6 +29,11 @@ public final class PRoundInfo {
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_poset_proto_RoundInfoMessage_EventsEntry_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_poset_proto_RoundInfo_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_poset_proto_RoundInfo_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -44,9 +49,11 @@ public final class PRoundInfo {
       "lean\"\225\001\n\020RoundInfoMessage\0229\n\006Events\030\001 \003(" +
       "\0132).poset.proto.RoundInfoMessage.EventsE" +
       "ntry\032F\n\013EventsEntry\022\013\n\003key\030\001 \001(\t\022&\n\005valu" +
-      "e\030\002 \001(\0132\027.poset.proto.RoundEvent:\0028\001*-\n\007" +
-      "Trilean\022\r\n\tUNDEFINED\020\000\022\010\n\004TRUE\020\001\022\t\n\005FALS" +
-      "E\020\002B\016B\nPRoundInfoP\001b\006proto3"
+      "e\030\002 \001(\0132\027.poset.proto.RoundEvent:\0028\001\"K\n\t" +
+      "RoundInfo\022.\n\007Message\030\001 \001(\0132\035.poset.proto" +
+      ".RoundInfoMessage\022\016\n\006Queued\030\002 \001(\010*-\n\007Tri" +
+      "lean\022\r\n\tUNDEFINED\020\000\022\010\n\004TRUE\020\001\022\t\n\005FALSE\020\002",
+      "B\016B\nPRoundInfoP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -78,6 +85,12 @@ public final class PRoundInfo {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_poset_proto_RoundInfoMessage_EventsEntry_descriptor,
         new java.lang.String[] { "Key", "Value", });
+    internal_static_poset_proto_RoundInfo_descriptor =
+      getDescriptor().getMessageTypes().get(2);
+    internal_static_poset_proto_RoundInfo_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_poset_proto_RoundInfo_descriptor,
+        new java.lang.String[] { "Message", "Queued", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

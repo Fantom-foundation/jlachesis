@@ -68,12 +68,12 @@ public  final class WireBlockSignature extends
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return poset.proto.BlockOuterClass.internal_static_poset_proto_WireBlockSignature_descriptor;
+    return poset.proto.PBlock.internal_static_poset_proto_WireBlockSignature_descriptor;
   }
 
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return poset.proto.BlockOuterClass.internal_static_poset_proto_WireBlockSignature_fieldAccessorTable
+    return poset.proto.PBlock.internal_static_poset_proto_WireBlockSignature_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
             poset.proto.WireBlockSignature.class, poset.proto.WireBlockSignature.Builder.class);
   }
@@ -279,12 +279,12 @@ public  final class WireBlockSignature extends
       poset.proto.WireBlockSignatureOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return poset.proto.BlockOuterClass.internal_static_poset_proto_WireBlockSignature_descriptor;
+      return poset.proto.PBlock.internal_static_poset_proto_WireBlockSignature_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return poset.proto.BlockOuterClass.internal_static_poset_proto_WireBlockSignature_fieldAccessorTable
+      return poset.proto.PBlock.internal_static_poset_proto_WireBlockSignature_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               poset.proto.WireBlockSignature.class, poset.proto.WireBlockSignature.Builder.class);
     }
@@ -315,7 +315,7 @@ public  final class WireBlockSignature extends
 
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return poset.proto.BlockOuterClass.internal_static_poset_proto_WireBlockSignature_descriptor;
+      return poset.proto.PBlock.internal_static_poset_proto_WireBlockSignature_descriptor;
     }
 
     public poset.proto.WireBlockSignature getDefaultInstanceForType() {

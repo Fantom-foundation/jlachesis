@@ -3,6 +3,8 @@ package poset.proto;
 import "peers/peer.proto";
 
 option java_multiple_files = true;
+option java_outer_classname = "PEvent";
+
 
 enum TransactionType {
   PEER_ADD = 0;

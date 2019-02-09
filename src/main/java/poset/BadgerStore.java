@@ -19,6 +19,10 @@ import common.error;
 import peers.Peer;
 import peers.Peers;
 
+/**
+ * BadgerStore
+ *
+ */
 public class BadgerStore implements Store {
 	peers.Peers participants;
 	InmemStore inmemStore;
@@ -593,9 +597,6 @@ public class BadgerStore implements Store {
 	}
 
 	public error dbSetRoots(Map<String,Root> roots) {
-//		tx = db.NewTransaction(true);
-//		defer tx.Discard();
-
 		for (String participant : roots.keySet()) {
 			Root root = roots.get(participant);
 			RetResult<byte[]> rootMarshal = root.marshaller().protoMarshal();
@@ -656,9 +657,6 @@ public class BadgerStore implements Store {
 	}
 
 	public error dbSetRound(long index , RoundInfo round ) {
-//		tx = db.NewTransaction(true);
-//		defer tx.Discard();
-
 		byte[] key = roundKey(index);
 		RetResult<byte[]> protoMarshal = round.marshaller().protoMarshal();
 		byte[] val = protoMarshal.result;
@@ -694,9 +692,6 @@ public class BadgerStore implements Store {
 	}
 
 	public error dbSetParticipants(peers.Peers participants)  {
-//		tx = db.NewTransaction(true);
-//		defer tx.Discard();
-
 		for (String participant : participants.getByPubKey().keySet()) {
 			Peer id = participants.getByPubKey().get(participant);
 			byte[] key = participantKey(participant);
@@ -731,9 +726,6 @@ public class BadgerStore implements Store {
 	}
 
 	public error dbSetBlock(Block block)  {
-//		tx = db.NewTransaction(true);
-//		defer tx.Discard();
-
 		byte[] key = blockKey(block.Index());
 		RetResult<byte[]> protoMarshal = block.marshaller().protoMarshal();
 		byte[] val = protoMarshal.result;
@@ -769,9 +761,6 @@ public class BadgerStore implements Store {
 	}
 
 	public error dbSetFrame(Frame frame)  {
-//		tx = db.NewTransaction(true);
-//		defer tx.Discard();
-
 		byte[] key = frameKey(frame.Round);
 		RetResult<byte[]> protoMarshal = frame.marshaller().protoMarshal();
 		byte[] val = protoMarshal.result;

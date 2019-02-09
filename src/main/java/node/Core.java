@@ -184,7 +184,7 @@ public class Core {
 				continue;
 			}
 			for (String otherPubKey : participants.getByPubKey().keySet()) {
-				if (otherPubKey == pubKey) {
+				if (otherPubKey.equals(pubKey)) {
 					continue;
 				}
 				RetResult<String[]> participantEventsCr = poset.Store.ParticipantEvents(otherPubKey, -1);
@@ -200,7 +200,7 @@ public class Core {
 					if (err != null) {
 						continue;
 					}
-					if (event.OtherParent() == eventHash) {
+					if (event.OtherParent().equals(eventHash)) {
 						inDegrees.put(pubKey, inDegrees.get(pubKey)+1);
 					}
 				}
@@ -230,7 +230,7 @@ public class Core {
 			return err;
 		}
 
-		if (event.Creator() == HexID()) {
+		if (event.Creator().equals(HexID())) {
 			head = event.Hex();
 			Seq = event.Index();
 		}

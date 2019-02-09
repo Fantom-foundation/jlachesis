@@ -3,6 +3,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
+import static poset.Event.rootSelfParent;
 
 import java.io.File;
 import java.security.KeyPair;
@@ -15,11 +16,9 @@ import org.junit.Test;
 import autils.Appender;
 import autils.Logger;
 import common.RetResult;
-import common.TestUtils;
 import common.error;
 import peers.Peer;
 import peers.Peers;
-import static poset.Event.rootSelfParent;
 
 /**
  * Test for Poset

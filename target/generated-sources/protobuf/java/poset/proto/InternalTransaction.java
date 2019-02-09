@@ -75,12 +75,12 @@ public  final class InternalTransaction extends
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return poset.proto.EventOuterClass.internal_static_poset_proto_InternalTransaction_descriptor;
+    return poset.proto.PEvent.internal_static_poset_proto_InternalTransaction_descriptor;
   }
 
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return poset.proto.EventOuterClass.internal_static_poset_proto_InternalTransaction_fieldAccessorTable
+    return poset.proto.PEvent.internal_static_poset_proto_InternalTransaction_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
             poset.proto.InternalTransaction.class, poset.proto.InternalTransaction.Builder.class);
   }
@@ -284,12 +284,12 @@ public  final class InternalTransaction extends
       poset.proto.InternalTransactionOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return poset.proto.EventOuterClass.internal_static_poset_proto_InternalTransaction_descriptor;
+      return poset.proto.PEvent.internal_static_poset_proto_InternalTransaction_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return poset.proto.EventOuterClass.internal_static_poset_proto_InternalTransaction_fieldAccessorTable
+      return poset.proto.PEvent.internal_static_poset_proto_InternalTransaction_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               poset.proto.InternalTransaction.class, poset.proto.InternalTransaction.Builder.class);
     }
@@ -324,7 +324,7 @@ public  final class InternalTransaction extends
 
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return poset.proto.EventOuterClass.internal_static_poset_proto_InternalTransaction_descriptor;
+      return poset.proto.PEvent.internal_static_poset_proto_InternalTransaction_descriptor;
     }
 
     public poset.proto.InternalTransaction getDefaultInstanceForType() {

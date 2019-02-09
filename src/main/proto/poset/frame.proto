@@ -4,6 +4,7 @@ import "poset/root.proto";
 import "poset/event.proto";
 
 option java_multiple_files = true;
+option java_outer_classname = "PFrame";
 
 message Frame {
   int64 Round = 1;

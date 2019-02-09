@@ -75,7 +75,7 @@ public enum TransactionType
   }
   public static final com.google.protobuf.Descriptors.EnumDescriptor
       getDescriptor() {
-    return poset.proto.EventOuterClass.getDescriptor().getEnumTypes().get(0);
+    return poset.proto.PEvent.getDescriptor().getEnumTypes().get(0);
   }
 
   private static final TransactionType[] VALUES = values();

@@ -87,12 +87,12 @@ public  final class Frame extends
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return poset.proto.FrameOuterClass.internal_static_poset_proto_Frame_descriptor;
+    return poset.proto.PFrame.internal_static_poset_proto_Frame_descriptor;
   }
 
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return poset.proto.FrameOuterClass.internal_static_poset_proto_Frame_fieldAccessorTable
+    return poset.proto.PFrame.internal_static_poset_proto_Frame_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
             poset.proto.Frame.class, poset.proto.Frame.Builder.class);
   }
@@ -351,12 +351,12 @@ public  final class Frame extends
       poset.proto.FrameOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return poset.proto.FrameOuterClass.internal_static_poset_proto_Frame_descriptor;
+      return poset.proto.PFrame.internal_static_poset_proto_Frame_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return poset.proto.FrameOuterClass.internal_static_poset_proto_Frame_fieldAccessorTable
+      return poset.proto.PFrame.internal_static_poset_proto_Frame_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               poset.proto.Frame.class, poset.proto.Frame.Builder.class);
     }
@@ -399,7 +399,7 @@ public  final class Frame extends
 
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return poset.proto.FrameOuterClass.internal_static_poset_proto_Frame_descriptor;
+      return poset.proto.PFrame.internal_static_poset_proto_Frame_descriptor;
     }
 
     public poset.proto.Frame getDefaultInstanceForType() {

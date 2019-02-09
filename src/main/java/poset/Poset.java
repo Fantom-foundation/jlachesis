@@ -199,7 +199,7 @@ public class Poset {
 			Root root = roots.get(y);
 			if (root != null) {
 				String yCreator = Participants.getById().get(root.SelfParent.CreatorID).GetPubKeyHex();
-				if (ex.Creator() == yCreator) {
+				if (ex.Creator().equals(yCreator)) {
 					return new RetResult<Boolean>(ex.Index() >= root.SelfParent.Index, null);
 				}
 			} else {
@@ -207,7 +207,7 @@ public class Poset {
 			}
 		} else {
 			// check if creators are equals and check indexes
-			if (ex.Creator() == ey.Creator()){
+			if (ex.Creator().equals(ey.Creator())){
 				return new RetResult<Boolean>(ex.Index() >= ey.Index(), null);
 			}
 		}
@@ -262,7 +262,7 @@ public class Poset {
 
 			Root root = roots.get(x);
 			if (root != null) {
-				if (root.SelfParent.Hash == y) {
+				if (root.SelfParent.Hash.equals(y)) {
 					return new RetResult<Boolean>(true, null);
 				}
 			}
@@ -287,7 +287,7 @@ public class Poset {
 				}
 			}
 		} else {
-			if (ex.Creator() == ey.Creator()) {
+			if (ex.Creator().equals(ey.Creator())) {
 				return new RetResult<Boolean>(ex.Index() >= ey.Index(), null);
 			}
 		}
@@ -431,12 +431,12 @@ public class Poset {
 		/*
 			The Event is directly attached to the Root.
 		*/
-		if (ex.SelfParent() == root.SelfParent.Hash) {
+		if (ex.SelfParent().equals(root.SelfParent.Hash)) {
 			//Root is authoritative EXCEPT if other-parent is not in the root
 			RootEvent other = root.Others.get(ex.Hex());
 			boolean ok = other != null;
 			if  (ex.OtherParent().isEmpty() ||
-				(ok && other.Hash == ex.OtherParent())) {
+				(ok && other.Hash.equals(ex.OtherParent()))) {
 
 				return new RetResult<Long>(root.NextRound, null);
 			}
@@ -461,7 +461,7 @@ public class Poset {
 			//XXX
 			RootEvent other = root.Others.get(ex.Hex());
 			boolean ok = other != null;
-			if (ok && other.Hash == ex.OtherParent()) {
+			if (ok && other.Hash.equals(ex.OtherParent())) {
 				opRound = root.NextRound;
 			} else {
 				RetResult<Long> roundCall2 = round(ex.OtherParent());
@@ -483,7 +483,7 @@ public class Poset {
 				Map<String, Long> ft = getFlagTable.result;
 				for (String k : ft.keySet()) {
 					for (String w : ws) {
-						if (w == k && w != ex.Hex()) {
+						if (w.equals(k) && !w.equals(ex.Hex())) {
 							RetResult<Boolean> seeCall = see(ex.Hex(), w);
 							Boolean see = seeCall.result;
 							err = seeCall.err;
@@ -518,7 +518,7 @@ public class Poset {
 		IsSee isSee = new IsSee() {
 			public boolean isSee(Poset poset, String string, String[] witnesses)  {
 				for (String w : ws) {
-					if (w.equals(root) && w != ex.Hex()) {
+					if (w.equals(root) && !w.equals(ex.Hex())) {
 						RetResult<Boolean> seeCall = poset.see(ex.Hex(), w);
 						boolean see = seeCall.result;
 						error err = seeCall.err;
@@ -676,7 +676,7 @@ public class Poset {
 
 		long plt = Long.MIN_VALUE; //:= int64(Long.MIN_VALUE);
 		//If it is the creator's first Event, use the corresponding Root
-		if (ex.SelfParent() == root.SelfParent.Hash) {
+		if (ex.SelfParent().equals(root.SelfParent.Hash)) {
 			plt = root.SelfParent.LamportTimestamp;
 		} else {
 			RetResult<Long> lamportTimestampCall = lamportTimestamp(ex.SelfParent());
@@ -703,7 +703,7 @@ public class Poset {
 			} else {
 				RootEvent other = root.Others.get(x);
 				ok = other != null;
-				if (ok && other.Hash == ex.OtherParent()){
+				if (ok && other.Hash.equals(ex.OtherParent())){
 				//we do not know the other-parent but it is referenced  in Root.Others
 				//we use the Root's LamportTimestamp
 				opLT = other.LamportTimestamp;
@@ -772,7 +772,7 @@ public class Poset {
 			return err;
 		}
 
-		boolean selfParentLegit = (selfParent == creatorLastKnown);
+		boolean selfParentLegit = (selfParent.equals(creatorLastKnown));
 
 		if (!selfParentLegit) {
 			return error.Errorf("self-parent not last known event by creator");
@@ -800,7 +800,7 @@ public class Poset {
 
 				RootEvent other = root.Others.get(event.Hex());
 				boolean ok = other != null;
-				if (ok && other.Hash == event.OtherParent()) {
+				if (ok && other.Hash.equals(event.OtherParent())) {
 					return null;
 				}
 				return error.Errorf("other-parent not known");
@@ -849,7 +849,7 @@ public class Poset {
 
 		RootEvent other = root.Others.get(ev.Hex());
 		boolean ok = other != null;
-		if (ok && other.Hash == op) {
+		if (ok && other.Hash.equals(op)) {
 			return new RetResult<RootEvent> (other, null);
 		}
 
@@ -980,7 +980,7 @@ public class Poset {
 
 			RootEvent other = root.Others.get(event.Hex());
 			boolean ok = other != null;
-			if  (ok && other.Hash == event.OtherParent()) {
+			if  (ok && other.Hash.equals(event.OtherParent())) {
 				otherParentCreatorID = other.CreatorID;
 				otherParentIndex = other.Index;
 			} else {
@@ -1171,8 +1171,8 @@ public class Poset {
 
 				if (witness) {
 					// if event is self head
-					if (core != null && ev.Hex() == core.Head() &&
-						ev.Creator() == core.HexID()) {
+					if (core != null && ev.Hex().equals(core.Head()) &&
+						ev.Creator().equals(core.HexID())) {
 
 //						replaceFlagTable := public(Event event, long round) {
 //							HashMap<String, Long> ft = new HashMap<String, Long>();

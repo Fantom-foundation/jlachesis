@@ -74,12 +74,12 @@ public  final class BlockSignature extends
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return poset.proto.EventOuterClass.internal_static_poset_proto_BlockSignature_descriptor;
+    return poset.proto.PEvent.internal_static_poset_proto_BlockSignature_descriptor;
   }
 
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return poset.proto.EventOuterClass.internal_static_poset_proto_BlockSignature_fieldAccessorTable
+    return poset.proto.PEvent.internal_static_poset_proto_BlockSignature_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
             poset.proto.BlockSignature.class, poset.proto.BlockSignature.Builder.class);
   }
@@ -305,12 +305,12 @@ public  final class BlockSignature extends
       poset.proto.BlockSignatureOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return poset.proto.EventOuterClass.internal_static_poset_proto_BlockSignature_descriptor;
+      return poset.proto.PEvent.internal_static_poset_proto_BlockSignature_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return poset.proto.EventOuterClass.internal_static_poset_proto_BlockSignature_fieldAccessorTable
+      return poset.proto.PEvent.internal_static_poset_proto_BlockSignature_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               poset.proto.BlockSignature.class, poset.proto.BlockSignature.Builder.class);
     }
@@ -343,7 +343,7 @@ public  final class BlockSignature extends
 
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return poset.proto.EventOuterClass.internal_static_poset_proto_BlockSignature_descriptor;
+      return poset.proto.PEvent.internal_static_poset_proto_BlockSignature_descriptor;
     }
 
     public poset.proto.BlockSignature getDefaultInstanceForType() {

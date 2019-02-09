@@ -74,12 +74,12 @@ public  final class RoundEvent extends
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return poset.proto.RoundInfoOuterClass.internal_static_poset_proto_RoundEvent_descriptor;
+    return poset.proto.PRoundInfo.internal_static_poset_proto_RoundEvent_descriptor;
   }
 
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return poset.proto.RoundInfoOuterClass.internal_static_poset_proto_RoundEvent_fieldAccessorTable
+    return poset.proto.PRoundInfo.internal_static_poset_proto_RoundEvent_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
             poset.proto.RoundEvent.class, poset.proto.RoundEvent.Builder.class);
   }
@@ -288,12 +288,12 @@ public  final class RoundEvent extends
       poset.proto.RoundEventOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return poset.proto.RoundInfoOuterClass.internal_static_poset_proto_RoundEvent_descriptor;
+      return poset.proto.PRoundInfo.internal_static_poset_proto_RoundEvent_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return poset.proto.RoundInfoOuterClass.internal_static_poset_proto_RoundEvent_fieldAccessorTable
+      return poset.proto.PRoundInfo.internal_static_poset_proto_RoundEvent_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               poset.proto.RoundEvent.class, poset.proto.RoundEvent.Builder.class);
     }
@@ -326,7 +326,7 @@ public  final class RoundEvent extends
 
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return poset.proto.RoundInfoOuterClass.internal_static_poset_proto_RoundEvent_descriptor;
+      return poset.proto.PRoundInfo.internal_static_poset_proto_RoundEvent_descriptor;
     }
 
     public poset.proto.RoundEvent getDefaultInstanceForType() {

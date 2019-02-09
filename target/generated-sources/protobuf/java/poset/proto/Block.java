@@ -106,7 +106,7 @@ public  final class Block extends
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return poset.proto.BlockOuterClass.internal_static_poset_proto_Block_descriptor;
+    return poset.proto.PBlock.internal_static_poset_proto_Block_descriptor;
   }
 
   @SuppressWarnings({"rawtypes"})
@@ -122,7 +122,7 @@ public  final class Block extends
   }
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return poset.proto.BlockOuterClass.internal_static_poset_proto_Block_fieldAccessorTable
+    return poset.proto.PBlock.internal_static_poset_proto_Block_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
             poset.proto.Block.class, poset.proto.Block.Builder.class);
   }
@@ -155,7 +155,7 @@ public  final class Block extends
         java.lang.String, java.lang.String> defaultEntry =
             com.google.protobuf.MapEntry
             .<java.lang.String, java.lang.String>newDefaultInstance(
-                poset.proto.BlockOuterClass.internal_static_poset_proto_Block_SignaturesEntry_descriptor, 
+                poset.proto.PBlock.internal_static_poset_proto_Block_SignaturesEntry_descriptor, 
                 com.google.protobuf.WireFormat.FieldType.STRING,
                 "",
                 com.google.protobuf.WireFormat.FieldType.STRING,
@@ -503,7 +503,7 @@ public  final class Block extends
       poset.proto.BlockOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return poset.proto.BlockOuterClass.internal_static_poset_proto_Block_descriptor;
+      return poset.proto.PBlock.internal_static_poset_proto_Block_descriptor;
     }
 
     @SuppressWarnings({"rawtypes"})
@@ -530,7 +530,7 @@ public  final class Block extends
     }
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return poset.proto.BlockOuterClass.internal_static_poset_proto_Block_fieldAccessorTable
+      return poset.proto.PBlock.internal_static_poset_proto_Block_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               poset.proto.Block.class, poset.proto.Block.Builder.class);
     }
@@ -572,7 +572,7 @@ public  final class Block extends
 
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return poset.proto.BlockOuterClass.internal_static_poset_proto_Block_descriptor;
+      return poset.proto.PBlock.internal_static_poset_proto_Block_descriptor;
     }
 
     public poset.proto.Block getDefaultInstanceForType() {
