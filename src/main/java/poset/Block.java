@@ -9,6 +9,7 @@ import java.util.Map;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Parser;
 
 import autils.Appender;
 import common.IProto;
@@ -17,8 +18,6 @@ import common.RetResult3;
 import common.error;
 
 public class Block {
-	private poset.proto.Block pBlock;
-
 	private BlockBody Body;
 	private Map<String,String> Signatures;
 	private byte[] Hash;
@@ -206,22 +205,8 @@ public class Block {
 			}
 
 			@Override
-			public RetResult<byte[]> protoMarshal() {
-				if (pBlock == null) {
-					pBlock = toProto();
-				}
-				return new RetResult<>(pBlock.toByteArray(), null);
-			}
-
-			@Override
-			public error protoUnmarshal(byte[] data) {
-				try {
-					pBlock = poset.proto.Block.parseFrom(data);
-				} catch (InvalidProtocolBufferException e) {
-					return error.Errorf(e.getMessage());
-				}
-				fromProto(pBlock);
-				return null;
+			public Parser<poset.proto.Block> parser() {
+				return poset.proto.Block.parser();
 			}
 		};
 	}

@@ -3,7 +3,7 @@ package poset;
 import java.util.Arrays;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Parser;
 
 import common.IProto;
 import common.RetResult;
@@ -11,7 +11,6 @@ import common.error;
 import crypto.hash;
 
 public class BlockBody {
-	private poset.proto.BlockBody pBlockBody;
 	long Index;
 	long RoundReceived;
 	byte[][] Transactions;
@@ -71,22 +70,8 @@ public class BlockBody {
 			}
 
 			@Override
-			public RetResult<byte[]> protoMarshal() {
-				if (pBlockBody == null) {
-					pBlockBody = toProto();
-				}
-				return new RetResult<>(pBlockBody.toByteArray(), null);
-			}
-
-			@Override
-			public error protoUnmarshal(byte[] data) {
-				try {
-					pBlockBody = poset.proto.BlockBody.parseFrom(data);
-				} catch (InvalidProtocolBufferException e) {
-					return error.Errorf(e.getMessage());
-				}
-				fromProto(pBlockBody);
-				return null;
+			public Parser<poset.proto.BlockBody> parser() {
+				return poset.proto.BlockBody.parser();
 			}
 		};
 	}

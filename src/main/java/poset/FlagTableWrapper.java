@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Parser;
 
 import common.IProto;
 import common.RetResult;
@@ -12,8 +13,6 @@ import poset.proto.PFlagTableWrapper;
 import poset.proto.PFlagTableWrapper.FlagTableWrapper.Builder;
 
 public class FlagTableWrapper {
-	private PFlagTableWrapper.FlagTableWrapper pFTW;
-
 	Map<String,Long> Body; //  `protobuf:"bytes,1,rep,name=Body,proto3" json:"Body,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
 
 	/**
@@ -44,29 +43,14 @@ public class FlagTableWrapper {
 
 			@Override
 			public void fromProto(PFlagTableWrapper.FlagTableWrapper pBlock) {
-				if (pFTW.getBodyMap() != null) {
-					Body.clear();
-					Body.putAll(pFTW.getBodyMap());
+				if (pBlock.getBodyMap() != null) {
+					Body.putAll(pBlock.getBodyMap());
 				}
 			}
 
 			@Override
-			public RetResult<byte[]> protoMarshal() {
-				if (pFTW == null) {
-					pFTW = toProto();
-				}
-				return new RetResult<>(pFTW.toByteArray(), null);
-			}
-
-			@Override
-			public error protoUnmarshal(byte[] data) {
-				try {
-					pFTW = PFlagTableWrapper.FlagTableWrapper.parseFrom(data);
-				} catch (InvalidProtocolBufferException e) {
-					return error.Errorf(e.getMessage());
-				}
-				fromProto(pFTW);
-				return null;
+			public Parser<poset.proto.PFlagTableWrapper.FlagTableWrapper> parser() {
+				return PFlagTableWrapper.FlagTableWrapper.parser();
 			}
 		};
 	}
