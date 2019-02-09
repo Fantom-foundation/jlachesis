@@ -1,10 +1,15 @@
 package poset;
 
+import com.google.protobuf.Parser;
+
+import common.IProto;
+import peers.Peer;
+
 public class InternalTransaction {
 	TransactionType Type; // `protobuf:"varint,1,opt,name=Type,json=type,enum=poset.TransactionType" json:"Type,omitempty"`
-	peers.Peer Peer; // `protobuf:"bytes,2,opt,name=peer" json:"peer,omitempty"`
+	Peer Peer; // `protobuf:"bytes,2,opt,name=peer" json:"peer,omitempty"`
 
-	public InternalTransaction(TransactionType type, peers.Peer peer) {
+	public InternalTransaction(TransactionType type, Peer peer) {
 		super();
 		Type = type;
 		Peer = peer;
@@ -42,17 +47,36 @@ public class InternalTransaction {
 		return this.Peer.equals(that.Peer) && this.Type == that.Type;
 	}
 
+	public IProto<InternalTransaction, poset.proto.InternalTransaction> marshaller() {
+		return new IProto<InternalTransaction, poset.proto.InternalTransaction>() {
+			@Override
+			public poset.proto.InternalTransaction toProto() {
+				poset.proto.InternalTransaction.Builder builder = poset.proto.InternalTransaction.newBuilder();
+				if (Type != null) {
+					builder.setType(poset.proto.TransactionType.forNumber(Type.value));
+				}
+				if (Peer != null) {
+					builder.setPeer(Peer.marshaller().toProto());
+				}
+				return builder.build();
+			}
 
+			@Override
+			public void fromProto(poset.proto.InternalTransaction pIntTransaction) {
+				Type = TransactionType.values()[pIntTransaction.getType().getNumber()];
 
-//	func (t *InternalTransaction) ProtoMarshal() ([]byte, error) {
-//		var bf proto.Buffer
-//		bf.SetDeterministic(true)
-//		if err := bf.Marshal(t); err != null {
-//			return null, err
-//		}
-//		return bf.Bytes(), null
-//	}
-//	func (t *InternalTransaction) ProtoUnmarshal(data []byte) error {
-//		return proto.Unmarshal(data, t)
-//	}
+				peers.proto.Peer pPeer = pIntTransaction.getPeer();
+				Peer = null;
+				if (pPeer != null) {
+					Peer = new Peer();
+					Peer.marshaller().fromProto(pPeer);
+				}
+			}
+
+			@Override
+			public Parser<poset.proto.InternalTransaction> parser() {
+				return poset.proto.InternalTransaction.parser();
+			}
+		};
+	}
 }

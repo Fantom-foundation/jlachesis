@@ -3,12 +3,7 @@ package poset;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.Parser;
-
 import common.IProto;
-import common.RetResult;
-import common.error;
 import poset.proto.PFlagTableWrapper;
 import poset.proto.PFlagTableWrapper.FlagTableWrapper.Builder;
 
@@ -49,7 +44,7 @@ public class FlagTableWrapper {
 			}
 
 			@Override
-			public Parser<poset.proto.PFlagTableWrapper.FlagTableWrapper> parser() {
+			public com.google.protobuf.Parser<poset.proto.PFlagTableWrapper.FlagTableWrapper> parser() {
 				return PFlagTableWrapper.FlagTableWrapper.parser();
 			}
 		};

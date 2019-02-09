@@ -25,14 +25,14 @@ public class EventTest {
 	//@Test
 	public void TestMarshallBody() {
 		EventBody body = createDummyEventBody();
-		RetResult<byte[]> protoMarshal = body.ProtoMarshal();
+		RetResult<byte[]> protoMarshal = body.marshaller().protoMarshal();
 
 		byte[] raw = protoMarshal.result;
 		error err = protoMarshal.err;
 		assertNull("No Error marshalling EventBody: %s", err);
 
 		EventBody newBody = new EventBody();
-		err = newBody.ProtoUnmarshal(raw);
+		err = newBody.marshaller().protoUnmarshal(raw);
 		assertNull("No Error unmarshalling EventBody", err);
 
 		assertArrayEquals("Transactions should match", body.Transactions, newBody.Transactions);

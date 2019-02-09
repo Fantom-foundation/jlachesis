@@ -196,7 +196,7 @@ public class PosetTest {
 	}
 
 	public Logger testLogger() {
-		return TestUtils.NewTestLogger(getClass()).field("id", "test");
+		return Logger.getLogger(getClass()).field("id", "test");
 	}
 
 	/* Initialisation publictions */
@@ -339,6 +339,7 @@ public class PosetTest {
 		}
 	}
 
+//	@Test
 	public void TestAncestor() {
 		initPoset();
 
@@ -385,14 +386,14 @@ public class PosetTest {
 			RetResult<Boolean> ancestorCall = poset.ancestor(index.get(exp.descendant), index.get(exp.ancestor));
 			boolean a = ancestorCall.result;
 			error err = ancestorCall.err;
-			assertNull(String.format("No error when computing ancestor(%s, %s). Err: %v",
+			assertNull(String.format("No error when computing ancestor(%s, %s)",
 				exp.descendant, exp.ancestor), err);
 			assertEquals(String.format("ancestor(%s, %s) should match",
 				exp.descendant, exp.ancestor), exp.val, a);
 		}
 	}
 
-	//@Test
+//	@Test
 	public void TestSelfAncestor() {
 		initPoset();
 
@@ -430,7 +431,7 @@ public class PosetTest {
 		}
 	}
 
-	@Test
+//	@Test
 	public void TestSee() {
 		initPoset();
 
@@ -456,7 +457,7 @@ public class PosetTest {
 		}
 	}
 
-	//@Test
+//	@Test
 	public void TestLamportTimestamp() {
 		initPoset();
 
@@ -769,7 +770,7 @@ public class PosetTest {
 //		for _, exp := range expected {
 //			a, err := poset.stronglySee(index[exp.descendant], index[exp.ancestor])
 //			if err != null && !exp.err {
-//				t.Fatalf("Error computing stronglySee(%s, %s). Err: %v",
+//				t.Fatalf("Error computing stronglySee(%s, %s)",
 //					exp.descendant, exp.ancestor, err)
 //			}
 //			if a != exp.val {
@@ -811,7 +812,7 @@ public class PosetTest {
 //		for _, exp := range expected {
 //			a, err := poset.witness(index[exp.ancestor])
 //			if err != null {
-//				t.Fatalf("Error computing witness(%s). Err: %v",
+//				t.Fatalf("Error computing witness(%s)",
 //					exp.ancestor, err)
 //			}
 //			if a != exp.val {
@@ -861,7 +862,7 @@ public class PosetTest {
 //		for _, exp := range expected {
 //			r, err := poset.round(index[exp.event])
 //			if err != null {
-//				t.Fatalf("Error computing round(%s). Err: %v", exp.event, err)
+//				t.Fatalf("Error computing round(%s)", exp.event, err)
 //			}
 //			if r != exp.round {
 //				t.Fatalf("round(%s) should be %v, not %v", exp.event, exp.round, r)

@@ -3,11 +3,12 @@ package poset;
 import java.util.Arrays;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Parser;
 
+import common.IProto;
 import common.RetResult;
 import common.error;
 import crypto.hash;
-import poset.proto.EventBody.Builder;
 
 public class EventBody {
 	byte[][] Transactions; //  `protobuf:"bytes,1,rep,name=Transactions,json=transactions,proto3" json:"Transactions,omitempty"`
@@ -81,49 +82,79 @@ public class EventBody {
 				Utils.BlockSignatureListEquals(this.BlockSignatures, that.BlockSignatures);
 	}
 
-	public RetResult<byte[]> ProtoMarshal() {
-		Builder builder = poset.proto.EventBody.newBuilder();
-		if (this.Transactions != null) {
-			Arrays.asList(this.Transactions)
-			.forEach(transaction -> builder.addTransactions(ByteString.copyFrom(transaction)));
-		}
+	public IProto<EventBody, poset.proto.EventBody> marshaller() {
+		return new IProto<EventBody, poset.proto.EventBody>() {
+			@Override
+			public poset.proto.EventBody toProto() {
+				poset.proto.EventBody.Builder builder = poset.proto.EventBody.newBuilder();
 
-//		InternalTransaction[] InternalTransactions; // `protobuf:"bytes,2,rep,name=InternalTransactions,json=internalTransactions" json:"InternalTransactions,omitempty"`
-
-//		if (Parents != null) {
-//			Arrays.asList(this.Parents).forEach(
-//					parent ->
-//					{
-//						if (parent != null)
-//							builder.addParents(parent);
-//					});
-//		}
-
-//		builder.setCreator(ByteString.copyFrom(Creator));
-//		builder.setIndex(Index);
-
-		if (BlockSignatures != null) {
-			Arrays.asList(this.BlockSignatures).forEach(
-					block ->
-					{
-//						if (block != null)
-//							builder.addBlockSignatures(block);
+				if (Transactions != null) {
+					Arrays.asList(Transactions).forEach(transaction -> {
+						builder.addTransactions(ByteString.copyFrom(transaction));
 					});
-		}
+				}
+				if (InternalTransactions != null) {
+					Arrays.asList(InternalTransactions).forEach(InternalTransaction -> {
+						builder.addInternalTransactions(InternalTransaction.marshaller().toProto());
+					});
+				}
+				if (Parents != null) {
+					Arrays.asList(Parents).forEach(parent -> {
+//						builder.addParents(parent);
+						builder.addParents(parent!= null ? parent : "");
+					});
+				}
+				if (Creator != null) {
+					builder.setCreator(ByteString.copyFrom(Creator));
+				}
+				builder.setIndex(Index);
+				if (BlockSignatures != null) {
+					Arrays.asList(BlockSignatures).forEach(BlockSignature -> {
+						builder.addBlockSignatures(BlockSignature.marshaller().toProto());
+					});
+				}
+				return builder.build();
+			}
 
-		byte[] byteArray = builder.build().toByteArray();
+			@Override
+			public void fromProto(poset.proto.EventBody proto) {
 
-		// TBD
-		return new RetResult<byte[]>(byteArray, null);
-	}
+				Transactions = toArray(proto.getTransactionsList());
 
-	public error ProtoUnmarshal(byte[] data) {
-		// TBD
-		return null;
+				int internalTransactionsCount = proto.getInternalTransactionsCount();
+				InternalTransactions = null;
+				if (internalTransactionsCount > 0) {
+					InternalTransactions = new InternalTransaction[internalTransactionsCount];
+					for (int i =0; i < internalTransactionsCount; ++i) {
+						InternalTransactions[i] = new InternalTransaction();
+						InternalTransactions[i].marshaller().fromProto(proto.getInternalTransactions(i));
+					}
+				}
+
+				Parents = (String[]) proto.getParentsList().toArray();
+				Creator = proto.getCreator().toByteArray();
+				Index = proto.getIndex();
+
+				int bsCount = proto.getBlockSignaturesCount();
+				BlockSignatures = null;
+				if (bsCount > 0) {
+					BlockSignatures = new BlockSignature[bsCount];
+					for (int i =0; i < bsCount; ++i) {
+						BlockSignatures[i] = new BlockSignature();
+						BlockSignatures[i].marshaller().fromProto(proto.getBlockSignatures(i));
+					}
+				}
+			}
+
+			@Override
+			public Parser<poset.proto.EventBody> parser() {
+				return poset.proto.EventBody.parser();
+			}
+		};
 	}
 
 	public RetResult<byte[]> Hash() {
-		RetResult<byte[]> protoMarshal = ProtoMarshal();
+		RetResult<byte[]> protoMarshal = marshaller().protoMarshal();
 		byte[] hashBytes = protoMarshal.result;
 		error err = protoMarshal.err;
 		if (err != null) {

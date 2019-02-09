@@ -8,8 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.Parser;
 
 import autils.Appender;
 import common.IProto;
@@ -205,7 +203,7 @@ public class Block {
 			}
 
 			@Override
-			public Parser<poset.proto.Block> parser() {
+			public com.google.protobuf.Parser<poset.proto.Block> parser() {
 				return poset.proto.Block.parser();
 			}
 		};

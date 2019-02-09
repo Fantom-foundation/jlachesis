@@ -3,7 +3,6 @@ package poset;
 import java.util.Arrays;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Parser;
 
 import common.IProto;
 import common.RetResult;
@@ -70,7 +69,7 @@ public class BlockBody {
 			}
 
 			@Override
-			public Parser<poset.proto.BlockBody> parser() {
+			public com.google.protobuf.Parser<poset.proto.BlockBody> parser() {
 				return poset.proto.BlockBody.parser();
 			}
 		};

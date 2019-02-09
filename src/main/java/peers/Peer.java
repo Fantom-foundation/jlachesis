@@ -1,13 +1,14 @@
 package peers;
 
-import org.bouncycastle.util.encoders.Hex;
-
 import common.Hash32;
+import common.IProto;
 import common.RetResult;
 import common.error;
 
-// "encoding/hex"
-
+/**
+ * A Peer
+ *
+ */
 public class Peer {
 	long ID; // `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
 	String NetAddr; // `protobuf:"bytes,2,opt,name=NetAddr,proto3" json:"NetAddr,omitempty"`
@@ -74,12 +75,35 @@ public class Peer {
 	public RetResult<byte[]> PubKeyBytes() {
 		//PubKeyHex[2:]
 		try {
-//			byte[] decode = Hex.decode(PubKeyHex.substring(2,  PubKeyHex.length()));
 			byte[] decode = crypto.Utils.decodeString(PubKeyHex.substring(2, PubKeyHex.length())).result;
 			return new RetResult<byte[]>(decode, null);
 		} catch (Exception e){
 			return new RetResult<byte[]>(null, error.Errorf(e.getMessage()));
 		}
+	}
+
+
+	public IProto<Peer, peers.proto.Peer> marshaller() {
+		return new IProto<Peer, peers.proto.Peer>() {
+			@Override
+			public peers.proto.Peer toProto() {
+				peers.proto.Peer.Builder builder = peers.proto.Peer.newBuilder();
+				builder.setID(ID).setNetAddr(NetAddr).setPubKeyHex(PubKeyHex);
+				return builder.build();
+			}
+
+			@Override
+			public void fromProto(peers.proto.Peer pPeer) {
+				ID = pPeer.getID();
+				NetAddr = pPeer.getNetAddr();
+				PubKeyHex = pPeer.getPubKeyHex();
+			}
+
+			@Override
+			public com.google.protobuf.Parser<peers.proto.Peer> parser() {
+				return peers.proto.Peer.parser();
+			}
+		};
 	}
 
 	public error computeID() {

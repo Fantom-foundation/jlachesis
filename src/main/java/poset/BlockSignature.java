@@ -2,8 +2,12 @@ package poset;
 
 import java.util.Arrays;
 
-public class BlockSignature {
+import com.google.protobuf.ByteString;
+import com.google.protobuf.Parser;
 
+import common.IProto;
+
+public class BlockSignature {
 	byte[] Validator; // `protobuf:"bytes,1,opt,name=Validator,json=validator,proto3" json:"Validator,omitempty"`
 	long Index; // `protobuf:"varint,2,opt,name=Index,json=index" json:"Index,omitempty"`
 	String Signature; // `protobuf:"bytes,3,opt,name=Signature,json=signature" json:"Signature,omitempty"`
@@ -43,35 +47,48 @@ public class BlockSignature {
 			return Signature;
 	}
 
-
 	public String ValidatorHex() {
 //		return String.format("0x%X", Validator);
 		return crypto.Utils.toHexString(Validator);
 	}
 
-//	public RetResult<byte[]> ProtoMarshal() {
-//		var bf proto.Buffer
-//		bf.SetDeterministic(true)
-//		if err := bf.Marshal(bs); err != null {
-//			return null, err;
-//		}
-//		return bf.Bytes(), null;
-//		return null;
-//	}
+	public IProto<BlockSignature, poset.proto.BlockSignature> marshaller() {
+		return new IProto<BlockSignature, poset.proto.BlockSignature>() {
+			@Override
+			public poset.proto.BlockSignature toProto() {
+				poset.proto.BlockSignature.Builder builder = poset.proto.BlockSignature.newBuilder();
 
-//	public error ProtoUnmarshal( byte[] data) {
-//		return proto.Unmarshal(data, this);
-//	}
+				if (Validator != null) {
+					builder.setValidator(ByteString.copyFrom(Validator));
+				}
+				builder.setIndex(Index);
+				if (Signature != null) {
+					builder.setSignature(Signature);
+				}
+				return builder.build();
+			}
+
+			@Override
+			public void fromProto(poset.proto.BlockSignature pBlock) {
+				Validator = pBlock.getValidator().toByteArray();
+				Index = pBlock.getIndex();
+				Signature = pBlock.getSignature();
+			}
+
+			@Override
+			public Parser<poset.proto.BlockSignature> parser() {
+				return poset.proto.BlockSignature.parser();
+			}
+		};
+	}
 
 	public WireBlockSignature ToWire()  {
 		return new WireBlockSignature (Index, Signature);
 	}
 
-
 	public boolean equals(BlockSignature that) {
 		return Utils.BytesEquals(this.Validator, that.Validator) &&
 			this.Index == that.Index &&
-			this.Signature == that.Signature;
-}
-
+			this.Signature.equals(that.Signature);
+	}
 }
