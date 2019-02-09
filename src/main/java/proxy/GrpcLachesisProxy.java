@@ -291,10 +291,7 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 			Block b = event.getBlock();
 			if (b != null) {
 				poset.Block pb = new poset.Block();
-				RetResult<poset.Block> protoUnmarshal = pb.ProtoUnmarshal(b.getData().toByteArray());
-				pb = protoUnmarshal.result;
-				err = protoUnmarshal.err;
-
+				err = pb.marshaller().protoUnmarshal(b.getData().toByteArray());
 				if (err != null) {
 					continue;
 				}

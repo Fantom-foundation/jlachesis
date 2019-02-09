@@ -286,7 +286,7 @@ public class Event implements FlagtableContainer {
 	public error ReplaceFlagTable(Map<String,Long> flagTable) {
 		FlagTableWrapper ftw = new FlagTableWrapper(flagTable);
 
-		RetResult<byte[]> byteArrayCall = ftw.toByteArray();
+		RetResult<byte[]> byteArrayCall = ftw.marshaller().protoMarshal();
 		Message.FlagTable = byteArrayCall.result;
 		error err = byteArrayCall.err;
 		return err;
@@ -295,7 +295,7 @@ public class Event implements FlagtableContainer {
 	// GetFlagTable returns the flag tabl
 	public RetResult<Map<String,Long>> GetFlagTable() {
 		FlagTableWrapper flagTable = new FlagTableWrapper();
-		error err = flagTable.fromByteArray(Message.FlagTable);
+		error err = flagTable.marshaller().protoUnmarshal(Message.FlagTable);
 		return new RetResult<Map<String,Long>>(flagTable.Body, err);
 	}
 
@@ -306,7 +306,7 @@ public class Event implements FlagtableContainer {
 	 */
 	public RetResult<Map<String,Long>> MergeFlagTable(Map<String,Long> dst) {
 		FlagTableWrapper src = new FlagTableWrapper();
-		error err = src.fromByteArray(Message.FlagTable);
+		error err = src.marshaller().protoUnmarshal(Message.FlagTable);
 		if (err != null) {
 			return new RetResult<Map<String,Long>>(null, err);
 		}
@@ -323,61 +323,43 @@ public class Event implements FlagtableContainer {
 		return Message.OtherParentCreatorID;
 	}
 
-
 	public EventMessage getMessage() {
 		return Message;
 	}
-
-
 
 	public long getRound() {
 		return round;
 	}
 
-
-
 	public long getLamportTimestamp() {
 		return lamportTimestamp;
 	}
-
-
 
 	public long getRoundReceived() {
 		return roundReceived;
 	}
 
-
-
 	public String getCreator() {
 		return creator;
 	}
-
-
 
 	public byte[] getHash() {
 		return hash;
 	}
 
-
-
 	public String getHex() {
 		return hex;
 	}
-
-
 
 	public static String rootSelfParent(long participantID) {
 		return String.format("Root%d", participantID);
 	}
 
 
-
 	public error ProtoUnmarshal(byte[] eventBytes) {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-
 
 	public RetResult<byte[]> ProtoMarshal() {
 		// TODO Auto-generated method stub

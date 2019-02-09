@@ -4,12 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
-import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +14,6 @@ import org.junit.Test;
 
 import common.RetResult;
 import common.error;
-import crypto.Utils;
 
 /**
  * Event tests
@@ -197,7 +192,7 @@ public class EventTest {
 		start.put("y", 0L);
 		start.put("z", 0L);
 
-		byte[] ft = new FlagTableWrapper(start).toByteArray().result;
+		byte[] ft = new FlagTableWrapper(start).marshaller().protoMarshal().result;
 		EventMessage eventMessage = new  EventMessage();
 		eventMessage.FlagTable = ft;
 		Event event = new Event(eventMessage );
@@ -208,12 +203,12 @@ public class EventTest {
 			error err = mergeFlagTable.err;
 			assertNull("No error", err);
 
-			byte[] raw = new FlagTableWrapper(flagTable).toByteArray().result;
+			byte[] raw = new FlagTableWrapper(flagTable).marshaller().protoMarshal().result;
 			event.Message.FlagTable = raw;
 		}
 
 		FlagTableWrapper res = new FlagTableWrapper();
-		res.fromByteArray(event.Message.FlagTable);
+		res.marshaller().protoUnmarshal(event.Message.FlagTable);
 		assertEquals("expected flag table should match", exp, res.Body);
 	}
 

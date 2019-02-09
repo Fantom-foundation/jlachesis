@@ -17,6 +17,8 @@ import common.RetResult3;
 import common.error;
 
 public class Block {
+	private poset.proto.Block pBlock;
+
 	private BlockBody Body;
 	private Map<String,String> Signatures;
 	private byte[] Hash;
@@ -204,69 +206,25 @@ public class Block {
 			}
 
 			@Override
-			public RetResult<poset.proto.Block> parseFrom(byte[] data) {
-				try {
-					poset.proto.Block block = poset.proto.Block.parseFrom(data);
-					return new RetResult<>(block, null);
-				} catch (InvalidProtocolBufferException e) {
-					return new RetResult<>(null, error.Errorf(e.getMessage()));
-				}
-			}
-
-			@Override
 			public RetResult<byte[]> protoMarshal() {
-				return new RetResult<>(toProto().toByteArray(), null);
+				if (pBlock == null) {
+					pBlock = toProto();
+				}
+				return new RetResult<>(pBlock.toByteArray(), null);
 			}
 
 			@Override
 			public error protoUnmarshal(byte[] data) {
-				RetResult<poset.proto.Block> protBlock = parseFrom(data);
-				error err = protBlock.err;
-				if (err != null) {
-					return err;
+				try {
+					pBlock = poset.proto.Block.parseFrom(data);
+				} catch (InvalidProtocolBufferException e) {
+					return error.Errorf(e.getMessage());
 				}
-				poset.proto.Block pBlock = protBlock.result;
 				fromProto(pBlock);
 				return null;
 			}
 		};
 	}
-
-	public RetResult<byte[]> ProtoMarshal() {
-//		var bf proto.Buffer;
-//		bf.SetDeterministic(true);
-//		if err := bf.Marshal(b); err != null {
-//			return null, err;
-//		}
-//		return bf.Bytes(), null;
-
-		// TBD
-		return null;
-	}
-
-	public RetResult<Block> ProtoUnmarshal(byte[] data) {
-		// TODO
-//		poset.proto.Block block = null;
-//		try {
-//			block = poset.proto.Block.parseFrom(data);
-//		} catch (InvalidProtocolBufferException e) {
-//			return new RetResult<>(null, error.Errorf(e.getMessage()));
-//		}
-//		if (block != null) {
-//			Block b = new Block();
-//			b.Body = null
-//			Signatures.clear();
-//			Hash = null;
-//			Hex = null;
-//			setStateHash(null);
-//			FrameHash = null;
-//
-//			return new RetResult<>(b, null);
-//
-//		}
-		return null;
-	}
-
 
 	public RetResult<BlockSignature> Sign(KeyPair keyPair) {
 		RetResult<byte[]> hash2 = Body.Hash();

@@ -722,9 +722,7 @@ public class BadgerStore implements Store {
 		}
 
 		Block block = new Block();
-		RetResult<Block> protoUnmarshal = block.ProtoUnmarshal(blockBytes);
-		block = protoUnmarshal.result;
-		err = protoUnmarshal.err;
+		err = block.marshaller().protoUnmarshal(blockBytes);
 		if (err != null) {
 			return new RetResult<>(null, err);
 		}
@@ -737,7 +735,7 @@ public class BadgerStore implements Store {
 //		defer tx.Discard();
 
 		byte[] key = blockKey(block.Index());
-		RetResult<byte[]> protoMarshal = block.ProtoMarshal();
+		RetResult<byte[]> protoMarshal = block.marshaller().protoMarshal();
 		byte[] val = protoMarshal.result;
 		error err = protoMarshal.err;
 		if (err != null) {

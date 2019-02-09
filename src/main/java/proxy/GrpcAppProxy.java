@@ -246,7 +246,7 @@ public class GrpcAppProxy implements AppProxy, LachesisNodeServer {
 
 	// CommitBlock implements AppProxy interface method
 	public RetResult<byte[]> CommitBlock(poset.Block block) {
-		RetResult<byte[]> protoMarshal = block.ProtoMarshal();
+		RetResult<byte[]> protoMarshal = block.marshaller().protoMarshal();
 		byte[] data = protoMarshal.result;
 		error err = protoMarshal.err;
 		if (err != null) {

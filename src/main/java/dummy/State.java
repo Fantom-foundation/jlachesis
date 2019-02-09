@@ -10,6 +10,7 @@ import common.RetResult;
 import common.error;
 import proxy.ProxyHandler;
 
+
 /*
  * The dummy App is used for testing and as an example for building Lachesis
  * applications. Here, we define the dummy's state which doesn't really do
@@ -18,8 +19,9 @@ import proxy.ProxyHandler;
  * Snapshots correspond to the state hash resulting from executing a the block's
  * transactions.
  */
-
-// State implements ProxyHandler
+/**
+ * State implements ProxyHandler
+ */
 public class State implements ProxyHandler {
 	Logger logger;
 	byte[][] committedTxs;
@@ -27,16 +29,12 @@ public class State implements ProxyHandler {
 	Map<Long, byte[]> snapshots;
 
 	public State(Logger logger) {
-			this.logger =       logger;
-			this.committedTxs= new byte[][] {};
-			this.stateHash=   new byte[] {};
-			this.snapshots=  new HashMap<Long, byte[]>();
+		this.logger =       logger;
+		this.committedTxs = new byte[][] {};
+		this.stateHash=   new byte[] {};
+		this.snapshots=  new HashMap<Long, byte[]>();
 		logger.info("Init Dummy State");
 	}
-
-	/*
-	 * inmem interface: ProxyHandler implementation
-	 */
 
 	public RetResult<byte[]> CommitHandler(poset.Block block ) {
 		logger.field("block", block).debug("CommitBlock");
@@ -62,14 +60,11 @@ public class State implements ProxyHandler {
 	}
 
 	public RetResult<byte[]> RestoreHandler(byte[] snapshot) {
-		//XXX do something smart here
+		//TODO do something smart here
 		stateHash = snapshot;
 		return new RetResult<byte[]>(stateHash, null);
 	}
 
-	/*
-	 * staff:
-	 */
 	public byte[][] GetCommittedTransactions() {
 		return committedTxs;
 	}
