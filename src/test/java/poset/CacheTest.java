@@ -25,7 +25,7 @@ import peers.Peers;
  */
 public class CacheTest {
 
-//	@Test
+	@Test
 	public void TestParticipantEventsCache() {
 		int size = 10;
 		long testSize = 25L;
@@ -55,6 +55,7 @@ public class CacheTest {
 
 		// GET ITEM ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 		for (String pk : participants.getByPubKey().keySet()) {
+			System.out.println("pk = " + pk);
 			long index1 = 9L;
 			RetResult<String> GetItemCall = pec.GetItem(pk, index1);
 			error err = GetItemCall.err;
@@ -70,11 +71,11 @@ public class CacheTest {
 			assertEquals("expected and cached equal", expected2, actual2);
 
 			long index3 = 27L;
-			RetResult<String> GetItemCall3 = pec.GetItem(pk, index3);
-			String actual3 = GetItemCall3.result;
+			RetResult<String[]> GetItemCall3 = pec.Get(pk, index3);
+			String[] actual3 = GetItemCall3.result;
 			err = GetItemCall3.err;
 			assertNull("No error when get item from cache", err);
-			assertEquals("expected and cached equal", "", actual3);
+			assertArrayEquals("expected and cached equal", new String[0], actual3);
 		}
 
 		//KNOWN ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -88,33 +89,32 @@ public class CacheTest {
 
 		//GET ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 		for (String pk : participants.getByPubKey().keySet()) {
-			RetResult<String> GetItemCall = pec.GetItem(pk, 0);
+			RetResult<String[]> GetItemCall = pec.Get(pk, 0);
 			error err = GetItemCall.err;
 			assertTrue("Expected ErrTooLate", StoreErr.Is(err, StoreErrType.TooLate));
 
 			long skipIndex = 9L;
 			String[] expected = Appender.sliceFromToEnd(items.get(pk), (int) skipIndex+1);
-			RetResult<String> GetItemCallSkip = pec.GetItem(pk,skipIndex);
-			String cached = GetItemCallSkip.result;
+			RetResult<String[]> GetItemCallSkip = pec.Get(pk,skipIndex);
+			String[] cached = GetItemCallSkip.result;
 			err = GetItemCallSkip.err;
 			assertNull("No error when get item from cache", err);
-			assertEquals("expected and cached equal", expected, cached);
-
+			assertArrayEquals("expected and cached equal", expected, cached);
 
 			long skipIndex2 = 15L;
 			String[] expected2 = Appender.sliceFromToEnd(items.get(pk), (int) skipIndex2+1);
-			RetResult<String> GetItemCallSkip2 = pec.GetItem(pk,skipIndex2);
-			String cached2 = GetItemCallSkip2.result;
+			RetResult<String[]> GetItemCallSkip2 = pec.Get(pk,skipIndex2);
+			String[] cached2 = GetItemCallSkip2.result;
 			err = GetItemCallSkip2.err;
 			assertNull("No error when get item from cache", err);
-			assertEquals("expected and cached equal", expected2, cached2);
+			assertArrayEquals("expected and cached equal", expected2, cached2);
 
 			long skipIndex3 = 27L;
-			RetResult<String> GetItemCallSkip3 = pec.GetItem(pk,skipIndex3);
-			String cached3 = GetItemCallSkip3.result;
+			RetResult<String[]> GetItemCallSkip3 = pec.Get(pk,skipIndex3);
+			String[] cached3 = GetItemCallSkip3.result;
 			err = GetItemCallSkip3.err;
 			assertNull("No error when get item from cache", err);
-			assertEquals("expected and cached equal", "", cached3);
+			assertArrayEquals("expected and cached equal", new String[0], cached3);
 		}
 	}
 

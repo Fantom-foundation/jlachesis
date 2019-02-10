@@ -77,10 +77,11 @@ public class ParticipantEventsCache {
 
 		RetResult<Object> getItem = rim.GetItem(id, index);
 		Object item = getItem.result;
-		logger.field("id", id).field("item", item).debug("GetItem()");
-
-
 		err = getItem.err;
+		logger.field("id", id)
+			.field("item", item)
+			.field("err", err).debug("GetItem()");
+
 		if (err != null) {
 			return new  RetResult<String>("", err);
 		}
