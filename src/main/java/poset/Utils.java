@@ -3,6 +3,25 @@ package poset;
 import java.util.Arrays;
 
 public class Utils {
+
+	public static boolean protoBytesEquals(byte[] a, byte[] b) {
+		if ((a == null && b == null)
+			|| (a == null && b.length == 0)
+			|| (b == null && a.length == 0)) {
+			return true;
+		}
+		return Arrays.equals(a, b);
+	}
+
+	public static boolean protoEquals(Object[] a, Object[] b) {
+		if ((a == null && b == null)
+			|| (a == null && b.length == 0)
+			|| (b == null && a.length == 0)) {
+			return true;
+		}
+		return Arrays.equals(a, b);
+	}
+
 	public static boolean bytesEquals(byte[] thisByte, byte[] thatByte)  {
 		return Arrays.equals(thisByte, thatByte);
 	}

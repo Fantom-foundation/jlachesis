@@ -61,7 +61,7 @@ public class EventTest {
 		assertTrue("Verify returned true", res);
 	}
 
-	//@Test
+	@Test
 	public void TestMarshallEvent() {
 		KeyPair key = crypto.Utils.GenerateECDSAKeyPair().result;
 		byte[] publicKeyBytes = crypto.Utils.FromECDSAPub(key.getPublic());

@@ -209,7 +209,7 @@ public class EventMessage {
 			return false;
 		if (CreatorID != other.CreatorID)
 			return false;
-		if (!Arrays.equals(FlagTable, other.FlagTable))
+		if (!Utils.protoBytesEquals(FlagTable, other.FlagTable))
 			return false;
 		if (OtherParentCreatorID != other.OtherParentCreatorID)
 			return false;
@@ -224,7 +224,7 @@ public class EventMessage {
 			return false;
 		if (TopologicalIndex != other.TopologicalIndex)
 			return false;
-		if (!Arrays.equals(WitnessProof, other.WitnessProof))
+		if (!Utils.protoEquals(WitnessProof, other.WitnessProof))
 			return false;
 		return true;
 	}
