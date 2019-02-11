@@ -61,9 +61,39 @@ public class RoundEvent {
 		return Famous;
 	}
 
-	public boolean equals(RoundEvent that) {
-		return this.Consensus == that.Consensus &&
-			this.Witness == that.Witness &&
-			this.Famous == that.Famous;
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (Consensus ? 1231 : 1237);
+		result = prime * result + ((Famous == null) ? 0 : Famous.hashCode());
+		result = prime * result + (Witness ? 1231 : 1237);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		RoundEvent other = (RoundEvent) obj;
+		if (Consensus != other.Consensus)
+			return false;
+		if (Famous != other.Famous)
+			return false;
+		if (Witness != other.Witness)
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("RoundEvent [Consensus=").append(Consensus).append(", Witness=").append(Witness)
+				.append(", Famous=").append(Famous).append("]");
+		return builder.toString();
 	}
 }

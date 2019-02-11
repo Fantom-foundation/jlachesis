@@ -527,7 +527,7 @@ public class BadgerStoreTest {
 		removeBadgerStore(store);
 	}
 
-	//@Test
+	@Test
 	public void TestBadgerRounds() {
 		int cacheSize = 1; // Inmem_store's caches accept positive cacheSize only
 		RResult2<BadgerStore, pub[]> initBadgerStore = initBadgerStore(cacheSize);

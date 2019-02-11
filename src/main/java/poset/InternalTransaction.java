@@ -42,11 +42,6 @@ public class InternalTransaction {
 		return Peer;
 	}
 
-
-	public boolean equals(InternalTransaction that) {
-		return this.Peer.equals(that.Peer) && this.Type.equals(that.Type);
-	}
-
 	public IProto<InternalTransaction, poset.proto.InternalTransaction> marshaller() {
 		return new IProto<InternalTransaction, poset.proto.InternalTransaction>() {
 			@Override
@@ -78,5 +73,44 @@ public class InternalTransaction {
 				return poset.proto.InternalTransaction.parser();
 			}
 		};
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((Peer == null) ? 0 : Peer.hashCode());
+		result = prime * result + ((Type == null) ? 0 : Type.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		InternalTransaction other = (InternalTransaction) obj;
+		if (Peer == null) {
+			if (other.Peer != null)
+				return false;
+		} else if (!Peer.equals(other.Peer))
+			return false;
+		if (Type != other.Type)
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("InternalTransaction [Type=");
+		builder.append(Type);
+		builder.append(", Peer=");
+		builder.append(Peer);
+		builder.append("]");
+		return builder.toString();
 	}
 }

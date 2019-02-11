@@ -1,4 +1,7 @@
 package poset;
+
+import java.util.Arrays;
+
 public class WireBody {
 	byte[][] Transactions;
 	InternalTransaction[] InternalTransactions;
@@ -98,5 +101,71 @@ public class WireBody {
 
 	public void setIndex(long index) {
 		Index = index;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(BlockSignatures);
+		result = prime * result + (int) (CreatorID ^ (CreatorID >>> 32));
+		result = prime * result + (int) (Index ^ (Index >>> 32));
+		result = prime * result + Arrays.hashCode(InternalTransactions);
+		result = prime * result + (int) (OtherParentCreatorID ^ (OtherParentCreatorID >>> 32));
+		result = prime * result + (int) (OtherParentIndex ^ (OtherParentIndex >>> 32));
+		result = prime * result + (int) (SelfParentIndex ^ (SelfParentIndex >>> 32));
+		result = prime * result + Arrays.deepHashCode(Transactions);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		WireBody other = (WireBody) obj;
+		if (!Arrays.equals(BlockSignatures, other.BlockSignatures))
+			return false;
+		if (CreatorID != other.CreatorID)
+			return false;
+		if (Index != other.Index)
+			return false;
+		if (!Arrays.equals(InternalTransactions, other.InternalTransactions))
+			return false;
+		if (OtherParentCreatorID != other.OtherParentCreatorID)
+			return false;
+		if (OtherParentIndex != other.OtherParentIndex)
+			return false;
+		if (SelfParentIndex != other.SelfParentIndex)
+			return false;
+		if (!Arrays.deepEquals(Transactions, other.Transactions))
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("WireBody [Transactions=");
+		builder.append(Arrays.toString(Transactions));
+		builder.append(", InternalTransactions=");
+		builder.append(Arrays.toString(InternalTransactions));
+		builder.append(", BlockSignatures=");
+		builder.append(Arrays.toString(BlockSignatures));
+		builder.append(", SelfParentIndex=");
+		builder.append(SelfParentIndex);
+		builder.append(", OtherParentCreatorID=");
+		builder.append(OtherParentCreatorID);
+		builder.append(", OtherParentIndex=");
+		builder.append(OtherParentIndex);
+		builder.append(", CreatorID=");
+		builder.append(CreatorID);
+		builder.append(", Index=");
+		builder.append(Index);
+		builder.append("]");
+		return builder.toString();
 	}
 }

@@ -3,6 +3,7 @@ package poset;
 import java.math.BigInteger;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Arrays;
 import java.util.Map;
 
 import com.google.protobuf.ByteString;
@@ -77,8 +78,6 @@ public class Event implements FlagtableContainer {
 		this.hex = null;
 	}
 
-
-
 	public Event(EventMessage eventMessage) {
 		// TBD add stub
 		this.Message = new EventMessage();
@@ -109,8 +108,6 @@ public class Event implements FlagtableContainer {
 	public Event(Event ev) {
 		// TODO Auto-generated constructor stub
 	}
-
-
 
 	// Round returns round of event.
 	public long Round() {
@@ -327,10 +324,14 @@ public class Event implements FlagtableContainer {
 				}
 				builder.setRound(round)
 				.setLamportTimestamp(lamportTimestamp)
-				.setRoundReceived(roundReceived)
-				.setCreator(creator)
-				.setHex(hex);
+				.setRoundReceived(roundReceived);
+				if (creator != null) {
+					builder.setCreator(creator);
+				}
 				if (hex != null) {
+					builder.setHex(hex);
+				}
+				if (hash != null) {
 					builder.setHash(ByteString.copyFrom(hash));
 				}
 				return builder.build();
@@ -358,6 +359,65 @@ public class Event implements FlagtableContainer {
 				return poset.proto.Event.parser();
 			}
 		};
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((Message == null) ? 0 : Message.hashCode());
+		result = prime * result + ((creator == null) ? 0 : creator.hashCode());
+		result = prime * result + Arrays.hashCode(hash);
+		result = prime * result + ((hex == null) ? 0 : hex.hashCode());
+		result = prime * result + (int) (lamportTimestamp ^ (lamportTimestamp >>> 32));
+		result = prime * result + (int) (round ^ (round >>> 32));
+		result = prime * result + (int) (roundReceived ^ (roundReceived >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Event other = (Event) obj;
+		if (Message == null) {
+			if (other.Message != null)
+				return false;
+		} else if (!Message.equals(other.Message))
+			return false;
+		if (creator == null) {
+			if (other.creator != null)
+				return false;
+		} else if (!creator.equals(other.creator))
+			return false;
+		if (!Arrays.equals(hash, other.hash))
+			return false;
+		if (hex == null) {
+			if (other.hex != null)
+				return false;
+		} else if (!hex.equals(other.hex))
+			return false;
+		if (lamportTimestamp != other.lamportTimestamp)
+			return false;
+		if (round != other.round)
+			return false;
+		if (roundReceived != other.roundReceived)
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Event [Message=").append(Message).append(", round=").append(round).append(", lamportTimestamp=")
+				.append(lamportTimestamp).append(", roundReceived=").append(roundReceived).append(", creator=")
+				.append(creator).append(", hash=").append(Arrays.toString(hash)).append(", hex=").append(hex)
+				.append("]");
+		return builder.toString();
 	}
 
 	public long CreatorID() {

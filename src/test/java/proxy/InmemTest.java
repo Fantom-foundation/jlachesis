@@ -3,6 +3,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import org.jcsp.lang.CSTimer;
 import org.junit.Test;
 
 import autils.Appender;
@@ -38,7 +39,8 @@ public class InmemTest {
 
 		//"#1 Send tx"
 		byte[] tx_origin = "the test transaction".getBytes();
-
+		CSTimer tim = new CSTimer();
+		tim.setAlarm(tim.read() + timeout * 1000);
 		ExecService.go(() -> {
 			new Selectors<byte[]>(proxy.SubmitCh()) {
 				public void onEvent() {

@@ -51,4 +51,36 @@ public class RoundInfoMessage {
 	public Map<String,RoundEvent> GetEvents() {
 		return Events;
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((Events == null) ? 0 : Events.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		RoundInfoMessage other = (RoundInfoMessage) obj;
+		if (Events == null) {
+			if (other.Events != null)
+				return false;
+		} else if (!Events.equals(other.Events))
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("RoundInfoMessage [Events=").append(Events).append("]");
+		return builder.toString();
+	}
 }

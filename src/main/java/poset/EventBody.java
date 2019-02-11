@@ -72,16 +72,6 @@ public class EventBody {
 		return BlockSignatures;
 	}
 
-
-	public boolean equals(EventBody that) {
-		return Utils.byteArraysEquals(this.Transactions, that.Transactions) &&
-				Utils.arrayEquals(this.InternalTransactions, that.InternalTransactions) &&
-				Utils.<String>arrayEquals(this.Parents, that.Parents) &&
-				Utils.bytesEquals(this.Creator, that.Creator) &&
-				this.Index == that.Index &&
-				Utils.arrayEquals(this.BlockSignatures, that.BlockSignatures);
-	}
-
 	public IProto<EventBody, poset.proto.EventBody> marshaller() {
 		return new IProto<EventBody, poset.proto.EventBody>() {
 			@Override
@@ -100,8 +90,9 @@ public class EventBody {
 				}
 				if (Parents != null) {
 					Arrays.asList(Parents).forEach(parent -> {
-//						builder.addParents(parent);
-						builder.addParents(parent!= null ? parent : "");
+						if (parent != null) {
+							builder.addParents(parent);
+						}
 					});
 				}
 				if (Creator != null) {
@@ -118,26 +109,25 @@ public class EventBody {
 
 			@Override
 			public void fromProto(poset.proto.EventBody proto) {
-
 				Transactions = toArray(proto.getTransactionsList());
 
-				int internalTransactionsCount = proto.getInternalTransactionsCount();
+				int intranCount = proto.getInternalTransactionsCount();
 				InternalTransactions = null;
-				if (internalTransactionsCount > 0) {
-					InternalTransactions = new InternalTransaction[internalTransactionsCount];
-					for (int i =0; i < internalTransactionsCount; ++i) {
+				if (intranCount >= 0) {
+					InternalTransactions = new InternalTransaction[intranCount];
+					for (int i =0; i < intranCount; ++i) {
 						InternalTransactions[i] = new InternalTransaction();
 						InternalTransactions[i].marshaller().fromProto(proto.getInternalTransactions(i));
 					}
 				}
 
-				Parents = (String[]) proto.getParentsList().toArray();
+				Parents = proto.getParentsList().toArray(new String[0]);
 				Creator = proto.getCreator().toByteArray();
 				Index = proto.getIndex();
 
 				int bsCount = proto.getBlockSignaturesCount();
 				BlockSignatures = null;
-				if (bsCount > 0) {
+				if (bsCount >= 0) {
 					BlockSignatures = new BlockSignature[bsCount];
 					for (int i =0; i < bsCount; ++i) {
 						BlockSignatures[i] = new BlockSignature();
@@ -151,6 +141,49 @@ public class EventBody {
 				return poset.proto.EventBody.parser();
 			}
 		};
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("EventBody [Transactions=");
+		builder.append(Arrays.toString(Transactions));
+		builder.append(", InternalTransactions=");
+		builder.append(Arrays.toString(InternalTransactions));
+		builder.append(", Parents=");
+		builder.append(Arrays.toString(Parents));
+		builder.append(", Creator=");
+		builder.append(Arrays.toString(Creator));
+		builder.append(", Index=");
+		builder.append(Index);
+		builder.append(", BlockSignatures=");
+		builder.append(Arrays.toString(BlockSignatures));
+		builder.append("]");
+		return builder.toString();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		EventBody other = (EventBody) obj;
+		if (!Arrays.equals(BlockSignatures, other.BlockSignatures))
+			return false;
+		if (!Arrays.equals(Creator, other.Creator))
+			return false;
+		if (Index != other.Index)
+			return false;
+		if (!Arrays.equals(InternalTransactions, other.InternalTransactions))
+			return false;
+		if (!Arrays.equals(Parents, other.Parents))
+			return false;
+		if (!Arrays.deepEquals(Transactions, other.Transactions))
+			return false;
+		return true;
 	}
 
 	public RetResult<byte[]> Hash() {

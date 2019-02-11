@@ -27,13 +27,16 @@ public class Root {
 		Others = new HashMap<String,RootEvent>(others);
 	}
 
-	//Root forms a base on top of which a participant's Events can be inserted. It
-	//contains the SelfParent of the first descendant of the Root, as well as other
-	//Events, belonging to a past before the Root, which might be referenced
-	//in future Events. NextRound corresponds to a proposed value for the child's
-	//Round; it is only used if the child's OtherParent is empty or NOT in the
-	//Root's Others.
-	//NewBaseRoot initializes a Root object for a fresh Poset.
+	/**
+	 * Root forms a base on top of which a participant's Events can be inserted. It
+	 * contains the SelfParent of the first descendant of the Root, as well as other
+	 * Events, belonging to a past before the Root, which might be referenced
+	 * in future Events. NextRound corresponds to a proposed value for the child's
+	 * Round; it is only used if the child's OtherParent is empty or NOT in the
+	 * Root's Others. NewBaseRoot initializes a Root object for a fresh Poset.
+	 *
+	 * @param creatorID
+	 */
 	public Root(long creatorID) {
 		super();
 		RootEvent rootEvent = new RootEvent(creatorID);
@@ -90,6 +93,48 @@ public class Root {
 		};
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Root [NextRound=").append(NextRound).append(", SelfParent=").append(SelfParent)
+				.append(", Others=").append(Others).append("]");
+		return builder.toString();
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (NextRound ^ (NextRound >>> 32));
+		result = prime * result + ((Others == null) ? 0 : Others.hashCode());
+		result = prime * result + ((SelfParent == null) ? 0 : SelfParent.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Root other = (Root) obj;
+		if (NextRound != other.NextRound)
+			return false;
+		if (Others == null) {
+			if (other.Others != null)
+				return false;
+		} else if (!Others.equals(other.Others))
+			return false;
+		if (SelfParent == null) {
+			if (other.SelfParent != null)
+				return false;
+		} else if (!SelfParent.equals(other.SelfParent))
+			return false;
+		return true;
+	}
+
 	public long GetNextRound() {
 		return NextRound;
 	}
@@ -104,11 +149,5 @@ public class Root {
 
 	public boolean EqualsMapStringRootEvent(Map<String,RootEvent> thisMap, Map<String,RootEvent> thatMap) {
 		return thisMap.equals(thatMap);
-	}
-
-	public boolean Equals(Root that) {
-		return this.NextRound == that.NextRound &&
-			this.SelfParent.equals(that.SelfParent) &&
-			this.Others.equals(that.Others);
 	}
 }

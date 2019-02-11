@@ -86,9 +86,47 @@ public class BlockSignature {
 		return new WireBlockSignature (Index, Signature);
 	}
 
-	public boolean equals(BlockSignature that) {
-		return Utils.bytesEquals(this.Validator, that.Validator) &&
-			this.Index == that.Index &&
-			this.Signature.equals(that.Signature);
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("BlockSignature [Validator=");
+		builder.append(Arrays.toString(Validator));
+		builder.append(", Index=");
+		builder.append(Index);
+		builder.append(", Signature=");
+		builder.append(Signature);
+		builder.append("]");
+		return builder.toString();
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (Index ^ (Index >>> 32));
+		result = prime * result + ((Signature == null) ? 0 : Signature.hashCode());
+		result = prime * result + Arrays.hashCode(Validator);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		BlockSignature other = (BlockSignature) obj;
+		if (Index != other.Index)
+			return false;
+		if (Signature == null) {
+			if (other.Signature != null)
+				return false;
+		} else if (!Signature.equals(other.Signature))
+			return false;
+		if (!Arrays.equals(Validator, other.Validator))
+			return false;
+		return true;
 	}
 }

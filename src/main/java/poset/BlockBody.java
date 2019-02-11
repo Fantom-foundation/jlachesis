@@ -75,10 +75,40 @@ public class BlockBody {
 		};
 	}
 
-	public boolean equals(BlockBody that) {
-		return this.Index == that.Index &&
-			this.RoundReceived == that.RoundReceived &&
-			Utils.byteArraysEquals(this.Transactions, that.Transactions);
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (Index ^ (Index >>> 32));
+		result = prime * result + (int) (RoundReceived ^ (RoundReceived >>> 32));
+		result = prime * result + Arrays.deepHashCode(Transactions);
+		return result;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("BlockBody [Index=").append(Index).append(", RoundReceived=").append(RoundReceived)
+				.append(", Transactions=").append(Arrays.toString(Transactions)).append("]");
+		return builder.toString();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		BlockBody other = (BlockBody) obj;
+		if (Index != other.Index)
+			return false;
+		if (RoundReceived != other.RoundReceived)
+			return false;
+		if (!Arrays.deepEquals(Transactions, other.Transactions))
+			return false;
+		return true;
 	}
 
 	public RetResult<byte[]> Hash() {

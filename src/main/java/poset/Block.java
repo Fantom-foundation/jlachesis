@@ -108,12 +108,12 @@ public class Block {
 		return new RetResult<Block>(new Block(blockIndex, frame.Round, frameHash, transactions), null);
 	}
 
-	public boolean equals(Block that) {
-		return this.Body.equals(that.Body) &&
-			this.Signatures.equals(that.Signatures) &&
-			Utils.bytesEquals(this.Hash, that.Hash) &&
-			this.Hex.equals(that.Hex);
-	}
+//	public boolean equals(Block that) {
+//		return this.Body.equals(that.Body) &&
+//			this.Signatures.equals(that.Signatures) &&
+//			Utils.bytesEquals(this.Hash, that.Hash) &&
+//			this.Hex.equals(that.Hex);
+//	}
 
 	public long Index() {
 		return Body.Index;
@@ -257,6 +257,52 @@ public class Block {
 		}
 
 		return new RetResult<Boolean>(crypto.Utils.Verify(pubKey, signBytes, r, s), null);
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((Body == null) ? 0 : Body.hashCode());
+		result = prime * result + Arrays.hashCode(FrameHash);
+		result = prime * result + Arrays.hashCode(Hash);
+		result = prime * result + ((Hex == null) ? 0 : Hex.hashCode());
+		result = prime * result + ((Signatures == null) ? 0 : Signatures.hashCode());
+		result = prime * result + Arrays.hashCode(StateHash);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Block other = (Block) obj;
+		if (Body == null) {
+			if (other.Body != null)
+				return false;
+		} else if (!Body.equals(other.Body))
+			return false;
+		if (!Arrays.equals(FrameHash, other.FrameHash))
+			return false;
+		if (!Arrays.equals(Hash, other.Hash))
+			return false;
+		if (Hex == null) {
+			if (other.Hex != null)
+				return false;
+		} else if (!Hex.equals(other.Hex))
+			return false;
+		if (Signatures == null) {
+			if (other.Signatures != null)
+				return false;
+		} else if (!Signatures.equals(other.Signatures))
+			return false;
+		if (!Arrays.equals(StateHash, other.StateHash))
+			return false;
+		return true;
 	}
 
 	@Override

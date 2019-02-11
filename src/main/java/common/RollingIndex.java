@@ -26,7 +26,7 @@ public class RollingIndex {
 
 	public RetResult<Object[]> Get(long skipIndex) {
 		logger.field("skipIndex", skipIndex)
-			.field("items", items).debug("RollingIndex.Get()");
+			.field("items", items).debug("Get()");
 
 		Object[] res = new Object[] {};
 

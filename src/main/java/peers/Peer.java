@@ -71,6 +71,14 @@ public class Peer {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Peer [ID=").append(ID).append(", NetAddr=").append(NetAddr).append(", PubKeyHex=")
+				.append(PubKeyHex).append("]");
+		return builder.toString();
+	}
+
 	@SuppressWarnings("finally")
 	public RetResult<byte[]> PubKeyBytes() {
 		//PubKeyHex[2:]

@@ -84,8 +84,7 @@ public class InmemStoreTest {
 				Event rev = getEvent.result;
 				err = getEvent.err;
 				assertNull("No error when GetEvent", err);
-
-				assertEquals(String.format("events[%s][%d] should be %#v, not %#v", p, k, ev, rev),
+				assertEquals(String.format("events[%s][%d] should be %s, not %s", p, k, ev, rev),
 					 ev.Message.Body, rev.Message.Body);
 			}
 		}
@@ -97,7 +96,6 @@ public class InmemStoreTest {
 			String[] pEvents = pEventsCall.result;
 			err = pEventsCall.err;
 			assertNull("No error when ParticipantEvents", err);
-
 			assertEquals(String.format("%s should match size", p.hex), testSize, pEvents.length);
 
 			Event[] eventsArray = events.get(p.hex);
@@ -128,7 +126,7 @@ public class InmemStoreTest {
 		}
 	}
 
-	//@Test
+	@Test
 	public void TestInmemRounds() {
 		initInmemStore(10);
 

@@ -22,7 +22,7 @@ import common.error;
  *
  */
 public class EventTest {
-	//@Test
+	@Test
 	public void TestMarshallBody() {
 		EventBody body = createDummyEventBody();
 		RetResult<byte[]> protoMarshal = body.marshaller().protoMarshal();
@@ -37,12 +37,12 @@ public class EventTest {
 
 		assertArrayEquals("Transactions should match", body.Transactions, newBody.Transactions);
 		assertArrayEquals("Internal Transactions should match", body.InternalTransactions, newBody.InternalTransactions);
-		assertArrayEquals("BlockSigneclipse-javadoc:%E2%98%82=jlachesis/%5C/home%5C/qn%5C/.m2%5C/repository%5C/junit%5C/junit%5C/4.12%5C/junit-4.12.jar%3Corg.junitatures should match", body.BlockSignatures, newBody.BlockSignatures);
+		assertArrayEquals("BlockSignatures should match", body.BlockSignatures, newBody.BlockSignatures);
 		assertArrayEquals("Parents should match", body.Parents, newBody.Parents);
 		assertArrayEquals("Creators should match", body.Creator, newBody.Creator);
 	}
 
-	//@Test
+	@Test
 	public void TestSignEvent() {
 		KeyPair key = crypto.Utils.GenerateECDSAKeyPair().result;
 		byte[] publicKeyBytes = crypto.Utils.FromECDSAPub(key.getPublic());
@@ -85,7 +85,7 @@ public class EventTest {
 		assertEquals("Events should equal", newEvent.Message, event.Message);
 	}
 
-	//@Test
+	@Test
 	public void TestWireEvent() {
 		KeyPair key = crypto.Utils.GenerateECDSAKeyPair().result;
 		byte[] publicKeyBytes = crypto.Utils.FromECDSAPub(key.getPublic());

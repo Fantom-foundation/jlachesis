@@ -91,14 +91,44 @@ public class Frame {
 		return new RetResult<byte[]>(hash.SHA256(hashBytes), null);
 	}
 
-	public boolean equals(Frame that) {
-		return this.Round == that.Round &&
-			Utils.arrayEquals(this.Roots, that.Roots) &&
-			Utils.arrayEquals(this.Events, that.Events);
-	}
-
 	public long GetRound() {
 		return Round;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(Events);
+		result = prime * result + Arrays.hashCode(Roots);
+		result = prime * result + (int) (Round ^ (Round >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Frame other = (Frame) obj;
+		if (!Arrays.equals(Events, other.Events))
+			return false;
+		if (!Arrays.equals(Roots, other.Roots))
+			return false;
+		if (Round != other.Round)
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Frame [Round=").append(Round).append(", Roots=").append(Arrays.toString(Roots))
+				.append(", Events=").append(Arrays.toString(Events)).append("]");
+		return builder.toString();
 	}
 
 	public Root[] GetRoots() {

@@ -56,14 +56,14 @@ public class RoundInfo {
 
 	//return witnesses
 	public String[] Witnesses() {
-		String[] res = Message.Events.keySet().stream().map( x ->
+		String[] res = Message.Events.keySet().stream().filter( x ->
 			Message.Events.get(x).Witness
 		).toArray(String[]::new);
 		return res;
 	}
 
 	public String[] RoundEvents() {
-		String[] res = Message.Events.keySet().stream().map( x ->
+		String[] res = Message.Events.keySet().stream().filter( x ->
 			!(Message.Events.get(x).Consensus)
 		).toArray(String[]::new);
 		return res;
@@ -71,7 +71,7 @@ public class RoundInfo {
 
 	//return consensus events
 	public String[] ConsensusEvents() {
-		String[] res = Message.Events.keySet().stream().map( x ->
+		String[] res = Message.Events.keySet().stream().filter( x ->
 			Message.Events.get(x).Consensus
 		).toArray(String[]::new);
 		return res;
@@ -79,7 +79,7 @@ public class RoundInfo {
 
 	//return famous witnesses
 	public String[] FamousWitnesses() {
-		String[] res = Message.Events.keySet().stream().map( x -> {
+		String[] res = Message.Events.keySet().stream().filter( x -> {
 			RoundEvent e = Message.Events.get(x);
 			return (e.Witness && e.Famous == Trilean.TRUE);
 		}).toArray(String[]::new);
@@ -125,8 +125,38 @@ public class RoundInfo {
 		return queued;
 	}
 
-	public boolean equals(RoundInfo that) {
-		return this.queued == that.queued &&
-			this.Message.Events.equals(that.Message.Events);
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((Message == null) ? 0 : Message.hashCode());
+		result = prime * result + (queued ? 1231 : 1237);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		RoundInfo other = (RoundInfo) obj;
+		if (Message == null) {
+			if (other.Message != null)
+				return false;
+		} else if (!Message.equals(other.Message))
+			return false;
+		if (queued != other.queued)
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("RoundInfo [Message=").append(Message).append(", queued=").append(queued).append("]");
+		return builder.toString();
 	}
 }

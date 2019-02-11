@@ -26,7 +26,33 @@ public class WireBlockSignature {
 		return new WireBlockSignature (Index, Signature);
 	}
 
-	public boolean equals(WireBlockSignature that) {
-		return this.Index == that.Index && this.Signature.equals(that.Signature);
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		WireBlockSignature other = (WireBlockSignature) obj;
+		if (Index != other.Index)
+			return false;
+		if (Signature == null) {
+			if (other.Signature != null)
+				return false;
+		} else if (!Signature.equals(other.Signature))
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("WireBlockSignature [Index=");
+		builder.append(Index);
+		builder.append(", Signature=");
+		builder.append(Signature);
+		builder.append("]");
+		return builder.toString();
 	}
 }
