@@ -13,6 +13,15 @@ public class Utils {
 		return Arrays.equals(a, b);
 	}
 
+	public static boolean protoStringEquals(String a, String b) {
+		if ((a == null && b == null)
+			|| (a == null && b.isEmpty())
+			|| (b == null && a.isEmpty())) {
+			return true;
+		}
+		return a.equals(b);
+	}
+
 	public static boolean protoEquals(Object[] a, Object[] b) {
 		if ((a == null && b == null)
 			|| (a == null && b.length == 0)

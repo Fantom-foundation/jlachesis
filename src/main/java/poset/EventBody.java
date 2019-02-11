@@ -171,15 +171,15 @@ public class EventBody {
 		if (getClass() != obj.getClass())
 			return false;
 		EventBody other = (EventBody) obj;
-		if (!Arrays.equals(BlockSignatures, other.BlockSignatures))
+		if (!Utils.protoEquals(BlockSignatures, other.BlockSignatures))
 			return false;
-		if (!Arrays.equals(Creator, other.Creator))
+		if (!Utils.protoBytesEquals(Creator, other.Creator))
 			return false;
 		if (Index != other.Index)
 			return false;
-		if (!Arrays.equals(InternalTransactions, other.InternalTransactions))
+		if (!Utils.protoEquals(InternalTransactions, other.InternalTransactions))
 			return false;
-		if (!Arrays.equals(Parents, other.Parents))
+		if (!Utils.protoEquals(Parents, other.Parents))
 			return false;
 		if (!Arrays.deepEquals(Transactions, other.Transactions))
 			return false;

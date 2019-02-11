@@ -11,6 +11,8 @@ import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
 
 import autils.Appender;
+import autils.FileUtils;
+import autils.Logger;
 import common.RetResult;
 import common.RetResult3;
 import common.StoreErr;
@@ -24,18 +26,20 @@ import peers.Peers;
  *
  */
 public class BadgerStore implements Store {
-	peers.Peers participants;
-	InmemStore inmemStore;
-	DB db;
-	String path;
-	boolean needBoostrap;
-
 	public static final String participantPrefix = "participant";
 	public static final String rootSuffix        = "root";
 	public static final String roundPrefix       = "round";
 	public static final String topoPrefix        = "topo";
 	public static final String blockPrefix       = "block";
 	public static final String framePrefix       = "frame";
+
+	private static final Logger logger = Logger.getLogger(BadgerStore.class);
+
+	peers.Peers participants;
+	InmemStore inmemStore;
+	DB db;
+	String path;
+	boolean needBoostrap;
 
 	public BadgerStore() {
 		super();
@@ -100,21 +104,13 @@ public class BadgerStore implements Store {
 	//LoadBadgerStore creates a Store from an existing database
 	public static RetResult<BadgerStore> LoadBadgerStore(int cacheSize, String path) {
 		error err = null;
-		try {
-			File file = new File(path);
-		} catch (Exception e) {
-			err = error.Errorf(e.getMessage());
-		}
-		if (err != null) {
-			return new RetResult<BadgerStore>(null, err);
+		if (! FileUtils.fileExist(path)) {
+			return new RetResult<BadgerStore>(null, error.Errorf("file path not exist"));
 		}
 
 		DB db = DBMaker.fileDB(new File(path))
 	            .transactionEnable().closeOnJvmShutdown().fileChannelEnable()
 	            .make();
-//		if (err != null) {
-//			return new RetResult<>(null, err);
-//		}
 		BadgerStore store = new BadgerStore(db, path, true);
 
 		RetResult<peers.Peers> dbGetParticipantsCall = store.dbGetParticipants();
@@ -128,7 +124,7 @@ public class BadgerStore implements Store {
 
 		//read roots from db and put them in InmemStore
 		Map<String, Root> roots = new HashMap<String,Root>();
-		for (String p : store.participants.getByPubKey().keySet()) {
+		for (String p : participants.getByPubKey().keySet()) {
 			RetResult<Root> dbGetRoot = store.dbGetRoot(p);
 			Root root = dbGetRoot.result;
 			err = dbGetRoot.err;
@@ -558,38 +554,43 @@ public class BadgerStore implements Store {
 		String[] res = null;
 
 		long i = skip + 1;
-		byte[] key = participantEventKey(participant, i);
-		byte[] item = participantMap.get(key);
-		error errr = null;
-		if (item == null) {
-			errr = StoreErr.newStoreErr("Participant", StoreErrType.KeyNotFound, Arrays.toString(key));
-		}
-		else {
-			while (errr == null) {
-				res = Appender.append(res, new String(item));
-				i++;
-				key = participantEventKey(participant, i);
-				item = participantMap.get(key);
-				if (item == null) {
-					errr = StoreErr.newStoreErr("Pariticipant", StoreErrType.KeyNotFound, Arrays.toString(key));
-				}
+		error err = null;
+		byte[] key;
+		byte[] item;
+
+		while (err == null) {
+			key = participantEventKey(participant, i);
+			item = participantMap.get(key);
+
+			logger.field("i",  i).field("key", new String(key)).field("item", new String(item)).debug("dbParticipantEvents");
+
+			if (item == null) {
+				err = StoreErr.newStoreErr("Participant", StoreErrType.KeyNotFound, Arrays.toString(key));
+				break;
 			}
+			res = Appender.append(res, new String(item));
+			i++;
 		}
 
-		if (!isDBKeyNotFound(errr)) {
-			return new RetResult<String[]>(res, errr);
+		if (!isDBKeyNotFound(err)) {
+			return new RetResult<String[]>(res, err);
 		}
 
 		return new RetResult<String[]>(res, null);
 	}
 
 	public RetResult<String> dbParticipantEvent(String participant, long index) {
+		logger.field("participant", participant).field("index", index).debug("dbParticipantEvent()");
+
 		byte[] key = participantEventKey(participant, index);
 
 		byte[] data = participantMap.get(key);
+
+		logger.field("key", new String(key)).field("data", new String(data)).debug("dbParticipantEvent()");
+
 		error err = null;
 		if (data == null) {
-			err = StoreErr.newStoreErr("Pariticipant", StoreErrType.KeyNotFound, Arrays.toString(key));
+			err = StoreErr.newStoreErr("Participant", StoreErrType.KeyNotFound, Arrays.toString(key));
 			return new RetResult<>("", err);
 		}
 
@@ -608,7 +609,7 @@ public class BadgerStore implements Store {
 			byte[] key = participantRootKey(participant);
 //			fmt.Println("Setting root", participant, "->", key)
 			//insert [participant_root] => [root bytes]
-			participantMap.put(key, val);
+			eventMap.put(key, val);
 		}
 
 		db.commit();
@@ -616,12 +617,17 @@ public class BadgerStore implements Store {
 	}
 
 	public RetResult<Root> dbGetRoot(String participant) {
-		byte[] key = participantRootKey(participant);
+		logger.field("participant", participant).debug("dbGetRoot()");
 
-		byte[] rootBytes = participantMap.get(key);
+		byte[] key = participantRootKey(participant);
+		byte[] rootBytes = eventMap.get(key);
+
+		logger.field("key", new String(key))
+			.field("rootBytes", new String(rootBytes)).debug("dbGetRoot()");
+
 		error err = null;
 		if (rootBytes == null) {
-			err = StoreErr.newStoreErr("Pariticipant", StoreErrType.KeyNotFound, Arrays.toString(key));
+			err = StoreErr.newStoreErr("Participant", StoreErrType.KeyNotFound, Arrays.toString(key));
 			return new RetResult<>(new Root(), err);
 		}
 
@@ -679,11 +685,14 @@ public class BadgerStore implements Store {
 		for (byte[] key : participantMap.keySet()) {
 
 			byte[] value = participantMap.get(key);
+
+			logger.field("key", new String(key)).field("value", new String(value)).debug("dbGetParticipants()");
+
 			if (value == null) {
 				err = StoreErr.newStoreErr("Round", StoreErrType.KeyNotFound, Arrays.toString(key));
 			}
 
-			byte[] pubKey = Arrays.copyOfRange(value, prefix.length +1, value.length);
+			byte[] pubKey = Appender.sliceFromToEnd(key, prefix.length +1);
 
 			res.AddPeer(new Peer(new String(pubKey), ""));
 		}
@@ -696,13 +705,15 @@ public class BadgerStore implements Store {
 			Peer id = participants.getByPubKey().get(participant);
 			byte[] key = participantKey(participant);
 //			val = byte[](strconv.FormatInt(id.GetID(), 10));
-			byte[] val = String.valueOf(id.GetID()).getBytes();
+			byte[] value = String.valueOf(id.GetID()).getBytes();
+
+			logger.field("key", new String(key)).field("value", new String(value)).debug("dbSetParticipants()");
 
 			//insert [participant_participant] => [id]
-			participantMap.put(key, val);
+			participantMap.put(key, value);
 		}
 
-		db.commit();
+//		db.commit();
 		return null;
 	}
 

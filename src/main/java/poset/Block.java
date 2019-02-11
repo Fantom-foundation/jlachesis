@@ -286,21 +286,18 @@ public class Block {
 				return false;
 		} else if (!Body.equals(other.Body))
 			return false;
-		if (!Arrays.equals(FrameHash, other.FrameHash))
+		if (!Utils.protoBytesEquals(FrameHash, other.FrameHash))
 			return false;
-		if (!Arrays.equals(Hash, other.Hash))
+		if (!Utils.protoBytesEquals(Hash, other.Hash))
 			return false;
-		if (Hex == null) {
-			if (other.Hex != null)
-				return false;
-		} else if (!Hex.equals(other.Hex))
+		if (!Utils.protoStringEquals(Hex, other.Hex))
 			return false;
 		if (Signatures == null) {
 			if (other.Signatures != null)
 				return false;
 		} else if (!Signatures.equals(other.Signatures))
 			return false;
-		if (!Arrays.equals(StateHash, other.StateHash))
+		if (!Utils.protoBytesEquals(StateHash, other.StateHash))
 			return false;
 		return true;
 	}

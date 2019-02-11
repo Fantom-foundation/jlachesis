@@ -146,8 +146,4 @@ public class Root {
 	public Map<String,RootEvent> GetOthers() {
 		return Others;
 	}
-
-	public boolean EqualsMapStringRootEvent(Map<String,RootEvent> thisMap, Map<String,RootEvent> thatMap) {
-		return thisMap.equals(thatMap);
-	}
 }

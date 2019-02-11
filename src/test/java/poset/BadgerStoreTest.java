@@ -31,9 +31,9 @@ import peers.Peers.PubKeyPeers;
 public class BadgerStoreTest {
 	static File currentDirectory = new File(new File(".").getAbsolutePath());
 
-	private String getTestDir() {
-		return currentDirectory.getAbsolutePath() + "test_data";
-	}
+	private String testDir = currentDirectory.getAbsolutePath() + "test_data";
+
+	private String dbPath = Paths.get(testDir, "badger").toString();
 
 	private RResult2<BadgerStore, pub[]> initBadgerStore(int cacheSize) {
 		int n = 3;
@@ -48,27 +48,30 @@ public class BadgerStoreTest {
 				new pub(peer.GetID(), key, pubKey, peer.GetPubKeyHex()));
 		}
 
-		error err = FileUtils.delete(getTestDir());
-		assertNull("No error deleting folder", err);
+		recreateTestDir();
 
-		FileUtils.mkdirs(getTestDir(), FileUtils.MOD_777);
-		String dir = Paths.get(getTestDir(), "badger").toString();
-		err = FileUtils.mkdirs(dir, FileUtils.MOD_755).err;
-		assertNull("No error creating a file", err);
-
-		RetResult<BadgerStore> newBadgerStore = BadgerStore.NewBadgerStore(participants, cacheSize, dir);
+		RetResult<BadgerStore> newBadgerStore = BadgerStore.NewBadgerStore(participants, cacheSize, dbPath);
 		BadgerStore store = newBadgerStore.result;
-		err = newBadgerStore.err;
+		error err = newBadgerStore.err;
 		assertNull("No error creating badger store", err);
 
 		return new RResult2<>(store, participantPubs);
+	}
+
+	private void recreateTestDir() {
+		error err = FileUtils.delete(testDir);
+		assertNull("No error deleting folder", err);
+
+		FileUtils.mkdirs(testDir, FileUtils.MOD_777);
+		err = FileUtils.mkdirs(dbPath, FileUtils.MOD_755).err;
+		assertNull("No error creating a file", err);
 	}
 
 	private void removeBadgerStore(BadgerStore store) {
 		error err = store.Close();
 		assertNull("No error", err);
 
-		err = FileUtils.delete(getTestDir());
+		err = FileUtils.delete(testDir);
 		assertNull("No error deleting folder", err);
 	}
 
@@ -80,24 +83,16 @@ public class BadgerStoreTest {
 		});
 
 		int cacheSize = 1;
-		RetResult<BadgerStore> newStore = BadgerStore.NewBadgerStore(participants, cacheSize, dir);
+		RetResult<BadgerStore> newStore = BadgerStore.NewBadgerStore(participants, cacheSize, dbPath);
 		BadgerStore store = newStore.result;
 		error err = newStore.err;
 		assertNull("No error", err);
 		return store;
 	}
 
-	//@Test
+	@Test
 	public void TestNewBadgerStore() {
-		error err = FileUtils.delete(getTestDir());
-		assertNull("No error deleting folder", err);
-
-		FileUtils.mkdirs(getTestDir(), FileUtils.MOD_777);
-		String dir = Paths.get(getTestDir(), "badger").toString();
-		err = FileUtils.mkdirs(dir, FileUtils.MOD_755).err;
-		assertNull("No error creating a file", err);
-
-		String dbPath = dir;
+		recreateTestDir();
 		BadgerStore store = createTestDB(dbPath);
 
 		assertEquals("Store path should mathc", store.path, dbPath);
@@ -107,64 +102,48 @@ public class BadgerStoreTest {
 		Map<String, Root> inmemRoots = store.inmemStore.rootsByParticipant;
 		assertEquals("DB root should have 3 items", 3, inmemRoots.size());
 
+		error err;
 		for (String participant : inmemRoots.keySet()) {
 			Root root = inmemRoots.get(participant);
 			RetResult<Root> dbGetRoot = store.dbGetRoot(participant);
 			Root dbRoot = dbGetRoot.result;
 			err = dbGetRoot.err;
-			assertNull(String.format("No error when retrieving DB root for participant %s: %s", participant), err);
+			assertNull(String.format("No error when retrieving DB root for participant %s", participant), err);
 			assertEquals(String.format("%s DB root should match", participant), root, dbRoot);
 		}
 
-		err = store.Close();
-		assertNull("No error", err);
-
-		FileUtils.delete(store.path);
+		removeBadgerStore(store);
 	}
 
-	//@Test
+	@Test
 	public void TestLoadBadgerStore() {
-
-		error err = FileUtils.delete(getTestDir());
-		assertNull("No error deleting folder", err);
-
-		FileUtils.mkdirs(getTestDir(), FileUtils.MOD_777);
-		String dir = Paths.get(getTestDir(), "badger").toString();
-		err = FileUtils.mkdirs(dir, FileUtils.MOD_755).err;
-		assertNull("No error creating a file", err);
-
-		String dbPath = "test_data/badger";
+		recreateTestDir();
 		BadgerStore store = createTestDB(dbPath);
-
-		//Create the test db
-		BadgerStore tempStore = createTestDB(dbPath);
-
-		tempStore.Close();
-
+		store.Close();
 		int cacheSize = 100;
-		RetResult<BadgerStore> loadBadgerStore = BadgerStore.LoadBadgerStore(cacheSize, tempStore.path);
-		BadgerStore badgerStore = loadBadgerStore.result;
-		err = loadBadgerStore.err;
+		RetResult<BadgerStore> loadBadgerStore = BadgerStore.LoadBadgerStore(cacheSize, store.path);
+		store = loadBadgerStore.result;
+		error err = loadBadgerStore.err;
 		assertNull("No error", err);
 
-		RetResult<Peers> dbGetParticipants = badgerStore.dbGetParticipants();
+		RetResult<Peers> dbGetParticipants = store.dbGetParticipants();
 		Peers dbParticipants = dbGetParticipants.result;
 		err = dbGetParticipants.err;
 		assertNull("No error", err);
 
-		assertEquals("store.participants  length should be 3", 3, badgerStore.participants.Len());
+		assertEquals("store.participants  length should be 3", 3, store.participants.Len());
 
-		assertEquals("store.participants length should match", dbParticipants.Len(), badgerStore.participants.Len());
+		assertEquals("store.participants length should match", dbParticipants.Len(), store.participants.Len());
 
 		PubKeyPeers byPubKey = dbParticipants.getByPubKey();
 		for (String dbP : byPubKey.keySet()) {
 			Peer dbPeer = byPubKey.get(dbP);
-			Peer peer = badgerStore.participants.ByPubKey(dbP);
+			Peer peer = store.participants.ByPubKey(dbP);
 			assertNotNull(String.format("BadgerStore participants should contain %s", dbP), peer);
-			assertEquals(String.format("participant %s ID should be %d, not %d", dbP), dbPeer.GetID(), peer.GetID());
+			assertEquals(String.format("participant %s ID should match", dbP), dbPeer.GetID(), peer.GetID());
 		}
 
-		FileUtils.delete(tempStore.path);
+		removeBadgerStore(store);
 	}
 
 	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -271,7 +250,7 @@ public class BadgerStoreTest {
 		removeBadgerStore(store);
 	}
 
-	//@Test
+	@Test
 	public void TestDBRoundMethods() {
 		int cacheSize = 1; // Inmem_store's caches accept positive cacheSize only
 		RResult2<BadgerStore, pub[]> initBadgerStore = initBadgerStore(cacheSize);
@@ -312,7 +291,7 @@ public class BadgerStoreTest {
 		removeBadgerStore(store);
 	}
 
-	//@Test
+	@Test
 	public void TestDBParticipantMethods() {
 		int cacheSize = 1; // Inmem_store's caches accept positive cacheSize only
 		BadgerStore store = initBadgerStore(cacheSize).result1;
@@ -330,13 +309,13 @@ public class BadgerStoreTest {
 			Peer peer = byPubKey.get(p);
 			Peer dbPeer = participantsFromDB.ByPubKey(p);
 			assertNotNull(String.format("DB contains participant %s", p), dbPeer);
-			assertEquals(String.format("DB participant %s should have ID %d, not %d", p), peer.GetID(), dbPeer.GetID());
+			assertEquals(String.format("DB participant %s should have matching ID", p), peer.GetID(), dbPeer.GetID());
 		}
 
 		removeBadgerStore(store);
 	}
 
-	//@Test
+	@Test
 	public void TestDBBlockMethods() {
 		int cacheSize = 1; // Inmem_store's caches accept positive cacheSize only
 		RResult2<BadgerStore, pub[]> initBadgerStore = initBadgerStore(cacheSize);
@@ -396,7 +375,7 @@ public class BadgerStoreTest {
 		removeBadgerStore(store);
 	}
 
-	//@Test
+	@Test
 	public void TestDBFrameMethods() {
 		int cacheSize = 1; // Inmem_store's caches accept positive cacheSize only
 		RResult2<BadgerStore, pub[]> initBadgerStoreCall = initBadgerStore(cacheSize);
@@ -436,7 +415,7 @@ public class BadgerStoreTest {
 	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	//Check that the wrapper methods work
 	//These methods use the inmemStore as a cache on top of the DB
-	//@Test
+//	@Test
 	public void TestBadgerEvents() {
 		//Insert more events than can fit in cache to test retrieving from db.
 		int cacheSize = 10;
@@ -570,7 +549,7 @@ public class BadgerStoreTest {
 		removeBadgerStore(store);
 	}
 
-	//@Test
+	@Test
 	public void TestBadgerBlocks() {
 		int cacheSize = 1; // Inmem_store's caches accept positive cacheSize only
 		RResult2<BadgerStore, pub[]> initBadgerStore = initBadgerStore(cacheSize);
@@ -628,7 +607,7 @@ public class BadgerStoreTest {
 		removeBadgerStore(store);
 	}
 
-	//@Test
+	@Test
 	public void TestBadgerFrames() {
 		int cacheSize = 1; // Inmem_store's caches accept positive cacheSize only
 		RResult2<BadgerStore, pub[]> initBadgerStore = initBadgerStore(cacheSize);

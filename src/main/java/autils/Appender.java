@@ -161,4 +161,13 @@ public class Appender {
 		T[] res = Arrays.copyOfRange(a, low, a.length);
 		return res;
 	}
+
+	public static byte[] sliceFromToEnd(byte[] a, int low) {
+		if (a == null) {
+			return null;
+		}
+
+		byte[] res = Arrays.copyOfRange(a, low, a.length);
+		return res;
+	}
 }
