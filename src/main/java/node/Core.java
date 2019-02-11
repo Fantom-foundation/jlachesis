@@ -289,7 +289,7 @@ public class Core {
 
 	// returns events that c knows about and are not in 'known'
 	public RetResult<poset.Event[]> EventDiff(Map<Long,Long> known) {
-		poset.Event[] unknown = null;
+		poset.Event[] unknown = new poset.Event[0];
 		// known represents the index of the last event known for every participant
 		// compare this to our view of events and fill unknown with events that we know of
 		// and the other doesn't
@@ -381,6 +381,8 @@ public class Core {
 
 	public error FastForward(String peer, poset.Block block, poset.Frame frame) {
 
+		logger.field("peer", peer).debug("FastForward()");
+
 		// Check Block Signatures
 		error err = poset.CheckBlock(block);
 		if (err != null) {
@@ -391,12 +393,21 @@ public class Core {
 		RetResult<byte[]> hashCall = frame.Hash();
 		byte[] frameHash = hashCall.result;
 		err = hashCall.err;
+
+		logger.field("err1", err).debug("FastForward()");
+
 		if (err != null) {
 			return err;
 		}
+
 		if (!Utils.bytesEquals(block.GetFrameHash(), frameHash)) {
+
+			logger.field("err2", err).debug("FastForward()");
+
 			return error.Errorf("invalid Frame Hash");
 		}
+
+		logger.debug("FastForward() here");
 
 		err = poset.Reset(block, frame);
 		if (err != null) {

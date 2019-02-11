@@ -15,6 +15,12 @@ public class RoundInfo {
 		queued = false;
 	}
 
+	public RoundInfo(RoundInfoMessage message) {
+		super();
+		Message = message;
+		queued = false;
+	}
+
 	public void AddEvent(String x, boolean witness) {
 		RoundEvent re = Message.Events.get(x);
 		if (re == null) {

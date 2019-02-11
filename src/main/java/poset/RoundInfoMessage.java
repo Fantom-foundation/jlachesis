@@ -14,6 +14,13 @@ public class RoundInfoMessage {
 		Events = new HashMap<String,RoundEvent>();
 	}
 
+	public RoundInfoMessage(Map<String, RoundEvent> events) {
+		super();
+		Events = events;
+	}
+
+
+
 	public IProto<RoundInfoMessage, poset.proto.RoundInfoMessage> marshaller() {
 		return new IProto<RoundInfoMessage, poset.proto.RoundInfoMessage>() {
 			@Override

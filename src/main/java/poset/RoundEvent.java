@@ -17,6 +17,15 @@ public class RoundEvent {
 		Famous = Trilean.UNDEFINED;
 	}
 
+	public RoundEvent(boolean witness, Trilean famous) {
+		super();
+		Consensus = false;
+		Witness = witness;
+		Famous = famous;
+	}
+
+
+
 	public RoundEvent(boolean witness) {
 		this.Witness= witness;
 		// TODO: just add these inits

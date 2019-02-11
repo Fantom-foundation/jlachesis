@@ -13,6 +13,7 @@ import java.util.stream.IntStream;
 import org.apache.log4j.Level;
 import org.jcsp.lang.One2OneChannel;
 
+import autils.Appender;
 import autils.Logger;
 import common.LRUCache;
 import common.RetResult;
@@ -110,6 +111,8 @@ public class Poset {
 		this.logger=            logger;
 		this.superMajority=     superMajority;
 		this.trustCount=        trustCount;
+
+		this.UndeterminedEvents = new ArrayList<String>();
 
 		participants.OnNewPeer(
 			new Listener() {
@@ -403,14 +406,13 @@ public class Poset {
 	}
 
 	public RetResult<Long>  round2(String x) {
-
 		/*
 			x is the Root
 			Use Root.SelfParent.Round
 		*/
 		Map<String, Root> rootsBySelfParent = Store.RootsBySelfParent().result;
 		Root r = rootsBySelfParent.get(x);
-		if  (r == null) {
+		if  (r != null) {
 			return new RetResult<Long>(r.SelfParent.Round, null);
 		}
 
@@ -552,7 +554,7 @@ public class Poset {
 //		}
 
 		// check wp
-		if (ex.Message.WitnessProof.length >= superMajority) {
+		if (ex.Message.WitnessProof != null && ex.Message.WitnessProof.length >= superMajority) {
 			int count = 0;
 
 			for (String root2 : ex.Message.WitnessProof) {
@@ -1077,18 +1079,27 @@ public class Poset {
 			return error.Errorf(String.format("SetEvent: %s", err));
 		}
 
+		logger.field("UndeterminedEvents", UndeterminedEvents).debug("adding hex");
+
+		if (UndeterminedEvents == null) {
+			UndeterminedEvents = new ArrayList<>();
+		}
 		UndeterminedEvents.add(event.Hex());
 
 		if (event.IsLoaded()) {
 			PendingLoadedEvents++;
 		}
 
-		ArrayList<BlockSignature> blockSignatures = new ArrayList<BlockSignature>();
-		for (BlockSignature bs: event.BlockSignatures()) {
-			blockSignatures.add(new BlockSignature(bs));
+		if (SigPool == null) {
+			SigPool = new ArrayList<>();
 		}
-
-		SigPool.addAll(blockSignatures);
+		if (event.BlockSignatures() != null) {
+			ArrayList<BlockSignature> blockSignatures = new ArrayList<BlockSignature>();
+			for (BlockSignature bs: event.BlockSignatures()) {
+				blockSignatures.add(new BlockSignature(bs));
+			}
+			SigPool.addAll(blockSignatures);
+		}
 
 		return null;
 	}
@@ -1152,6 +1163,9 @@ public class Poset {
 					(LastConsensusRound < 0 ||
 						roundNumber >= LastConsensusRound)) {
 
+					if (PendingRounds == null) {
+						PendingRounds = new ArrayList<>();
+					}
 					PendingRounds.add(new pendingRound (roundNumber, false));
 					roundInfo.queued = true;
 				}
@@ -1674,7 +1688,6 @@ public class Poset {
 
 		}
 
-
 		PendingRounds = PendingRounds.subList(processedIndex, PendingRounds.size());
 
 		return null;
@@ -1930,6 +1943,7 @@ public class Poset {
 
 	//Reset clears the Poset and resets it from a new base.
 	public error Reset(Block block, Frame frame) {
+		logger.field("block", block).debug("Reset()");
 
 		//Clear all state
 		LastConsensusRound = -1;
@@ -2286,5 +2300,23 @@ public class Poset {
 				" peer=" + Participants.ById(pid_id).GetNetAddr() +
 				" pubKeyHex=" + Participants.ById(pid_id).GetPubKeyHex());
 		}
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Poset [Participants=").append(Participants).append(", Store=").append(Store)
+				.append(", UndeterminedEvents=").append(UndeterminedEvents).append(", PendingRounds=")
+				.append(PendingRounds).append(", LastConsensusRound=").append(LastConsensusRound)
+				.append(", FirstConsensusRound=").append(FirstConsensusRound).append(", AnchorBlock=")
+				.append(AnchorBlock).append(", LastCommitedRoundEvents=").append(LastCommitedRoundEvents)
+				.append(", SigPool=").append(SigPool).append(", ConsensusTransactions=").append(ConsensusTransactions)
+				.append(", PendingLoadedEvents=").append(PendingLoadedEvents).append(", commitCh=").append(commitCh)
+				.append(", topologicalIndex=").append(topologicalIndex).append(", superMajority=").append(superMajority)
+				.append(", trustCount=").append(trustCount).append(", core=").append(core).append(", ancestorCache=")
+				.append(ancestorCache).append(", selfAncestorCache=").append(selfAncestorCache)
+				.append(", stronglySeeCache=").append(stronglySeeCache).append(", roundCache=").append(roundCache)
+				.append(", timestampCache=").append(timestampCache).append(", logger=").append(logger).append("]");
+		return builder.toString();
 	}
 }

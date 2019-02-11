@@ -12,6 +12,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import autils.Appender;
+import autils.Logger;
 import common.Hash32;
 import common.RetResult;
 import common.RetResult3;
@@ -36,7 +37,9 @@ public class CoreTest {
 	Map<String,String> index;
 	Map<Long, KeyPair> participantKeys;
 
-//	@Test
+	private static Logger logger = Logger.getLogger(CoreTest.class);
+
+	//@Test
 	public void TestEventDiff() {
 		initCores(3);
 
@@ -302,7 +305,7 @@ public class CoreTest {
 				participants,
 				new InmemStore(participants, cacheSize),
 				null,
-				common.TestUtils.NewTestLogger(this.getClass()));
+				logger );
 
 			String selfParent = String.format("Root%d", peer.GetID());
 
@@ -803,7 +806,7 @@ public class CoreTest {
 		long syncLimit = 10L;
 
 		boolean overSyncLimit = cores[0].OverSyncLimit(known, syncLimit);
-		assertTrue(String.format("OverSyncLimit(%v, %v) should return true", known, syncLimit), overSyncLimit);
+		assertTrue(String.format("OverSyncLimit(%s, %d) should return true", known, syncLimit), overSyncLimit);
 
 		// negative
 		known = new HashMap<Long,Long>();
