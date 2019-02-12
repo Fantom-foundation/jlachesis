@@ -48,14 +48,14 @@ public class ParticipantEventsCache {
 		long id = participantID.result;
 		error err= participantID.err;
 		if (err != null) {
-			return new RetResult<String[]>(new String[]{}, err);
+			return new RetResult<String[]>(null, err);
 		}
 
 		RetResult<Object[]> get = rim.Get(id, skipIndex);
 		Object[] pe = get.result;
 		err = get.err;
 		if (err != null) {
-			return new RetResult<String[]>(new String[]{}, err);
+			return new RetResult<String[]>(null, err);
 		}
 
 		String[] res = new String[pe.length];

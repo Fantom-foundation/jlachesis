@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.log4j.Level;
 import org.jcsp.lang.CSTimer;
@@ -71,8 +72,9 @@ public class GrpcAppProxy implements AppProxy, LachesisNodeServer {
 		this.timeout = timeout;
 		this.new_clients = Channel.one2one(); // make(chan ClientStream, 100);
 		// TODO: make chans buffered?
-		this.askings = new HashMap<UUID, One2OneChannel<ToServer.Answer>>(); // make(map[UUID]chan
-																				// *internal.ToServer.Answer),
+		this.askings = new HashMap<UUID, One2OneChannel<ToServer.Answer>>(); // make(map[UUID]chan *internal.ToServer.Answer),
+		this.askings_sync = new ReentrantReadWriteLock();
+
 		this.event4server = Channel.one2one(); // make(chan []byte),
 		this.event4clients = Channel.one2one(); // make(chan *internal.ToClient),
 

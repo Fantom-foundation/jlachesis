@@ -30,7 +30,7 @@ public class RollingIndex {
 
 		Object[] res = new Object[] {};
 
-		if (skipIndex <0 || skipIndex > lastIndex) {
+		if (skipIndex > lastIndex) {
 			return new RetResult<Object[]>(res, null);
 		}
 

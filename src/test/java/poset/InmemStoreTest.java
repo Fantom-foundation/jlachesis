@@ -45,7 +45,7 @@ public class InmemStoreTest {
 		this.participants = participantPubs;
 	}
 
-	//@Test
+	@Test
 	public void TestInmemEvents() {
 		int cacheSize = 100;
 		int testSize = 15;
@@ -218,7 +218,7 @@ public class InmemStoreTest {
 		assertEquals("Validator1 block signatures differ", sig1.Signature, val1Sig);
 
 		String val2Sig = storedBlock.GetSignatures().get(participants[1].hex);
-		assertNotNull("Validator1 signature is stored in block", val2Sig);
-		assertEquals("Validator1 block signatures differ", sig2.Signature, val2Sig);
+		assertNotNull("Validator2 signature is stored in block", val2Sig);
+		assertEquals("Validator2 block signatures differ", sig2.Signature, val2Sig);
 	}
 }
