@@ -412,7 +412,7 @@ public class BadgerStoreTest {
 	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	//Check that the wrapper methods work
 	//These methods use the inmemStore as a cache on top of the DB
-//	@Test
+	@Test
 	public void TestBadgerEvents() {
 		//Insert more events than can fit in cache to test retrieving from db.
 		int cacheSize = 10;
@@ -451,8 +451,8 @@ public class BadgerStoreTest {
 				error err = getEvent.err;
 				assertNull("No error", err);
 
-				assertEquals(String.format("events[%s][%d].Body should be %#v, not %#v", p, k), ev.Message.Body, rev.Message.Body);
-				assertEquals(String.format("events[%s][%d].Signature should be %#v, not %#v", p, k), ev.Message.Signature, rev.Message.Signature);
+				assertEquals(String.format("events[%s][%d].Body should match", p, k), ev.Message.Body, rev.Message.Body);
+				assertEquals(String.format("events[%s][%d].Signature should match", p, k), ev.Message.Signature, rev.Message.Signature);
 			}
 		}
 
@@ -463,12 +463,12 @@ public class BadgerStoreTest {
 			String[] pEvents = pEventsCall.result;
 			error err = pEventsCall.err;
 			assertNull("No error", err);
-			assertEquals(String.format("%s should have %d events, not %d", p.hex), testSize, pEvents.length);
+			assertEquals(String.format("%s should have match length of events", p.hex), testSize, pEvents.length);
 
 			Event[] expectedEvents = Appender.sliceFromToEnd(events.get(p.hex), skipIndex+1);
 			for (int k = 0; k < expectedEvents.length; ++k) {
 				Event e = expectedEvents[k];
-				assertEquals(String.format("ParticipantEvents[%s][%d] should be %s, not %s",
+				assertEquals(String.format("ParticipantEvents[%s][%d] should be match",
 						p.hex, k), e.Hex(), pEvents[k]);
 			}
 		}
@@ -482,7 +482,7 @@ public class BadgerStoreTest {
 
 			Event[] evs = events.get(p.hex);
 			Event expectedLast = evs[evs.length-1];
-			assertEquals(String.format("%s last should be %s, not %s", p.hex), expectedLast.Hex(), last);
+			assertEquals(String.format("%s last should match", p.hex), expectedLast.Hex(), last);
 		}
 
 		HashMap<Long, Long> expectedKnown = new HashMap<Long,Long>();
