@@ -656,4 +656,17 @@ public class Core {
 		return poset.Store.LastBlockIndex();
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Core [id=").append(id).append(", key=").append(key)
+				.append(", hexID=").append(hexID).append(", poset=").append(poset.hashCode())
+				.append(", inDegrees=").append(inDegrees).append(", participants=").append(participants)
+				.append(", head=").append(head).append(", Seq=").append(Seq).append(", transactionPool=")
+				.append(Arrays.toString(transactionPool)).append(", internalTransactionPool=")
+				.append(Arrays.toString(internalTransactionPool)).append(", blockSignaturePool=")
+				.append(Arrays.toString(blockSignaturePool)).append(", logger=").append(logger)
+				.append(", maxTransactionsInEvent=").append(maxTransactionsInEvent).append("]");
+		return builder.toString();
+	}
 }

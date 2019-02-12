@@ -148,7 +148,7 @@ public class BadgerStoreTest {
 
 	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	//Call DB methods directly
-	//@Test
+	@Test
 	public void TestDBEventMethods() {
 		int cacheSize = 1; // Inmem_store's caches accept positive cacheSize only
 		int testSize = 100;
@@ -194,8 +194,8 @@ public class BadgerStoreTest {
 				err = dbGetEvent.err;
 				assertNull("No error", err);
 
-				assertEquals(String.format("events[%s][%d].Body should be %#v, not %#v", p, k), ev.Message.Body, rev.Message.Body);
-				assertEquals(String.format("events[%s][%d].Signature should be %#v, not %#v", p, k), ev.Message.Signature, rev.Message.Signature);
+				assertEquals(String.format("events[%s][%d].Body should match", p, k), ev.Message.Body, rev.Message.Body);
+				assertEquals(String.format("events[%s][%d].Signature should match", p, k), ev.Message.Signature, rev.Message.Signature);
 
 				RetResult<Boolean> verify = rev.Verify();
 				boolean ver = verify.result;
@@ -210,7 +210,6 @@ public class BadgerStoreTest {
 		Event[] dbTopologicalEvents = dbTopologicalEventsCall.result;
 		err = dbTopologicalEventsCall.err;
 		assertNull("No error", err);
-
 		assertEquals("Length of dbTopologicalEvents should match", topologicalEvents.length, dbTopologicalEvents.length);
 
 		for (int i = 0; i< dbTopologicalEvents.length; ++i) {
@@ -218,10 +217,8 @@ public class BadgerStoreTest {
 			Event te = topologicalEvents[i];
 			assertEquals(String.format("dbTopologicalEvents[%d].Hex should match", i), te.Hex(), dte.Hex());
 			assertEquals(String.format("dbTopologicalEvents[%d].Body should match", i), te.Message.Body, dte.Message.Body);
-
 			assertEquals(String.format("dbTopologicalEvents[%d].Signature should match", i),
 						te.Message.Signature, dte.Message.Signature);
-
 
 			RetResult<Boolean> verify = dte.Verify();
 			boolean ver = verify.result;
@@ -238,7 +235,7 @@ public class BadgerStoreTest {
 			err = dbParticipantEventsCall.err;
 			assertNull("No error", err);
 
-			assertEquals(String.format("%s should have %d events, not %d", p.hex), testSize, pEvents.length);
+			assertEquals(String.format("%s should have matching number events", p.hex), testSize, pEvents.length);
 
 			Event[] expectedEvents = Appender.sliceFromToEnd(events.get(p.hex), skipIndex+1);
 			for (int k =0; k < expectedEvents.length; ++k) {

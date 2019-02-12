@@ -2313,7 +2313,7 @@ public class Poset {
 				.append(", SigPool=").append(SigPool).append(", ConsensusTransactions=").append(ConsensusTransactions)
 				.append(", PendingLoadedEvents=").append(PendingLoadedEvents).append(", commitCh=").append(commitCh)
 				.append(", topologicalIndex=").append(topologicalIndex).append(", superMajority=").append(superMajority)
-				.append(", trustCount=").append(trustCount).append(", core=").append(core).append(", ancestorCache=")
+				.append(", trustCount=").append(trustCount).append(", core=").append(core.hashCode()).append(", ancestorCache=")
 				.append(ancestorCache).append(", selfAncestorCache=").append(selfAncestorCache)
 				.append(", stronglySeeCache=").append(stronglySeeCache).append(", roundCache=").append(roundCache)
 				.append(", timestampCache=").append(timestampCache).append(", logger=").append(logger).append("]");

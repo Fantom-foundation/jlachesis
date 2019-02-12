@@ -71,25 +71,21 @@ public class BadgerStore implements Store {
 		initDBMaps();
 	}
 
-	//NewBadgerStore creates a brand new Store with a new database
+	/**
+	 * NewBadgerStore creates a brand new Store with a new database
+	 * @param participants
+	 * @param cacheSize
+	 * @param path
+	 * @return
+	 */
 	public static RetResult<BadgerStore> NewBadgerStore(peers.Peers participants, int cacheSize, String path) {
-
 		InmemStore inmemStore = new InmemStore(participants, cacheSize);
-
 	    DB db = DBMaker.fileDB(new File(path))
 	            .transactionEnable().closeOnJvmShutdown().fileChannelEnable()
 	            .make();
-
-		error err;
-		// TODO
-//		DB handle, err := badger.Open(opts);
-//		if (err != null) {
-//			return new RetResult<BadgerStore>(null, err);
-//		}
-
 		BadgerStore store = new BadgerStore(participants, inmemStore, db, path);
 
-		err = store.dbSetParticipants(participants);
+		error err = store.dbSetParticipants(participants);
 		if  (err != null) {
 			return new RetResult<BadgerStore>(null, err);
 		}
@@ -101,7 +97,12 @@ public class BadgerStore implements Store {
 		return new RetResult<>(store, null);
 	}
 
-	//LoadBadgerStore creates a Store from an existing database
+	/**
+	 * LoadBadgerStore creates a Store from an existing database
+	 * @param cacheSize
+	 * @param path
+	 * @return
+	 */
 	public static RetResult<BadgerStore> LoadBadgerStore(int cacheSize, String path) {
 		error err = null;
 		if (! FileUtils.fileExist(path)) {
@@ -131,7 +132,7 @@ public class BadgerStore implements Store {
 			if (err != null) {
 				return new RetResult<BadgerStore>(null, err);
 			}
-			roots.put(p,  root);
+			roots.put(p, root);
 		}
 		err = inmemStore.Reset(roots);
 		if (err != null) {
@@ -437,6 +438,8 @@ public class BadgerStore implements Store {
 
 	private ConcurrentNavigableMap<byte[],byte[]> eventMap;
 	private ConcurrentNavigableMap<byte[],byte[]> participantMap;
+	private ConcurrentNavigableMap<byte[],byte[]> participantEventMap;
+	private ConcurrentNavigableMap<byte[],byte[]> participantRootMap;
 	private ConcurrentNavigableMap<byte[],byte[]> roundMap;
 	private ConcurrentNavigableMap<byte[],byte[]> blockMap;
 	private ConcurrentNavigableMap<byte[],byte[]> frameMap;
@@ -444,67 +447,67 @@ public class BadgerStore implements Store {
 	private void initDBMaps() {
 		eventMap = db.treeMap("events_map", Serializer.BYTE_ARRAY, Serializer.BYTE_ARRAY).createOrOpen();
 		participantMap = db.treeMap("participants_map", Serializer.BYTE_ARRAY, Serializer.BYTE_ARRAY).createOrOpen();
+		participantEventMap = db.treeMap("participants_event", Serializer.BYTE_ARRAY, Serializer.BYTE_ARRAY).createOrOpen();
+		participantRootMap = db.treeMap("participants_root", Serializer.BYTE_ARRAY, Serializer.BYTE_ARRAY).createOrOpen();
 		roundMap = db.treeMap("rounds_map", Serializer.BYTE_ARRAY, Serializer.BYTE_ARRAY).createOrOpen();
 		blockMap = db.treeMap("blocks_map", Serializer.BYTE_ARRAY, Serializer.BYTE_ARRAY).createOrOpen();
 		frameMap = db.treeMap("frames_map", Serializer.BYTE_ARRAY, Serializer.BYTE_ARRAY).createOrOpen();
 	}
 
-	private RetResult<String> getEvent(String eventKey) {
+	private RetResult<byte[]> getEvent(String eventKey) {
 		byte[] v= eventMap.get(eventKey.getBytes());
+		//logger.field("eventKey", eventKey).field("v.length", v.length).debug("getEvent()");
 		if (v == null) {
 			return new RetResult<>(null, error.Errorf(String.format("Not found key : %s", eventKey)));
 		}
-		return new RetResult<>(new String(v), null);
+		return new RetResult<>(v, null);
 	}
 
 	public RetResult<Event> dbGetEvent(String key) {
-		byte[] eventBytes;
-
-		RetResult<String> getEvent = getEvent(key);
+		RetResult<byte[]> getEvent = getEvent(key);
 		error err = getEvent.err;
-		eventBytes = getEvent.result.getBytes();
+		byte[] eventBytes = getEvent.result;
+		//logger.field("key", key).field("v", new String(eventBytes)).debug("dbGetEvent()");
 
 		if (err != null) {
-			return new RetResult<Event>(new Event(), err);
+			return new RetResult<Event>(null, err);
 		}
 
 		Event event = new Event();
 		err = event.marshaller().protoUnmarshal(eventBytes);
 		if  (err != null) {
-			return new RetResult<Event>(new Event(), err);
+			return new RetResult<Event>(null, err);
 		}
 
 		return new RetResult<Event>(event, null);
 	}
 
 	public error dbSetEvents(Event[] events) {
-
 		// TODO why tx.Discard? how to convert.
 //		tx = db.NewTransaction(true);
 //		defer tx.Discard();
 		for (Event event : events) {
 			String eventHex = event.Hex();
+			//logger.field("eventHex", eventHex).debug("dbSetEvents()");
+			byte[] eventBytes = eventHex.getBytes();
+
 			RetResult<byte[]> eventProto = event.marshaller().protoMarshal();
 			byte[] val = eventProto.result;
 			error err = eventProto.err;
 			if (err != null) {
 				return err;
 			}
-			//check if it already exists
-			byte[] v = eventMap.get(eventHex.getBytes());
-			boolean existent =  v != null;
 
 			//insert [event hash] => [event bytes]
-			eventMap.put(eventHex.getBytes(), val);
-
-			if (existent) {
-				//insert [topo_index] => [event hash]
-				byte[] topoKey = topologicalEventKey(event.Message.TopologicalIndex);
-				eventMap.put(topoKey, eventHex.getBytes());
-				//insert [participant_index] => [event hash]
-				byte[] peKey = participantEventKey(event.Creator(), event.Index());
-				eventMap.put(peKey, eventHex.getBytes());
-			}
+			eventMap.put(eventBytes, val);
+			//insert [topo_index] => [event hash]
+			byte[] topoKey = topologicalEventKey(event.Message.TopologicalIndex);
+			//logger.field("topoKey", new String(topoKey)).debug("dbSetEvents()");
+			eventMap.put(topoKey, eventBytes);
+			//insert [participant_index] => [event hash]
+			byte[] peKey = participantEventKey(event.Creator(), event.Index());
+			//logger.field("topoKey", new String(peKey)).debug("dbSetEvents()");
+			eventMap.put(peKey, eventBytes);
 		}
 
 		db.commit();
@@ -516,15 +519,21 @@ public class BadgerStore implements Store {
 		long t = 0;
 
 		error err = null;
-		byte[] key = topologicalEventKey(t);
-		byte[] item = eventMap.get(key);
-		error errr = null;
-		while (errr == null) {
-			byte[] evKey = item;
-			byte[] eventBytes = eventMap.get(evKey);
+		byte[] key;
+		byte[] item;
+		while (err == null) {
+			key = topologicalEventKey(t);
+			item = eventMap.get(key);
 
+			//logger.field("key", new String(key)).field("item", Arrays.toString(item)).field("t",t).debug("dbTopologicalEvents");
+			if (item == null) {
+				err = StoreErr.newStoreErr("Event", StoreErrType.KeyNotFound, Arrays.toString(item));
+				break;
+			}
+			byte[] eventBytes = eventMap.get(item);
+			//logger.field("eventBytes", eventBytes).debug("dbTopologicalEvents");
 			if (eventBytes == null) {
-				err = StoreErr.newStoreErr("Event", StoreErrType.KeyNotFound, Arrays.toString(evKey));
+				err = StoreErr.newStoreErr("Event", StoreErrType.KeyNotFound, Arrays.toString(item));
 				break;
 			}
 
@@ -536,17 +545,14 @@ public class BadgerStore implements Store {
 			res = Appender.append(res, event);
 
 			t++;
-			key = topologicalEventKey(t);
-			item = eventMap.get(key);
-			if (item == null) {
-				errr = StoreErr.newStoreErr("Event", StoreErrType.KeyNotFound, Arrays.toString(key));
-			}
 		}
 
-		if (!isDBKeyNotFound(errr)) {
-			err = errr;
+		if (isDBKeyNotFound(err)) {
+			//logger.field("err", err).debug("DBKeyNotFound");
+			return new RetResult<Event[]>(res, null);
 		}
 
+		//logger.field("res", res).field("err", err).debug("dbTopologicalEvents()");
 		return new RetResult<Event[]>(res, err);
 	}
 
@@ -560,10 +566,9 @@ public class BadgerStore implements Store {
 
 		while (err == null) {
 			key = participantEventKey(participant, i);
-			item = participantMap.get(key);
+			item = eventMap.get(key);
 
-			logger.field("i",  i).field("key", new String(key)).field("item", new String(item)).debug("dbParticipantEvents");
-
+			//logger.field("i",  i).field("key", new String(key)).field("item", item).debug("dbParticipantEvents");
 			if (item == null) {
 				err = StoreErr.newStoreErr("Participant", StoreErrType.KeyNotFound, Arrays.toString(key));
 				break;
@@ -580,13 +585,10 @@ public class BadgerStore implements Store {
 	}
 
 	public RetResult<String> dbParticipantEvent(String participant, long index) {
-		logger.field("participant", participant).field("index", index).debug("dbParticipantEvent()");
-
+		//logger.field("participant", participant).field("index", index).debug("dbParticipantEvent()");
 		byte[] key = participantEventKey(participant, index);
-
 		byte[] data = participantMap.get(key);
-
-		logger.field("key", new String(key)).field("data", new String(data)).debug("dbParticipantEvent()");
+		//logger.field("key", new String(key)).field("data", new String(data)).debug("dbParticipantEvent()");
 
 		error err = null;
 		if (data == null) {
@@ -609,7 +611,7 @@ public class BadgerStore implements Store {
 			byte[] key = participantRootKey(participant);
 //			fmt.Println("Setting root", participant, "->", key)
 			//insert [participant_root] => [root bytes]
-			eventMap.put(key, val);
+			participantRootMap.put(key, val);
 		}
 
 		db.commit();
@@ -617,13 +619,11 @@ public class BadgerStore implements Store {
 	}
 
 	public RetResult<Root> dbGetRoot(String participant) {
-		logger.field("participant", participant).debug("dbGetRoot()");
-
+		//logger.field("participant", participant).debug("dbGetRoot()");
 		byte[] key = participantRootKey(participant);
-		byte[] rootBytes = eventMap.get(key);
-
-		logger.field("key", new String(key))
-			.field("rootBytes", new String(rootBytes)).debug("dbGetRoot()");
+		byte[] rootBytes = participantRootMap.get(key);
+		//logger.field("key", new String(key))
+		//	.field("rootBytes", new String(rootBytes)).debug("dbGetRoot()");
 
 		error err = null;
 		if (rootBytes == null) {
@@ -683,10 +683,8 @@ public class BadgerStore implements Store {
 
 		byte[] prefix = participantPrefix.getBytes();
 		for (byte[] key : participantMap.keySet()) {
-
 			byte[] value = participantMap.get(key);
-
-			logger.field("key", new String(key)).field("value", new String(value)).debug("dbGetParticipants()");
+			//logger.field("key", new String(key)).field("value", new String(value)).debug("dbGetParticipants()");
 
 			if (value == null) {
 				err = StoreErr.newStoreErr("Round", StoreErrType.KeyNotFound, Arrays.toString(key));
@@ -704,10 +702,8 @@ public class BadgerStore implements Store {
 		for (String participant : participants.getByPubKey().keySet()) {
 			Peer id = participants.getByPubKey().get(participant);
 			byte[] key = participantKey(participant);
-//			val = byte[](strconv.FormatInt(id.GetID(), 10));
 			byte[] value = String.valueOf(id.GetID()).getBytes();
-
-			logger.field("key", new String(key)).field("value", new String(value)).debug("dbSetParticipants()");
+			//logger.field("key", new String(key)).field("value", new String(value)).debug("dbSetParticipants()");
 
 			//insert [participant_participant] => [id]
 			participantMap.put(key, value);
@@ -780,7 +776,7 @@ public class BadgerStore implements Store {
 			return err;
 		}
 
-		//insert [index] => [block bytes]
+		//insert [index] => [frame bytes]
 		frameMap.put(key, val);
 		db.commit();
 		return null;
