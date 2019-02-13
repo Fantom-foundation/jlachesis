@@ -2144,10 +2144,10 @@ public class Poset {
 			return new RetResult<Event>(null, error.Errorf("flag table is null"));
 		}
 
-		InternalTransaction[] transactions = Arrays.copyOf(wevent.Body.InternalTransactions, wevent.Body.InternalTransactions.length);
+		InternalTransaction[] transactions = Utils.copyOf(wevent.Body.InternalTransactions);
 
 		BlockSignature[] signatureValues = wevent.BlockSignatures(creatorBytes);
-		BlockSignature[] blockSignatures = Arrays.copyOf(signatureValues, signatureValues.length);
+		BlockSignature[] blockSignatures = Utils.copyOf(signatureValues);
 
 		EventBody body = new EventBody(
 			wevent.Body.Transactions,

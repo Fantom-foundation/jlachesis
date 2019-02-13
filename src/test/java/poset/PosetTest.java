@@ -362,7 +362,7 @@ public class PosetTest {
 		}
 	}
 
-	//@Test
+//	@Test
 	public void TestAncestor() {
 		initPoset();
 
@@ -783,12 +783,12 @@ public class PosetTest {
 				fail(String.format("Error computing stronglySee(%s, %s)",
 					exp.descendant, exp.ancestor, err));
 			}
-			assertEquals(String.format("stronglySee(%s, %s) should be %s, not %s",
+			assertEquals(String.format("stronglySee(%s, %s) should match",
 				exp.descendant, exp.ancestor), exp.val, s);
 		}
 	}
 
-	//@Test
+//	@Test
 	public void TestWitness() {
 		initRoundPoset();
 

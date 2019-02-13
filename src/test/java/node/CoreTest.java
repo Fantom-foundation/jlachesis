@@ -39,7 +39,7 @@ public class CoreTest {
 
 	private static Logger logger = Logger.getLogger(CoreTest.class);
 
-	//@Test
+	@Test
 	public void TestEventDiff() {
 		initCores(3);
 
@@ -78,7 +78,7 @@ public class CoreTest {
 
 	}
 
-//	@Test
+	//@Test
 	public void TestSync() {
 		initCores(3);
 
@@ -743,7 +743,7 @@ public class CoreTest {
 		}
 	}
 
-	public Core[] initConsensusPoset() {
+	private Core[] initConsensusPoset() {
 		initCores(3);
 		play[] playbook = new play[]{
 			new play(0, 1, new  byte[][]{"e10".getBytes()}),
@@ -1031,7 +1031,7 @@ public class CoreTest {
 		assertEquals("Seq should be -1", -1, c0s);
 	}
 
-	public error synchronizeCores(Core[] cores, int from, int to, byte[][] payload) {
+	private error synchronizeCores(Core[] cores, int from, int to, byte[][] payload) {
 		Map<Long, Long> knownByTo = cores[to].KnownEvents();
 		RetResult<Event[]> eventDiff = cores[from].EventDiff(knownByTo);
 		Event[] unknownByTo = eventDiff.result;
@@ -1052,7 +1052,7 @@ public class CoreTest {
 		return cores[to].Sync(unknownWire);
 	}
 
-	public error syncAndRunConsensus(Core[] cores, int from, int to, byte[][] payload)  {
+	private error syncAndRunConsensus(Core[] cores, int from, int to, byte[][] payload)  {
 		error err = synchronizeCores(cores, from, to, payload);
 		if (err != null) {
 			return err;
@@ -1061,7 +1061,7 @@ public class CoreTest {
 		return null;
 	}
 
-	public String getName(Map<String,String> index, String hash) {
+	private String getName(Map<String,String> index, String hash) {
 		for (String name : index.keySet()) {
 			String h = index.get(name);
 			if (h.equals(hash)) {

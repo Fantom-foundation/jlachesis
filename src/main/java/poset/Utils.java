@@ -58,4 +58,11 @@ public class Utils {
 		}
 		return true;
 	}
+
+	public static <T> T[] copyOf(T[] list) {
+		if (list == null) {
+			return null;
+		}
+		return Arrays.copyOf(list, list.length);
+	}
 }
