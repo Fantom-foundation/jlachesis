@@ -81,6 +81,8 @@ public class NetworkTransport implements Transport {
 		this.timeout = timeout;
 		this.logger = logger;
 
+		logger.debug("NetworkTransport()");
+
 		this.connPoolLock = new ReentrantLock();
 
 //		go listen();
@@ -163,7 +165,7 @@ public class NetworkTransport implements Transport {
 
 		// Dial a new connection
 		logger.field("target", target)
-			.field("timeout", timeout.toMillis()).info("Dialing");
+			.field("timeout", timeout.toMillis()).debug("Dialing");
 
 		RetResult<Socket> dialCall = stream.Dial(target, timeout);
 		Socket conn2 = dialCall.result;
@@ -175,8 +177,9 @@ public class NetworkTransport implements Transport {
 		// Wrap the conn
 		netConn netConn;
 		try {
-			netConn = new netConn(target, conn2, new BufferedReader(new InputStreamReader(conn2.getInputStream())),
-					new PrintWriter(conn2.getOutputStream(), true));
+			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(conn2.getInputStream()));
+			PrintWriter printWriter = new PrintWriter(conn2.getOutputStream(), true);
+			netConn = new netConn(target, conn2, bufferedReader, printWriter);
 		} catch (IOException e) {
 			return new RetResult<netConn>(null, error.Errorf(e.getMessage()));
 		}
@@ -222,7 +225,7 @@ public class NetworkTransport implements Transport {
 	}
 
 	// genericRPC handles a simple request/response RPC.
-	public error genericRPC(String target, int rpcType, Object args, Object resp) {
+	public error genericRPC(String target, int rpcType, ParsableMessage args, ParsableMessage resp) {
 		logger.field("target", target).field("rpcType", rpcType).debug("genericRPC");
 
 		// Get a conn
@@ -235,9 +238,10 @@ public class NetworkTransport implements Transport {
 
 		// Set a deadline
 		if (timeout.getSeconds() > 0) {
-//			conn.conn..SetDeadline(time.Now().Add(timeout));
+//			conn.conn.SetDeadline(time.Now().Add(timeout));
+			logger.field("timeout", timeout.toMillis()).debug("SetSoTimeout()");
 			try {
-				conn.conn.setSoTimeout((int) (System.currentTimeMillis() + timeout.toMillis()));
+				conn.conn.setSoTimeout((int) timeout.toMillis());
 			} catch (SocketException e) {
 				return error.Errorf(e.getMessage());
 			}
@@ -245,6 +249,8 @@ public class NetworkTransport implements Transport {
 
 		// Send the RPC
 		err = sendRPC(conn, rpcType, args);
+		logger.field("err", err).debug("sendRPC finished");
+
 		if (err != null) {
 			return err;
 		}
@@ -253,14 +259,17 @@ public class NetworkTransport implements Transport {
 		RetResult<Boolean> decodeResponse = decodeResponse(conn, resp);
 		boolean canReturn = decodeResponse.result;
 		err = decodeResponse.err;
+		logger.field("err", err).field("canReturn", canReturn).debug("decodeResponse finished");
+
 		if (canReturn) {
 			returnConn(conn);
 		}
+
 		return err;
 	}
 
 	// sendRPC is used to encode and send the RPC.
-	public error sendRPC(netConn conn, int rpcType, Object args) {
+	public error sendRPC(netConn conn, int rpcType, ParsableMessage args) {
 		// Write the request type
 		try {
 			conn.w.write(rpcType);
@@ -288,9 +297,11 @@ public class NetworkTransport implements Transport {
 
 	// decodeResponse is used to decode an RPC response and reports whether
 	// the connection can be reused.
-	public RetResult<Boolean> decodeResponse(netConn conn, Object resp) {
+	public RetResult<Boolean> decodeResponse(netConn conn, ParsableMessage resp) {
+		logger.field("resp", resp).debug("decodeResponse()");
+
 		// Decode the error if any
-		String rpcError = null;
+		error rpcError = new error(null);
 		error err = conn.dec.Decode(rpcError);
 		if (err != null) {
 			conn.Release();
@@ -305,8 +316,8 @@ public class NetworkTransport implements Transport {
 		}
 
 		// Format an error if any
-		if (!rpcError.isEmpty()) {
-			return new RetResult<Boolean>(true, error.Errorf(rpcError));
+		if (rpcError.Error() != null) {
+			return new RetResult<Boolean>(true, rpcError);
 		}
 		return new RetResult<Boolean>(true, null);
 	}
@@ -379,13 +390,10 @@ public class NetworkTransport implements Transport {
 	// handleCommand is used to decode and dispatch a single command.
 	public error handleCommand(Reader r, jsonDecoder dec, jsonEncoder enc) {
 		// Get the rpc type
-//		rpcType, err := r.ReadByte();
-		int rpcType;
-		error err;
-		try {
-			rpcType = r.read();
-		} catch (IOException e) {
-			err = error.Errorf(e.getMessage());
+		RetResult<Integer> readRpc = dec.readRpc();
+		int rpcType = readRpc.result;
+		error err = readRpc.err;
+		if (err != null) {
 			return err;
 		}
 

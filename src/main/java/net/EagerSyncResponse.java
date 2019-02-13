@@ -1,6 +1,9 @@
 package net;
 
-public class EagerSyncResponse {
+import autils.JsonUtils;
+import common.error;
+
+public class EagerSyncResponse implements ParsableMessage {
 	long FromID;
 	boolean Success;
 
@@ -30,5 +33,17 @@ public class EagerSyncResponse {
 	}
 	public void setSuccess(boolean success) {
 		Success = success;
+	}
+
+	@Override
+	public error parseFrom(String s) {
+		error err = null;
+		try {
+			EagerSyncResponse o = JsonUtils.StringToObject(s, EagerSyncResponse.class);
+			copy(o);
+		} catch (Exception e) {
+			err = error.Errorf(e.getMessage());
+		}
+		return err;
 	}
 }

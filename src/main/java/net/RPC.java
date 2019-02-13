@@ -34,7 +34,7 @@ public class RPC {
 	}
 
 	// Respond is used to respond with a response, error or both
-	public void Respond(Object resp, error err) {
+	public void Respond(ParsableMessage resp, error err) {
 		RespChan.out().write(new RPCResponse(resp, err));
 	}
 

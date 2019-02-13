@@ -1,8 +1,10 @@
 package net;
 
+import autils.JsonUtils;
+import common.error;
 import poset.WireEvent;
 
-public class EagerSyncRequest {
+public class EagerSyncRequest implements ParsableMessage {
 	long FromID;
 	poset.WireEvent[] Events;
 
@@ -31,5 +33,18 @@ public class EagerSyncRequest {
 	}
 	public void setEvents(poset.WireEvent[] events) {
 		Events = events;
+	}
+
+	@Override
+	public error parseFrom(String s) {
+		error err = null;
+		try {
+			EagerSyncRequest o = JsonUtils.StringToObject(s, EagerSyncRequest.class);
+			this.FromID = o.FromID;
+			this.Events = o.Events;
+		} catch (Exception e) {
+			err = error.Errorf(e.getMessage());
+		}
+		return err;
 	}
 }

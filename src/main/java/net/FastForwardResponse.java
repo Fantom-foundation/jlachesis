@@ -1,6 +1,9 @@
 package net;
 
-public class FastForwardResponse {
+import autils.JsonUtils;
+import common.error;
+
+public class FastForwardResponse implements ParsableMessage {
 	long FromID;
 	poset.Block Block;
 	poset.Frame Frame;
@@ -65,5 +68,17 @@ public class FastForwardResponse {
 
 	public void setSnapshot(byte[] snapshot) {
 		Snapshot = snapshot;
+	}
+
+	@Override
+	public error parseFrom(String s) {
+		error err = null;
+		try {
+			FastForwardResponse o = JsonUtils.StringToObject(s, FastForwardResponse.class);
+			copy(o);
+		} catch (Exception e) {
+			err = error.Errorf(e.getMessage());
+		}
+		return err;
 	}
 }

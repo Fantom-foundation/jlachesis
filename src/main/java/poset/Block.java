@@ -99,10 +99,11 @@ public class Block {
 		}
 
 		byte[][] transactions = null;
-		for (int i = 0; i< frame.Events.length; ++i) {
-			EventMessage e = frame.Events[i];
-//			transactions = append(transactions, e.Body.Transactions...)
-			transactions = Appender.append(transactions, e.Body.Transactions);
+		if (frame.Events != null) {
+			for (int i = 0; i< frame.Events.length; ++i) {
+				EventMessage e = frame.Events[i];
+				transactions = Appender.append(transactions, e.Body.Transactions);
+			}
 		}
 
 		return new RetResult<Block>(new Block(blockIndex, frame.Round, frameHash, transactions), null);

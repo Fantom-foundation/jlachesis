@@ -14,7 +14,6 @@ import org.jcsp.lang.Channel;
 import org.jcsp.lang.Guard;
 import org.jcsp.lang.One2OneChannel;
 
-import channel.ChannelUtils;
 import common.RetResult;
 import common.error;
 
@@ -172,6 +171,7 @@ public class InmemTransport implements Transport {
 				err = error.Errorf("command timed out");
 				break;
 		}
+
 		return new RetResult<RPCResponse>(rpcResp, err);
 	}
 

@@ -2,9 +2,11 @@ package net;
 
 import java.util.Map;
 
+import autils.JsonUtils;
+import common.error;
 import poset.WireEvent;
 
-public class SyncResponse {
+public class SyncResponse implements ParsableMessage {
 	long FromID;
 	private boolean SyncLimit;
 	private poset.WireEvent[] Events;
@@ -64,5 +66,17 @@ public class SyncResponse {
 
 	public long getFromID() {
 		return FromID;
+	}
+
+	@Override
+	public error parseFrom(String s) {
+		error err = null;
+		try {
+			SyncResponse o = JsonUtils.StringToObject(s, SyncResponse.class);
+			copy(o);
+		} catch (Exception e) {
+			err = error.Errorf(e.getMessage());
+		}
+		return err;
 	}
 }
