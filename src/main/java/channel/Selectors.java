@@ -26,10 +26,14 @@ public class Selectors<T> {
 			// fall through
 			case TIM:
 				onTimeOut();
+			default:
+				onDefault();
 		}
 	}
 
 	public void onEvent() {	}
 
 	public void onTimeOut() { }
+
+	public void onDefault() { }
 }

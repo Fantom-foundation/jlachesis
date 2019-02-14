@@ -40,6 +40,13 @@ public class SyncResponse implements ParsableMessage {
 		Known = known;
 	}
 
+	public SyncResponse(long id, boolean syncLimit) {
+		FromID = id;
+		SyncLimit = syncLimit;
+		Events = null;
+		Known = null;
+	}
+
 	public void copy(SyncResponse r) {
 		FromID = r.FromID;
 		SyncLimit = r.SyncLimit;

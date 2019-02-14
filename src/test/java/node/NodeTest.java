@@ -1,18 +1,32 @@
 package node;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import java.security.Key;
+import java.io.File;
+import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import org.jcsp.lang.Alternative;
+import org.jcsp.lang.CSTimer;
+import org.jcsp.lang.Channel;
+import org.jcsp.lang.Guard;
 import org.jcsp.lang.One2OneChannelInt;
+import org.junit.Test;
 
 import autils.Appender;
+import autils.FileUtils;
 import autils.Logger;
+import autils.time;
+import channel.ChannelUtils;
 import channel.ExecService;
+import channel.SingSelectors;
 import common.NetUtils;
 import common.RResult2;
 import common.RetResult;
@@ -27,8 +41,11 @@ import net.SyncResponse;
 import net.TCPTransport;
 import peers.Peer;
 import peers.Peers;
+import poset.BadgerStore;
+import poset.Block;
 import poset.Event;
 import poset.InmemStore;
+import poset.Store;
 import poset.WireEvent;
 import proxy.AppProxy;
 
@@ -39,6 +56,10 @@ import proxy.AppProxy;
  */
 public class NodeTest {
 	private static Logger testLogger = Logger.getLogger(NodeTest.class);
+
+	File currentDirectory = new File(new File(".").getAbsolutePath());
+	String testDir = currentDirectory.getAbsolutePath() + "test_data";
+	String dbPath = Paths.get(testDir, "badger").toString();
 
 	private RResult2<KeyPair[],Peers> initPeers(int n) {
 		KeyPair[] keys = null;
@@ -58,7 +79,7 @@ public class NodeTest {
 		return new RResult2<>(keys,ps);
 	}
 
-//	@Test
+	//@Test
 	public void TestProcessSync() {
 		RResult2<KeyPair[], Peers> initPeers = initPeers(2);
 		KeyPair[] keys = initPeers.result1;
@@ -145,7 +166,7 @@ public class NodeTest {
 		peer0Trans.Close();
 	}
 
-//	@Test
+	//@Test
 	public void TestProcessEagerSync() {
 		RResult2<KeyPair[], Peers> initPeers = initPeers(2);
 		KeyPair[] keys = initPeers.result1;
@@ -221,603 +242,604 @@ public class NodeTest {
 		peer0Trans.Close();
 	}
 
-//	// @Test
-//	public TestAddTransaction() {
-//		// Start two nodes
-//		RResult2<KeyPair[], Peers> initPeers = initPeers(2);
-//		KeyPair[] keys = initPeers.result1;
-//		Peers p = initPeers.result2;
-//		Logger testLogger = TestUtils.NewTestLogger(this.getClass());
-//		Config config = TestUtils.TestConfig(this.getClass());
-//
-//		Peer[] ps = p.ToPeerSlice();
-//
-//		net.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
-//				time.Second, TestUtils.NewTestLogger(this.getClass()));
-//		peer0Trans, err :=
-//		assertNull("No err creating tcp transport", err);
-//
-//		peer0Proxy := dummy.NewInmemDummyApp(testLogger)
-//		defer peer0Trans.Close();
-//
-//		Node node0 = new Node(TestUtils.TestConfig(this.getClass()), ps[0].ID, keys[0], p,
-//			poset.NewInmemStore(p, config.CacheSize),
-//			peer0Trans,
-//			peer0Proxy);
-//		node0.Init();
-//
-//		node0.RunAsync(false)
-//		defer node0.Shutdown()
-//
-//		peer1Trans, err := net.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
-//			time.Second, common.NewTestLogger(t))
-//		if err != null {
-//			t.Fatalf("err: %v", err)
-//		}
-//		peer1Proxy := dummy.NewInmemDummyApp(testLogger)
-//		defer peer1Trans.Close()
-//
-//		node1 := NewNode(TestConfig(t), ps[1].ID, keys[1], p,
-//			poset.NewInmemStore(p, config.CacheSize),
-//			peer1Trans,
-//			peer1Proxy)
-//		node1.Init()
-//
-//		node1.RunAsync(false);
-//		defer node1.Shutdown();
-//		// Submit a Tx to node0
-//
-//		time.Sleep(2000 * time.Millisecond);
-//		message := "Hello World!";
-//		peer0Proxy.SubmitCh() <- byte[](message);
-//
-//		// simulate a SyncRequest from node0 to node1
-//
-//		node0KnownEvents := node0.core.KnownEvents();
-//		args := net.SyncRequest{
-//			FromID: node0.id,
-//			Known:  node0KnownEvents,
-//		};
-//
-//		peer1Trans.LocalAddr();
-//		var out net.SyncResponse;
-//		if err := peer0Trans.Sync(peer1Trans.LocalAddr(), &args, &out); err != null {
-//			t.Fatal(err);
-//		}
-//
-//		if err := node0.sync(out.Events); err != null {
-//			t.Fatal(err);
-//		}
-//
-//		// check the Tx was removed from the transactionPool
-//		// and added to the new Head
-//
-//		if l := len(node0.core.transactionPool); l > 0 {
-//			t.Fatalf("node0's transactionPool should have 0 elements, not %d\n", l);
-//		}
-//
-//		node0Head, _ := node0.core.GetHead();
-//		if l := len(node0Head.Transactions()); l != 1 {
-//			t.Fatalf("node0's Head should have 1 element, not %d\n", l);
-//		}
-//
-//		if m := string(node0Head.Transactions()[0]); m != message {
-//			t.Fatalf("Transaction message should be '%s' not, not %s\n",
-//				message, m);
-//		}
-//	}
-//
-//	private Node[] initNodes(KeyPair[] keys,
-//		peers.Peers peers,
-//		int cacheSize,
-//		long syncLimit,
-//		String storeType,
-//		Logger logger) {
-//
-//		Node[] nodes;
-//
-//		for (KeyPair k : keys) {
-////			key := fmt.Sprintf("0x%X", crypto.FromECDSAPub(k.getPublic());
-//			String key = crypto.Utils.keyToHexString(k.getPublic());
-//			Peer peer = peers.ByPubKey(key);
-//			long id = peer.GetID();
-//
-//			Config conf = new Config(
-//				Duration.ofMillis(5),
-//				Duration.ofSeconds(1),
-//				cacheSize,
-//				syncLimit,
-//				logger
-//			);
-//
-//			RetResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.GetUnusedNetAddr(),
-//					null, 2, Duration.ofSeconds(1), logger);
-//			NetworkTransport trans = newTCPTransport.result;
-//			error err = newTCPTransport.err;
-//			assertNull(String.format("No error to create transport for peer %d", id), err);
-//
-//			peer.setNetAddr(trans.LocalAddr());
-//			poset.Store store;
-//			switch (storeType) {
-//			case "badger":
-//				path, _ := ioutil.TempDir("", "badger");
-//				store, err = new BadgerStore(peers, conf.CacheSize, path)
-//				if err != null {
-//					t.Fatalf("failed to create BadgerStore for peer %d: %s",
-//						id, err)
-//				}
-//			case "inmem":
-//				store = new InmemStore(peers, conf.CacheSize);
-//			}
-//			AppProxy prox = DummyClient.NewInmemDummyApp(logger);
-//
-//			Node node = new Node(conf,
-//				id,
-//				k,
-//				peers,
-//				store,
-//				trans,
-//				prox);
-//
-//			err = node.Init();
-//			assertNull(String.format("failed to initialize node%d", id), err);
-//			nodes = Appender.append(nodes, node);
-//		}
-//		return nodes;
-//	}
-//
-//	public Node[] recycleNodes(Node[] oldNodes, Logger logger) {
-//		Node[] newNodes;
-//		for (Node oldNode : oldNodes) {
-//			newNode = recycleNode(oldNode, logger);
-//			newNodes = Appender.append(newNodes, newNode);
-//		}
-//		return newNodes;
-//	}
-//
-//	public Node recycleNode(Node oldNode, Logger logger) {
-//		conf = oldNode.conf;
-//		id = oldNode.id;
-//		key = oldNode.core.key;
-//		ps = oldNode.peerSelector.Peers();
-//
-//		Store store;
-//		error err;
-//		_, ok := oldNode.core.poset.Store.(*poset.BadgerStore);
-//		if  ok {
-//			store, err = poset.LoadBadgerStore(
-//				conf.CacheSize, oldNode.core.poset.Store.StorePath())
-//			if err != null {
-//				t.Fatal(err)
-//			}
-//		} else {
-//			store = poset.NewInmemStore(oldNode.core.participants, conf.CacheSize)
-//		}
-//
-//		trans, err := net.NewTCPTransport(oldNode.localAddr,
-//			null, 2, time.Second, logger)
-//		if err != null {
-//			t.Fatal(err)
-//		}
-//		prox := dummy.NewInmemDummyApp(logger)
-//
-//		newNode := NewNode(conf, id, key, ps, store, trans, prox)
-//
-//		if err := newNode.Init(); err != null {
-//			t.Fatal(err)
-//		}
-//
-//		return newNode
-//	}
-//
-//	public void runNodes(Node[] nodes, boolean gossip) {
-//		for (Node n: nodes) {
-//			ExecService.go(()-> n.Run(gossip));
-//		}
-//	}
-//
-//	public void shutdownNodes(Node[] nodes) {
-//		for (Node n : nodes) {
-//			n.Shutdown();
-//		}
-//	}
-//
-//	// @Test
-//	public void TestGossip() {
-//		logger = TestUtils.NewTestLogger(this.getClass());
-//
-//		RResult2<KeyPair[], Peers> initPeers = initPeers(4);
-//		keys = initPeers.result1;
-//		ps = initPeers.result2;
-//		Node[] nodes = initNodes(keys, ps, 1000, 1000, "inmem", logger);
-//
-//		long target = 50L;
-//
-//		error err = gossip(nodes, target, true, 3*time.Second);
-//		assertNull("No error when gossip", err);
-//
-//		checkGossip(nodes, 0, t)
-//	}
-//
-//	public TestMissingNodeGossip() {
-//
-//		logger := common.NewTestLogger(t)
-//
-//		keys, ps := initPeers(4)
-//		nodes := initNodes(keys, ps, 1000, 1000, "inmem", logger, t)
-//		defer shutdownNodes(nodes)
-//
-//		err := gossip(nodes[1:], 10, true, 3*time.Second)
-//		if err != null {
-//			t.Fatal(err)
-//		}
-//
-//		checkGossip(nodes[1:], 0, t)
-//	}
-//
-//	public TestSyncLimit() {
-//
-//		logger := common.NewTestLogger(t)
-//
-//		keys, ps := initPeers(4)
-//		nodes := initNodes(keys, ps, 1000, 1000, "inmem", logger, t)
-//
-//		err := gossip(nodes, 10, false, 3*time.Second)
-//		if err != null {
-//			t.Fatal(err)
-//		}
-//		defer shutdownNodes(nodes)
-//
-//		// create fake node[0] known to artificially reach SyncLimit
-//		node0KnownEvents := nodes[0].core.KnownEvents()
-//		for k := range node0KnownEvents {
-//			node0KnownEvents[k] = 0
-//		}
-//
-//		args := net.SyncRequest{
-//			FromID: nodes[0].id,
-//			Known:  node0KnownEvents,
-//		}
-//		expectedResp := net.SyncResponse{
-//			FromID:    nodes[1].id,
-//			SyncLimit: true,
-//		}
-//
-//		var out net.SyncResponse
-//		if err := nodes[0].trans.Sync(nodes[1].localAddr, &args, &out); err != null {
-//			t.Fatalf("err: %v", err)
-//		}
-//
-//		// Verify the response
-//		if expectedResp.FromID != out.FromID {
-//			t.Fatalf("SyncResponse.FromID should be %d, not %d",
-//				expectedResp.FromID, out.FromID)
-//		}
-//		if expectedResp.SyncLimit != true {
-//			t.Fatal("SyncResponse.SyncLimit should be true")
-//		}
-//	}
-//
-//	public TestFastForward() {
-//
-//		logger := common.NewTestLogger(t)
-//
-//		keys, ps := initPeers(4)
-//		nodes := initNodes(keys, ps, 1000, 1000,
-//			"inmem", logger, t)
-//		defer shutdownNodes(nodes)
-//
-//		target := int64(50)
-//		err := gossip(nodes[1:], target, false, 3*time.Second)
-//		if err != null {
-//			t.Fatal(err)
-//		}
-//
-//		err = nodes[0].fastForward()
-//		if err != null {
-//			t.Fatalf("Error FastForwarding: %s", err)
-//		}
-//
-//		lbi := nodes[0].core.GetLastBlockIndex()
-//		if lbi <= 0 {
-//			t.Fatalf("LastBlockIndex is too low: %d", lbi)
-//		}
-//		sBlock, err := nodes[0].GetBlock(lbi)
-//		if err != null {
-//			t.Fatalf("Error retrieving latest Block"+
-//				" from reset hasposetraph: %v", err)
-//		}
-//		expectedBlock, err := nodes[1].GetBlock(lbi)
-//		if err != null {
-//			t.Fatalf("Failed to retrieve block %d from node1: %v", lbi, err)
-//		}
-//		if !reflect.DeepEqual(sBlock.Body, expectedBlock.Body) {
-//			t.Fatalf("Blocks defer")
-//		}
-//	}
-//
-//	public TestCatchUp() {
-//		logger := common.NewTestLogger(t)
-//
-//		// Create  config for 4 nodes
-//		keys, ps := initPeers(4)
-//
-//		// Initialize the first 3 nodes only
-//		normalNodes := initNodes(keys[0:3], ps, 1000, 400, "inmem", logger, t)
-//		defer shutdownNodes(normalNodes)
-//
-//		target := int64(50)
-//
-//		err := gossip(normalNodes, target, false, 4*time.Second)
-//		if err != null {
-//			t.Fatal(err)
-//		}
-//		checkGossip(normalNodes, 0, t)
-//
-//		node4 := initNodes(keys[3:], ps, 1000, 400, "inmem", logger, t)[0]
-//
-//		// Run parallel routine to check node4 eventually reaches CatchingUp state.
-//		timeout := time.After(10 * time.Second)
-//		go public() {
-//			for {
-//				select {
-//				case <-timeout:
-//					t.Fatalf("Timeout waiting for node4 to enter CatchingUp state")
-//				default:
-//				}
-//				if node4.getState() == CatchingUp {
-//					break
-//				}
-//			}
-//		}()
-//
-//		node4.RunAsync(true)
-//		defer node4.Shutdown()
-//
-//		// Gossip some more
-//		nodes := append(normalNodes, node4)
-//		newTarget := target + 20
-//		err = bombardAndWait(nodes, newTarget, 10*time.Second)
-//		if err != null {
-//			t.Fatal(err)
-//		}
-//
-//		start := node4.core.poset.FirstConsensusRound
-//		checkGossip(nodes, *start, t)
-//	}
-//
-//	public TestFastSync() {
-//		logger := common.NewTestLogger(t)
-//
-//		// Create  config for 4 nodes
-//		keys, ps := initPeers(4)
-//		nodes := initNodes(keys, ps, 1000, 400, "inmem", logger, t)
-//		defer shutdownNodes(nodes)
-//
-//		var target int64 = 50
-//
-//		err := gossip(nodes, target, false, 3*time.Second)
-//		if err != null {
-//			t.Fatal(err)
-//		}
-//		checkGossip(nodes, 0, t)
-//
-//		node4 := nodes[3]
-//		node4.Shutdown()
-//
-//		secondTarget := target + 50
-//		err = bombardAndWait(nodes[0:3], secondTarget, 6*time.Second)
-//		if err != null {
-//			t.Fatal(err)
-//		}
-//		checkGossip(nodes[0:3], 0, t)
-//
-//		// Can't re-run it; have to reinstantiate a new node.
-//		node4 = recycleNode(node4, logger, t)
-//
-//		// Run parallel routine to check node4 eventually reaches CatchingUp state.
-//		timeout := time.After(6 * time.Second)
-//		go public() {
-//			for {
-//				select {
-//				case <-timeout:
-//					t.Fatalf("Timeout waiting for node4 to enter CatchingUp state")
-//				default:
-//				}
-//				if node4.getState() == CatchingUp {
-//					break
-//				}
-//			}
-//		}()
-//
-//		node4.RunAsync(true)
-//		defer node4.Shutdown()
-//
-//		nodes[3] = node4
-//
-//		// Gossip some more
-//		thirdTarget := secondTarget + 20
-//		err = bombardAndWait(nodes, thirdTarget, 6*time.Second)
-//		if err != null {
-//			t.Fatal(err)
-//		}
-//
-//		start := node4.core.poset.FirstConsensusRound
-//		checkGossip(nodes, *start, t)
-//	}
-//
-//	public TestShutdown() {
-//		logger := common.NewTestLogger(t)
-//
-//		keys, ps := initPeers(4)
-//		nodes := initNodes(keys, ps, 1000, 1000, "inmem", logger, t)
-//		runNodes(nodes, false)
-//
-//		nodes[0].Shutdown()
-//
-//		err := nodes[1].gossip(nodes[0].localAddr, null)
-//		if err == null {
-//			t.Fatal("Expected Timeout Error")
-//		}
-//
-//		nodes[1].Shutdown()
-//	}
-//
-//	 @Test
-//	public void TestBootstrapAllNodes() {
-//		logger := common.NewTestLogger(t)
-//
-//		os.RemoveAll("test_data")
-//		os.Mkdir("test_data", os.ModeDir|0777)
-//
-//		// create a first network with BadgerStore
-//		// and wait till it reaches 10 consensus rounds before shutting it down
-//		keys, ps := initPeers(4)
-//		nodes := initNodes(keys, ps, 1000, 1000, "badger", logger, t)
-//
-//		err := gossip(nodes, 10, false, 3*time.Second)
-//		if err != null {
-//			t.Fatal(err)
-//		}
-//		checkGossip(nodes, 0, t)
-//		shutdownNodes(nodes)
-//
-//		// Now try to recreate a network from the databases created
-//		// in the first step and advance it to 20 consensus rounds
-//		newNodes := recycleNodes(nodes, logger, t)
-//		err = gossip(newNodes, 20, false, 3*time.Second)
-//		if err != null {
-//			t.Fatal(err)
-//		}
-//		checkGossip(newNodes, 0, t)
-//		shutdownNodes(newNodes)
-//
-//		// Check that both networks did not have
-//		// completely different consensus events
-//		checkGossip([]*Node{nodes[0], newNodes[0]}, 0, t)
-//	}
-//
-//	public error gossip(
-//		Node[] nodes, long target, boolean shutdown, Duration timeout) {
-//		runNodes(nodes, true);
-//		error err = bombardAndWait(nodes, target, timeout);
-//		if (err != null) {
-//			return err;
-//		}
-//		if (shutdown) {
-//			shutdownNodes(nodes);
-//		}
-//		return null;
-//	}
-//
-//	public error bombardAndWait(Node[] nodes, long target, Duration timeout)  {
-//
-//		quit := make(chan struct{});
-//		makeRandomTransactions(nodes, quit);
-//
-//		// wait until all nodes have at least 'target' blocks
-//		stopper := time.After(timeout)
-//		for {
-//			select {
-//			case <-stopper:
-//				return fmt.Errorf("timeout")
-//			default:
-//			}
-//			time.Sleep(10 * time.Millisecond)
-//			done := true
-//			for _, n := range nodes {
-//				ce := n.core.GetLastBlockIndex()
-//				if ce < target {
-//					done = false
-//					break
-//				} else {
-//					// wait until the target block has retrieved a state hash from
-//					// the app
-//					targetBlock, _ := n.core.poset.Store.GetBlock(target)
-//					if len(targetBlock.GetStateHash()) == 0 {
-//						done = false
-//						break
-//					}
-//				}
-//			}
-//			if (done) {
-//				break
-//			}
-//		}
-//
-//		close(quit);
-//
-//		return null;
-//	}
-//
-//	public void checkGossip(Node[] nodes, fromBlock int64) {
-//
-//		Map<Long,Block[]> nodeBlocks = new HashMap<Long,Block[]>();
-//		for (Node n : nodes) {
-//			poset.Block[] blocks;
-//			for (int i = fromBlock; i < n.core.poset.Store.LastBlockIndex(); i++) {
-//				RetResult<Block> getBlock = n.core.poset.Store.GetBlock(i);
-//				block = getBlock.result;
-//				err = getBlock.err;
-//				assertNull("No error checkGossip", err);
-//				blocks = Appender.append(blocks, block);
-//			}
-//			nodeBlocks.put(n.id, blocks);
-//		}
-//
-//		minB := len(nodeBlocks[0])
-//		for k := int64(1); k < int64(len(nodes)); k++ {
-//			if len(nodeBlocks[k]) < minB {
-//				minB = len(nodeBlocks[k])
-//			}
-//		}
-//
-//		for i, block := range nodeBlocks[0][:minB] {
-//			for k := int64(1); k < int64(len(nodes)); k++ {
-//				oBlock := nodeBlocks[k][i]
-//				if !reflect.DeepEqual(block.Body, oBlock.Body) {
-//					t.Fatalf("check gossip: difference in block %d."+
-//						" node 0: %v, node %d: %v",
-//						block.Index(), block.Body, k, oBlock.Body)
-//				}
-//			}
-//		}
-//	}
+	//@Test
+	public void TestAddTransaction() {
+		// Start two nodes
+		RResult2<KeyPair[], Peers> initPeers = initPeers(2);
+		KeyPair[] keys = initPeers.result1;
+		Peers p = initPeers.result2;
+		Logger testLogger = TestUtils.NewTestLogger(this.getClass());
+		Config config = TestUtils.TestConfig(this.getClass());
 
-//	public void makeRandomTransactions(Node[] nodes, One2OneChannelInt quit /* chan struct{}*/) {
-//		Random rand = new Random();
-//
-//		ExecService.go(() -> {
-//			Map<Integer,Integer> seq = new HashMap<Integer,Integer>();
-//
-//			while(true) {
-//				select {
-//				case <-quit:
-//					return
-//				default:
-//					int n = rand.nextInt(nodes.length);
-//					Node node = nodes[n];
-//					submitTransaction(node, String.format("node%d transaction %d", n, seq[n]).getBytes());
-//					seq[n] = seq[n] + 1;
-//					time.Sleep(3 * time.Millisecond);
-//				}
-//			}
-//		});
-//	}
+		Peer[] ps = p.ToPeerSlice();
+
+		RetResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
+				Duration.ofSeconds(1), testLogger);
+		NetworkTransport peer0Trans = newTCPTransport.result;
+		error err = newTCPTransport.err;
+		assertNull("No err creating tcp transport", err);
+
+		AppProxy peer0Proxy = DummyClient.NewInmemDummyApp(testLogger);
+
+		Node node0 = new Node(config, ps[0].GetID(), keys[0], p,
+			new InmemStore(p, config.CacheSize),
+			peer0Trans,
+			peer0Proxy);
+		node0.Init();
+
+		node0.RunAsync(false);
+
+		newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
+				Duration.ofSeconds(1), testLogger);
+		NetworkTransport peer1Trans = newTCPTransport.result;
+		err = newTCPTransport.err;
+		assertNull("No err", err);
+		AppProxy peer1Proxy = DummyClient.NewInmemDummyApp(testLogger);
+
+
+		Node node1 = new Node(config, ps[1].GetID(), keys[1], p,
+			new InmemStore(p, config.CacheSize),
+			peer1Trans,
+			peer1Proxy);
+		node1.Init();
+
+		node1.RunAsync(false);
+		// Submit a Tx to node0
+
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		String message = "Hello World!";
+		peer0Proxy.SubmitCh().out().write(message.getBytes()); // <- byte[](message);
+
+		// simulate a SyncRequest from node0 to node1
+		Map<Long, Long> node0KnownEvents = node0.core.KnownEvents();
+		SyncRequest args = new SyncRequest(node0.id, node0KnownEvents);
+
+		peer1Trans.LocalAddr();
+		SyncResponse out = new SyncResponse();
+		err = peer0Trans.Sync(peer1Trans.LocalAddr(), args, out);
+		assertNull("No error", err);
+
+		err = node0.sync(out.getEvents());
+		assertNull("No error", err);
+
+		// check the Tx was removed from the transactionPool
+		// and added to the new Head
+		int l = node0.core.transactionPool.length;
+		assertEquals("node0's transactionPool should have 0 elements", 0, l);
+
+		Event node0Head = node0.core.GetHead().result;
+		l = node0Head.Transactions().length;
+		assertEquals("node0's Head should have 1 element", 1, l);
+
+		String m = new String(node0Head.Transactions()[0]);
+		assertEquals("Transaction message should match", message, m);
+
+		node1.Shutdown();
+		peer1Trans.Close();
+		node0.Shutdown();
+		peer0Trans.Close();
+	}
+
+	private void recreateTestDir() {
+		error err = FileUtils.delete(testDir);
+		assertNull("No error deleting folder", err);
+
+		FileUtils.mkdirs(testDir, FileUtils.MOD_777);
+		err = FileUtils.mkdirs(dbPath, FileUtils.MOD_755).err;
+		assertNull("No error creating a file", err);
+	}
+
+	private void removeBadgerStore(BadgerStore store) {
+		error err = store.Close();
+		assertNull("No error", err);
+
+		err = FileUtils.delete(testDir);
+		assertNull("No error deleting folder", err);
+	}
+
+	private Node[] initNodes(KeyPair[] keys,
+		peers.Peers peers,
+		int cacheSize,
+		long syncLimit,
+		String storeType,
+		Logger logger) {
+
+		Node[] nodes = null;
+
+		for (KeyPair k : keys) {
+//			key := fmt.Sprintf("0x%X", crypto.FromECDSAPub(k.getPublic());
+			String key = crypto.Utils.keyToHexString(k.getPublic());
+			Peer peer = peers.ByPubKey(key);
+			long id = peer.GetID();
+
+			Config conf = new Config(
+				Duration.ofMillis(5),
+				Duration.ofSeconds(1),
+				cacheSize,
+				syncLimit,
+				logger
+			);
+
+			RetResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.GetUnusedNetAddr(),
+					null, 2, Duration.ofSeconds(1), logger);
+			NetworkTransport trans = newTCPTransport.result;
+			error err = newTCPTransport.err;
+			assertNull(String.format("No error to create transport for peer %d", id), err);
+
+			peer.setNetAddr(trans.LocalAddr());
+			poset.Store store = null;
+			switch (storeType) {
+			case "badger":
+				recreateTestDir();
+
+				RetResult<BadgerStore> newBadgerStore = BadgerStore.NewBadgerStore(peers, conf.CacheSize, dbPath);
+				store = newBadgerStore.result;
+				err = newBadgerStore.err;
+				assertNull("No error creating badger store", err);
+				assertNull(String.format("No error to create BadgerStore for peer %d",
+						id), err);
+			case "inmem":
+				store = new InmemStore(peers, conf.CacheSize);
+			}
+			AppProxy prox = DummyClient.NewInmemDummyApp(logger);
+
+			Node node = new Node(conf,
+				id,
+				k,
+				peers,
+				store,
+				trans,
+				prox);
+
+			err = node.Init();
+			assertNull(String.format("failed to initialize node%d", id), err);
+			nodes = Appender.append(nodes, node);
+		}
+
+		return nodes;
+	}
+
+	public Node[] recycleNodes(Node[] oldNodes, Logger logger) {
+		Node[] newNodes = null;
+		for (Node oldNode : oldNodes) {
+			Node newNode = recycleNode(oldNode, logger);
+			newNodes = Appender.append(newNodes, newNode);
+		}
+		return newNodes;
+	}
+
+	public Node recycleNode(Node oldNode, Logger logger) {
+		Config conf = oldNode.conf;
+		long id = oldNode.id;
+		KeyPair key = oldNode.core.key;
+		Peers ps = oldNode.peerSelector.Peers();
+
+		Store store;
+		error err;
+		if (oldNode.core.poset.Store instanceof poset.BadgerStore) {
+			RetResult<BadgerStore> loadBadgerStore = BadgerStore.LoadBadgerStore(
+					conf.CacheSize, oldNode.core.poset.Store.StorePath());
+			store = loadBadgerStore.result;
+			err = loadBadgerStore.err;
+			assertNull("No err", err);
+		} else {
+			store = new InmemStore(oldNode.core.participants, conf.CacheSize);
+		}
+
+		RetResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(oldNode.localAddr,
+				null, 2, Duration.ofSeconds(1), logger);
+		NetworkTransport trans = newTCPTransport.result;
+		err = newTCPTransport.err;
+		assertNull("No err", err);
+		AppProxy prox = DummyClient.NewInmemDummyApp(logger);
+
+		Node newNode = new Node(conf, id, key, ps, store, trans, prox);
+		err = newNode.Init();
+		assertNull("No err when init", err);
+
+		return newNode;
+	}
+
+	public void runNodes(Node[] nodes, boolean gossip) {
+		for (Node n: nodes) {
+			ExecService.go(()-> n.Run(gossip));
+		}
+	}
+
+	public void shutdownNodes(Node[] nodes) {
+		for (Node n : nodes) {
+			n.Shutdown();
+		}
+	}
+
+	//@Test
+	public void TestGossip() {
+		RResult2<KeyPair[], Peers> initPeers = initPeers(4);
+		KeyPair[] keys = initPeers.result1;
+		Peers ps = initPeers.result2;
+		Node[] nodes = initNodes(keys, ps, 1000, 1000, "inmem", testLogger);
+
+		long target = 50L;
+
+		error err = gossip(nodes, target, true, Duration.ofSeconds(3));
+		assertNull("No error when gossip", err);
+
+		checkGossip(nodes, 0);
+	}
+
+	//@Test
+	public void TestMissingNodeGossip() {
+		RResult2<KeyPair[], Peers> initPeers = initPeers(4);
+		KeyPair[] keys = initPeers.result1;
+		Peers ps = initPeers.result2;
+		Node[] nodes = initNodes(keys, ps, 1000, 1000, "inmem", testLogger);
+
+		error err = gossip(Appender.sliceFromToEnd(nodes, 1), 10, true, Duration.ofMillis(3));
+		assertNull("No error when gossip", err);
+
+		checkGossip(Appender.sliceFromToEnd(nodes, 1), 0);
+		shutdownNodes(nodes);
+	}
+
+	//@Test
+	public void TestSyncLimit() {
+		RResult2<KeyPair[], Peers> initPeers = initPeers(4);
+		KeyPair[] keys = initPeers.result1;
+		Peers ps = initPeers.result2;
+		Node[] nodes = initNodes(keys, ps, 1000, 1000, "inmem", testLogger);
+
+		error err = gossip(nodes, 10, false, Duration.ofSeconds(3));
+		assertNull("No error when gossip", err);
+
+		// create fake node[0] known to artificially reach SyncLimit
+		Map<Long, Long> node0KnownEvents = nodes[0].core.KnownEvents();
+		for (long k : node0KnownEvents.keySet()) {
+			node0KnownEvents.put(k,  0L);
+		}
+
+		SyncRequest args = new SyncRequest(nodes[0].id, node0KnownEvents);
+		SyncResponse expectedResp = new SyncResponse(nodes[1].id, true);
+
+		SyncResponse out = new SyncResponse();
+		err = nodes[0].trans.Sync(nodes[1].localAddr, args, out);
+		assertNull("No err:", err);
+
+		// Verify the response
+		assertEquals("SyncResponse.FromID should match",
+			expectedResp.getFromID(), out.getFromID());
+
+		assertTrue("SyncResponse.SyncLimit should be true", expectedResp.isSyncLimit());
+
+		shutdownNodes(nodes);
+	}
+
+	//@Test
+	public void TestFastForward() {
+		RResult2<KeyPair[], Peers> initPeers = initPeers(4);
+		KeyPair[] keys = initPeers.result1;
+		Peers ps = initPeers.result2;
+		Node[] nodes = initNodes(keys, ps, 1000, 1000, "inmem", testLogger);
+
+		long target = 50L;
+		error err = gossip(nodes, 10, false, Duration.ofSeconds(3));
+		assertNull("No error when gossip", err);
+
+		err = nodes[0].fastForward();
+		assertNull("No Error FastForwarding", err);
+
+		long lbi = nodes[0].core.GetLastBlockIndex();
+		assertTrue(String.format("LastBlockIndex is too low: %d", lbi), lbi <= 0);
+		RetResult<Block> getBlock = nodes[0].GetBlock(lbi);
+		Block sBlock = getBlock.result;
+		err = getBlock.err;
+		assertEquals("No Error retrieving latest Block"+
+				" from reset hasposetraph", err);
+
+		getBlock = nodes[1].GetBlock(lbi);
+		Block expectedBlock = getBlock.result;
+		err = getBlock.err;
+		assertNull(String.format("No error to retrieve block %d from node1", lbi), err);
+		assertEquals("Blocks defer", sBlock.GetBody(), expectedBlock.GetBody());
+	}
+
+	//@Test
+	public void TestCatchUp() {
+		RResult2<KeyPair[], Peers> initPeers = initPeers(4);
+		KeyPair[] keys = initPeers.result1;
+		Peers ps = initPeers.result2;
+		// Initialize the first 3 nodes only
+		Node[] normalNodes = initNodes(Appender.slice(keys, 0, 3), ps, 1000, 4000, "inmem", testLogger);
+
+		int target = 50;
+		error err = gossip(normalNodes, target, false, Duration.ofSeconds(4));
+		assertNull("No error when gossip", err);
+
+		checkGossip(normalNodes, 0);
+
+		Node node4 = initNodes(Appender.sliceFromToEnd(keys, 3), ps, 1000, 400, "inmem", testLogger)[0];
+
+		// Run parallel routine to check node4 eventually reaches CatchingUp state.
+		CSTimer tim = new CSTimer();
+		tim.setAlarm(tim.read() + 10 * time.Second);
+		ExecService.go(() -> {
+			while(true) {
+				new SingSelectors() {
+					public void onTimeOut() {
+						fail("Timeout waiting for node4 to enter CatchingUp state");
+					}
+				}.run();
+
+				if (node4.getState() == NodeStates.CatchingUp) {
+					break;
+				}
+			}
+		});
+
+		node4.RunAsync(true);
+
+		// Gossip some more
+		Node[] nodes = Appender.append(normalNodes, node4);
+		int newTarget = target + 20;
+		err = bombardAndWait(nodes, newTarget, Duration.ofSeconds(10));
+		assertNull("No error when gossip", err);
+
+		long start = node4.core.poset.getFirstConsensusRound();
+		checkGossip(nodes, start);
+
+		node4.Shutdown();
+		shutdownNodes(normalNodes);
+	}
+
+	//@Test
+	public void TestFastSync() {
+		// Create  config for 4 nodes
+		RResult2<KeyPair[], Peers> initPeers = initPeers(4);
+		KeyPair[] keys = initPeers.result1;
+		Peers ps = initPeers.result2;
+		Node[] nodes = initNodes(keys, ps, 1000, 400, "inmem", testLogger);
+
+		long target = 50L;
+
+		error err = gossip(nodes, target, false, Duration.ofSeconds(3));
+		assertNull("No error", err);
+
+		checkGossip(nodes, 0);
+
+		Node node4 = nodes[3];
+		node4.Shutdown();
+
+		long secondTarget = target + 50;
+		err = bombardAndWait(Appender.slice(nodes,0,3), secondTarget, Duration.ofSeconds(6));
+		assertNull("No error", err);
+
+		checkGossip(Appender.slice(nodes,0,3), 0);
+
+		// Can't re-run it; have to reinstantiate a new node.
+		node4 = recycleNode(node4, testLogger);
+
+		// Run parallel routine to check node4 eventually reaches CatchingUp state.
+		CSTimer tim = new CSTimer();
+		tim.after(6 * time.Second);
+
+		final Node myNode = node4;
+		ExecService.go(() -> {
+			while(true) {
+				new SingSelectors(tim) {
+					public void onTimeOut() {
+						tim.read();
+						fail("Timeout waiting for node4 to enter CatchingUp state");
+					}
+				}.run();
+
+				if (myNode.getState() == NodeStates.CatchingUp) {
+					break;
+				}
+			}
+		});
+
+		node4.RunAsync(true);
+
+		nodes[3] = node4;
+
+		// Gossip some more
+		long thirdTarget = secondTarget + 20;
+		err = bombardAndWait(nodes, thirdTarget, Duration.ofSeconds(6));
+		assertNull("No error", err);
+
+		long start = node4.core.poset.getFirstConsensusRound();
+		checkGossip(nodes, start);
+
+		node4.Shutdown();
+		shutdownNodes(nodes);
+	}
+
+	//@Test
+	public void TestShutdown() {
+		RResult2<KeyPair[], Peers> initPeers = initPeers(4);
+		KeyPair[] keys = initPeers.result1;
+		Peers ps = initPeers.result2;
+		Node[] nodes = initNodes(keys, ps, 1000, 400, "inmem", testLogger);
+
+		nodes[0].Shutdown();
+
+		error err = nodes[1].gossip(nodes[0].localAddr, null);
+		assertNotNull("Expected Timeout Error", err);
+
+		nodes[1].Shutdown();
+	}
+
+	//@Test
+	public void TestBootstrapAllNodes() {
+		recreateTestDir();
+
+		// create a first network with BadgerStore
+		// and wait till it reaches 10 consensus rounds before shutting it down
+		RResult2<KeyPair[], Peers> initPeers = initPeers(4);
+		KeyPair[] keys = initPeers.result1;
+		Peers ps = initPeers.result2;
+		Node[] nodes = initNodes(keys, ps, 1000, 1000, "badger", testLogger);
+
+		Object err = gossip(nodes, 10, false, Duration.ofSeconds(3));
+		assertNull("No error", err);
+
+		checkGossip(nodes, 0);
+		shutdownNodes(nodes);
+
+		// Now try to recreate a network from the databases created
+		// in the first step and advance it to 20 consensus rounds
+		Node[] newNodes = recycleNodes(nodes, testLogger);
+		err = gossip(newNodes, 20, false, Duration.ofSeconds(3));
+		assertNull("No error", err);
+
+		checkGossip(newNodes, 0);
+		shutdownNodes(newNodes);
+
+		// Check that both networks did not have
+		// completely different consensus events
+		checkGossip(new Node[]{nodes[0], newNodes[0]}, 0);
+	}
+
+	public error gossip(Node[] nodes, long target, boolean shutdown, Duration timeout) {
+		runNodes(nodes, true);
+		error err = bombardAndWait(nodes, target, timeout);
+		if (err != null) {
+			return err;
+		}
+		if (shutdown) {
+			shutdownNodes(nodes);
+		}
+		return null;
+	}
+
+	public error bombardAndWait(Node[] nodes, long target, Duration timeout)  {
+		One2OneChannelInt quit = Channel.one2oneInt(); //chan struct{}
+		makeRandomTransactions(nodes, quit);
+
+
+		CSTimer stopper = new CSTimer();
+		stopper.after(6 * time.Second);
+
+		// wait until all nodes have at least 'target' blocks
+		while (true) {
+			final Alternative alt = new Alternative (new Guard[] {stopper});
+			final int TIM = 0;
+			switch (alt.priSelect ()) {
+				case TIM:
+					stopper.read();
+					return error.Errorf("timeout");
+				default:
+					break;
+			}
+
+			try {
+				Thread.sleep(10 * time.Millisecond);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			boolean done = true;
+			for (Node n : nodes) {
+				long ce = n.core.GetLastBlockIndex();
+				if (ce < target) {
+					done = false;
+					break;
+				} else {
+					// wait until the target block has retrieved a state hash from
+					// the app
+					Block targetBlock = n.core.poset.Store.GetBlock(target).result;
+					if (targetBlock.GetStateHash().length == 0) {
+						done = false;
+						break;
+					}
+				}
+			}
+			if (done) {
+				break;
+			}
+		}
+
+		ChannelUtils.close(quit);
+
+		return null;
+	}
+
+	public void checkGossip(Node[] nodes, long fromBlock) {
+		Map<Long,Block[]> nodeBlocks = new HashMap<Long,Block[]>();
+		for (Node n : nodes) {
+			poset.Block[] blocks = null;
+			for (int i = (int) fromBlock; i < n.core.poset.Store.LastBlockIndex(); i++) {
+				RetResult<Block> getBlock = n.core.poset.Store.GetBlock(i);
+				Block block = getBlock.result;
+				error err = getBlock.err;
+				assertNull("No error checkGossip", err);
+				blocks = Appender.append(blocks, block);
+			}
+			nodeBlocks.put(n.id, blocks);
+		}
+
+		int minB = nodeBlocks.get(0).length;
+		for (int k = 1; k < nodes.length; k++) {
+			if (nodeBlocks.get(k).length < minB) {
+				minB = nodeBlocks.get(k).length;
+			}
+		}
+
+		Block[] block0Sub = Appender.slice(nodeBlocks.get(0), 0, minB);
+		for (int i = 0; i < block0Sub.length; ++i) {
+			Block block = block0Sub[i];
+			for (int k = 1; k < nodes.length; k++) {
+				Block oBlock = nodeBlocks.get(k)[i];
+				assertEquals(String.format("check gossip: difference in block %d."+
+					" node 0: %s, node %d: %s",
+					block.Index(), k), block.GetBody(), oBlock.GetBody());
+			}
+		}
+	}
+
+	public void makeRandomTransactions(Node[] nodes, One2OneChannelInt quit /* chan struct{}*/) {
+		Random rand = new Random();
+
+		ExecService.go(() -> {
+			Map<Integer,Integer> seq = new HashMap<Integer,Integer>();
+
+			while(true) {
+				final Alternative alt = new Alternative (new Guard[] {quit.in()});
+				final int QUIT = 0;
+				switch (alt.priSelect ()) {
+					case QUIT:
+						return;
+					default:
+						int n = rand.nextInt(nodes.length);
+						Node node = nodes[n];
+						submitTransaction(node, String.format("node%d transaction %d", n, seq.get(n)).getBytes());
+						seq.put(n,  seq.get(n) + 1);
+						try {
+							Thread.sleep(3 * time.Millisecond);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+				}
+			}
+		});
+	}
 
 	public error submitTransaction(Node n, byte[] tx) {
 		n.proxy.SubmitCh().out().write(tx); // <- byte[](tx)
 		return null;
 	}
 
-//	public void BenchmarkGossip() {
-//		int N = 5;
-//		for (int n = 0; n < N; n++) {
-//			RResult2<KeyPair[], Peers> initPeers = initPeers(4);
-//			KeyPair[] keys = initPeers.result1;
-//			Peers ps = initPeers.result2;
-//			Node[] nodes = initNodes(keys, ps, 1000, 1000, "inmem", testLogger);
-//			gossip(nodes, 50, true, 3*time.Second);
-//		}
-//	}
+	private void BenchmarkGossip() {
+		int N = 5;
+		for (int n = 0; n < N; n++) {
+			RResult2<KeyPair[], Peers> initPeers = initPeers(4);
+			KeyPair[] keys = initPeers.result1;
+			Peers ps = initPeers.result2;
+			Node[] nodes = initNodes(keys, ps, 1000, 1000, "inmem", testLogger);
+			gossip(nodes, 50, true, Duration.ofSeconds(3));
+		}
+	}
 }
