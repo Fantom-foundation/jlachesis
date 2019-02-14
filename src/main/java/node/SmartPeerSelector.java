@@ -47,11 +47,13 @@ public class SmartPeerSelector implements PeerSelector {
 
 					if (ftRes.err == null) {
 						Map<String, Long> ft = ftRes.result;
-						for (String id : ft.keySet()) {
-							long flag = ft.get(id);
-							if (flag == 1 && selectablePeers.length > 1) {
-								// TODO: check it
-								selectablePeers = peers.ExcludePeer(selectablePeers, id).peers;
+						if (ft != null) {
+							for (String id : ft.keySet()) {
+								long flag = ft.get(id);
+								if (flag == 1 && selectablePeers.length > 1) {
+									// TODO: check it
+									selectablePeers = peers.ExcludePeer(selectablePeers, id).peers;
+								}
 							}
 						}
 					}

@@ -233,4 +233,14 @@ public class Diff {
 
 		return false;
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Diff [Err=").append(Err).append(", node=").append(Arrays.toString(node)).append(", IDs=")
+				.append(Arrays.toString(IDs)).append(", BlocksGap=").append(BlocksGap).append(", FirstBlockIndex=")
+				.append(FirstBlockIndex).append(", RoundGap=").append(RoundGap).append(", FirstRoundIndex=")
+				.append(FirstRoundIndex).append(", Descr=").append(Descr).append("]");
+		return builder.toString();
+	}
 }

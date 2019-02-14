@@ -2,6 +2,7 @@ package node;
 
 import java.security.KeyPair;
 import java.security.PrivateKey;
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Random;
 
@@ -24,8 +25,8 @@ import poset.Block;
 // NodeList is a list of connected nodes for tests purposes
 public class NodeList extends LinkedHashMap<PrivateKey, Node> {
 	private static final long serialVersionUID = 1848444769246800729L;
-
-	public static final int delay = 100 * time.Millisecond;
+	private static Logger logger = Logger.getLogger(NodeList.class);
+	public static final int delay = (int) Duration.ofMillis(100).toMillis(); //100 * time.Millisecond;
 
 	// NewNodeList makes, fills and runs NodeList instance
 	public NodeList(int count, Logger logger) {
@@ -98,6 +99,7 @@ public class NodeList extends LinkedHashMap<PrivateKey, Node> {
 		{
 			int seq = 0;
 			while(true) {
+				logger.field("seq", seq).debug("StartRandTxStream()");
 
 				// TBD conversion ok?
 //					select {
@@ -148,12 +150,21 @@ public class NodeList extends LinkedHashMap<PrivateKey, Node> {
 	public void WaitForBlock(long target) {
 	LOOP:
 		while (true) {
+
+			logger.field("target", target).debug("WaitForBlock() start loop");
+
 			try {
 				Thread.sleep(delay);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 			for (Node node : this.values()) {
+				logger.field("node.GetLastBlockIndex", node.GetLastBlockIndex()).debug("WaitForBlock()");
+
+				if (node.GetLastBlockIndex() <0) {
+					continue;
+				}
+
 				if (target > node.GetLastBlockIndex()) {
 					continue LOOP;
 				}
@@ -162,6 +173,9 @@ public class NodeList extends LinkedHashMap<PrivateKey, Node> {
 					continue LOOP;
 				}
 			}
+
+			logger.field("target", target).debug("WaitForBlock() end loop");
+
 			return;
 		}
 	}

@@ -13,11 +13,10 @@ import node.NodeList.Stoppable;
  * Test of diff
  *
  * @author qn
- *
  */
-public class ExampleTest {
+public class DiffTest {
 
-	//@Test
+	@Test
 	public void testPem() {
 		Logger logger = Logger.getLogger(this.getClass());
 		logger.setLevel(Level.FATAL);
@@ -31,13 +30,7 @@ public class ExampleTest {
 		Node[] nodeArray = nodes.Values();
 
 		Diff diff = Diff.compare(nodeArray[0],  nodeArray[1]);
-
-		System.out.println(diff);
 		assertTrue("diff = " + diff + " should not be empty", diff.IsEmpty());
-
-		System.out.println("all good");
-		// Output:
-		// all good
 	}
 
 }
