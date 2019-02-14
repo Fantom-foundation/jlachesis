@@ -21,16 +21,23 @@ public class SyncResponse implements ParsableMessage {
 
 	public SyncResponse(long fromID, boolean syncLimit, WireEvent[] events, Map<Long, Long> known) {
 		FromID = fromID;
-		this.SyncLimit = syncLimit;
-		this.Events = events;
-		this.Known = known;
+		SyncLimit = syncLimit;
+		Events = events;
+		Known = known;
 	}
 
 	public SyncResponse(long id) {
-		FromID = (int) id;
+		FromID = id;
 		SyncLimit = false;
 		Events = null;
 		Known = null;
+	}
+
+	public SyncResponse(long id, WireEvent[] events, Map<Long, Long> known) {
+		FromID = id;
+		SyncLimit = false;
+		Events = events;
+		Known = known;
 	}
 
 	public void copy(SyncResponse r) {

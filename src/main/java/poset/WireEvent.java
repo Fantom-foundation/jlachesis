@@ -43,6 +43,10 @@ public class WireEvent {
 		return null;
 	}
 
+	public WireBody getBody() {
+		return Body;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

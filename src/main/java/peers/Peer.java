@@ -37,6 +37,10 @@ public class Peer {
 		computeID();
 	}
 
+	public void setNetAddr(String netAddr) {
+		NetAddr = netAddr;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

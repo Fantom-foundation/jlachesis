@@ -34,16 +34,18 @@ public class ControlTimer {
 	}
 
 	public static ControlTimer RandomControlTimer() {
+		CSTimer tim = new CSTimer();
+		Random random = new Random();
+
 		timerFactory randomTimeout = new timerFactory() {
 			public CSTimer read(Duration min) /* <-chan time.Time */ {
-				if (min == null || min.getNano() <= 0) {
+				if (min == null || min.isNegative()) {
 					return null;
 				}
 
-				CSTimer tim = new CSTimer();
-				long extra = new Random().nextLong() % min.toMillis();
+				long extra = random.nextLong() % min.toMillis();
 				long alarmTime = tim.read() + min.toMillis() + extra;
-				tim.after(alarmTime);
+				tim.setAlarm(alarmTime);
 				return tim;
 			}
 		};
@@ -52,7 +54,6 @@ public class ControlTimer {
 	}
 
 	public void Run(Duration init) {
-
 		timerFactory setTimer = new timerFactory() {
 			public CSTimer read(Duration t) /* <-chan time.Time */ {
 				set = true;

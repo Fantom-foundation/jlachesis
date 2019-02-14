@@ -1,26 +1,36 @@
 package node;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
+import java.security.Key;
 import java.security.KeyPair;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Random;
 
-import org.apache.log4j.Level;
-import org.junit.Test;
+import org.jcsp.lang.One2OneChannelInt;
 
 import autils.Appender;
 import autils.Logger;
-import autils.time;
 import channel.ExecService;
+import common.NetUtils;
 import common.RResult2;
 import common.RetResult;
 import common.TestUtils;
 import common.error;
+import dummy.DummyClient;
+import net.EagerSyncRequest;
+import net.EagerSyncResponse;
 import net.NetworkTransport;
+import net.SyncRequest;
+import net.SyncResponse;
 import net.TCPTransport;
 import peers.Peer;
 import peers.Peers;
-import poset.Block;
+import poset.Event;
+import poset.InmemStore;
+import poset.WireEvent;
+import proxy.AppProxy;
 
 /**
  * Test for Node
@@ -28,6 +38,8 @@ import poset.Block;
  *
  */
 public class NodeTest {
+	private static Logger testLogger = Logger.getLogger(NodeTest.class);
+
 	private RResult2<KeyPair[],Peers> initPeers(int n) {
 		KeyPair[] keys = null;
 		Peers ps = new Peers();
@@ -46,195 +58,169 @@ public class NodeTest {
 		return new RResult2<>(keys,ps);
 	}
 
-//	//@Test
-//	public void TestProcessSync() {
-//		RResult2<KeyPair[], Peers> initPeers = initPeers(2);
-//		KeyPair[] keys = initPeers.result1;
-//		Peers p = initPeers.result2;
-//		Logger testLogger = TestUtils.NewTestLogger(this.getClass());
-//		Config config = TestUtils.TestConfig(this.getClass());
-//
-//		// Start two nodes
-//		Peer[] ps = p.ToPeerSlice();
-//
-//		String address = NetUtils.GetUnusedNetAddr();
-//		RetResult<NetworkTransport> NewTCPTransportCall = TCPTransport.NewTCPTransport(address, null, 2,
-//				time.Second, testLogger);
-//
-//		peer0Trans = NewTCPTransportCall.result;
-//		err = NewTCPTransportCall.err;
-//
-//		if err != null {
-//			t.Fatalf("err: %v", err)
-//		}
-//		defer peer0Trans.Close()
-//
-//		node0 := NewNode(config, ps[0].ID, keys[0], p,
-//			poset.NewInmemStore(p, config.CacheSize),
-//			peer0Trans,
-//			dummy.NewInmemDummyApp(testLogger));
-//		node0.Init();
-//
-//		node0.RunAsync(false);
-//		defer node0.Shutdown();
-//
-//		peer1Trans, err := net.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
-//			time.Second, testLogger);
-//		if err != null {
-//			t.Fatalf("err: %v", err);
-//		}
-//		defer peer1Trans.Close();
-//
-//		node1 := NewNode(config, ps[1].ID, keys[1], p,
-//			poset.NewInmemStore(p, config.CacheSize),
-//			peer1Trans,
-//			dummy.NewInmemDummyApp(testLogger));
-//		node1.Init();
-//
-//		node1.RunAsync(false);
-//		defer node1.Shutdown();
-//
-//		// Manually prepare SyncRequest and expected SyncResponse
-//
-//		node0KnownEvents := node0.core.KnownEvents();
-//		node1KnownEvents := node1.core.KnownEvents();
-//
-//		unknownEvents, err := node1.core.EventDiff(node0KnownEvents);
-//		if err != null {
-//			t.Fatal(err);
-//		}
-//
-//		unknownWireEvents, err := node1.core.ToWire(unknownEvents);
-//		if err != null {
-//			t.Fatal(err);
-//		}
-//
-//		args := net.SyncRequest{
-//			FromID: node0.id,
-//			Known:  node0KnownEvents,
-//		}
-//		expectedResp := net.SyncResponse{
-//			FromID: node1.id,
-//			Events: unknownWireEvents,
-//			Known:  node1KnownEvents,
-//		}
-//
-//		// Make actual SyncRequest and check SyncResponse
-//
-//		testLogger.Println("SYNCING...")
-//		time.Sleep(2000 * time.Millisecond)
-//		var out net.SyncResponse
-//		if err := peer0Trans.Sync(peer1Trans.LocalAddr(), &args, &out); err != null {
-//			t.Fatalf("err: %v", err)
-//		}
-//
-//		// Verify the response
-//		if expectedResp.FromID != out.FromID {
-//			t.Fatalf("SyncResponse.FromID should be %d, not %d",
-//				expectedResp.FromID, out.FromID)
-//		}
-//
-//		if l := len(out.Events); l != len(expectedResp.Events) {
-//			t.Fatalf("SyncResponse.Events should contain %d items, not %d",
-//				len(expectedResp.Events), l)
-//		}
-//
-//		for i, e := range expectedResp.Events {
-//			ex := out.Events[i]
-//			if !reflect.DeepEqual(e.Body, ex.Body) {
-//				t.Fatalf("SyncResponse.Events[%d] should be %v, not %v",
-//					i, e.Body, ex.Body)
-//			}
-//		}
-//
-//		if !reflect.DeepEqual(expectedResp.Known, out.Known) {
-//			t.Fatalf("SyncResponse.KnownEvents should be %#v, not %#v",
-//				expectedResp.Known, out.Known)
-//		}
-//
-//	}
-//
-//	// @Test
-//	public void TestProcessEagerSync() {
-//		RResult2<KeyPair[], Peers> initPeers = initPeers(2);
-//		KeyPair[] keys = initPeers.result1;
-//		Peers p = initPeers.result2;
-//		Logger testLogger = TestUtils.NewTestLogger(this.getClass());
-//		Config config = TestUtils.TestConfig(this.getClass());
-//
-//		// Start two nodes
-//		Peer[] ps = p.ToPeerSlice();
-//
-//		peer0Trans, err := net.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
-//			time.Second, testLogger)
-//		if err != null {
-//			t.Fatalf("err: %v", err)
-//		}
-//		defer peer0Trans.Close()
-//
-//		node0 := NewNode(config, ps[0].ID, keys[0], p,
-//			poset.NewInmemStore(p, config.CacheSize),
-//			peer0Trans,
-//			dummy.NewInmemDummyApp(testLogger))
-//		node0.Init()
-//
-//		node0.RunAsync(false)
-//		defer node0.Shutdown()
-//
-//		peer1Trans, err := net.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
-//			time.Second, testLogger)
-//		if err != null {
-//			t.Fatalf("err: %v", err)
-//		}
-//		defer peer1Trans.Close()
-//
-//		node1 := NewNode(config, ps[1].ID, keys[1], p,
-//			poset.NewInmemStore(p, config.CacheSize),
-//			peer1Trans,
-//			dummy.NewInmemDummyApp(testLogger))
-//		node1.Init()
-//
-//		node1.RunAsync(false)
-//		defer node1.Shutdown()
-//
-//		// Manually prepare EagerSyncRequest and expected EagerSyncResponse
-//
-//		node1KnownEvents := node1.core.KnownEvents()
-//
-//		unknownEvents, err := node0.core.EventDiff(node1KnownEvents)
-//		if err != null {
-//			t.Fatal(err)
-//		}
-//
-//		unknownWireEvents, err := node0.core.ToWire(unknownEvents)
-//		if err != null {
-//			t.Fatal(err)
-//		}
-//
-//		args := net.EagerSyncRequest{
-//			FromID: node0.id,
-//			Events: unknownWireEvents,
-//		}
-//		expectedResp := net.EagerSyncResponse{
-//			FromID:  node1.id,
-//			Success: true,
-//		}
-//
-//		time.Sleep(2000 * time.Millisecond)
-//		// Make actual EagerSyncRequest and check EagerSyncResponse
-//		var out net.EagerSyncResponse
-//		if err := peer0Trans.EagerSync(
-//			peer1Trans.LocalAddr(), &args, &out); err != null {
-//			t.Fatalf("err: %v", err)
-//		}
-//
-//		// Verify the response
-//		if expectedResp.Success != out.Success {
-//			t.Fatalf("EagerSyncResponse.Sucess should be %v, not %v",
-//				expectedResp.Success, out.Success)
-//		}
-//	}
-//
+//	@Test
+	public void TestProcessSync() {
+		RResult2<KeyPair[], Peers> initPeers = initPeers(2);
+		KeyPair[] keys = initPeers.result1;
+		Peers p = initPeers.result2;
+		Config config = TestUtils.TestConfig(this.getClass());
+
+		// Start two nodes
+		Peer[] ps = p.ToPeerSlice();
+
+		String address = NetUtils.GetUnusedNetAddr();
+		RetResult<NetworkTransport> NewTCPTransportCall = TCPTransport.NewTCPTransport(address, null, 2,
+				Duration.ofSeconds(1), testLogger);
+		NetworkTransport peer0Trans = NewTCPTransportCall.result;
+		error err = NewTCPTransportCall.err;
+		assertNull("No err", err);
+
+		Node node0 = new Node(config, ps[0].GetID(), keys[0], p,
+			new InmemStore(p, config.CacheSize),
+			peer0Trans,
+			DummyClient.NewInmemDummyApp(testLogger));
+		node0.Init();
+
+		node0.RunAsync(false);
+
+		NewTCPTransportCall = TCPTransport.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
+				Duration.ofSeconds(1), testLogger);
+		NetworkTransport peer1Trans = NewTCPTransportCall.result;
+		err = NewTCPTransportCall.err;
+		assertNull("No err", err);
+
+		Node node1 = new Node(config, ps[1].GetID(), keys[1], p,
+			new InmemStore(p, config.CacheSize),
+			peer1Trans,
+			DummyClient.NewInmemDummyApp(testLogger));
+		node1.Init();
+		node1.RunAsync(false);
+
+		// Manually prepare SyncRequest and expected SyncResponse
+
+		Map<Long, Long> node0KnownEvents = node0.core.KnownEvents();
+		Map<Long, Long> node1KnownEvents = node1.core.KnownEvents();
+
+		RetResult<Event[]> eventDiff = node1.core.EventDiff(node0KnownEvents);
+		Event[] unknownEvents = eventDiff.result;
+		err = eventDiff.err;
+		assertNull("No err", err);
+
+		RetResult<WireEvent[]> toWire = node1.core.ToWire(unknownEvents);
+		WireEvent[] unknownWireEvents = toWire.result;
+		err = toWire.err;
+		assertNull("No err", err);
+
+		SyncRequest args = new SyncRequest(node0.id, node0KnownEvents);
+		SyncResponse expectedResp = new SyncResponse(node1.id, unknownWireEvents, node1KnownEvents);
+
+		// Make actual SyncRequest and check SyncResponse
+		testLogger.debug("SYNCING...");
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+
+		SyncResponse out = new SyncResponse();
+		err = peer0Trans.Sync(peer1Trans.LocalAddr(), args, out);
+		assertNull("No err", err);
+
+		// Verify the response
+		assertEquals("SyncResponse.FromID should match", expectedResp.getFromID(), out.getFromID());
+		assertEquals("SyncResponse.Events should contain matching number of items",
+			 expectedResp.getEvents().length, out.getEvents().length);
+
+		for (int i = 0; i < expectedResp.getEvents().length; ++i) {
+			WireEvent e = expectedResp.getEvents()[i];
+			WireEvent ex = out.getEvents()[i];
+			assertEquals(String.format("SyncResponse.Events[%d] should match", i), e.getBody(), ex.getBody());
+		}
+
+		assertEquals("SyncResponse.KnownEvents should match", expectedResp.getKnown(), out.getKnown());
+
+		node1.Shutdown();
+		peer1Trans.Close();
+		node0.Shutdown();
+		peer0Trans.Close();
+	}
+
+//	@Test
+	public void TestProcessEagerSync() {
+		RResult2<KeyPair[], Peers> initPeers = initPeers(2);
+		KeyPair[] keys = initPeers.result1;
+		Peers p = initPeers.result2;
+		Config config = TestUtils.TestConfig(this.getClass());
+
+		// Start two nodes
+		Peer[] ps = p.ToPeerSlice();
+
+		RetResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
+				Duration.ofSeconds(1), testLogger);
+		NetworkTransport peer0Trans = newTCPTransport.result;
+		error err = newTCPTransport.err;
+		assertNull("No err", err);
+
+		Node node0 = new Node(config, ps[0].GetID(), keys[0], p,
+			new InmemStore(p, config.CacheSize),
+			peer0Trans,
+			DummyClient.NewInmemDummyApp(testLogger));
+		node0.Init();
+
+		node0.RunAsync(false);
+
+		newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
+				Duration.ofSeconds(1), testLogger);
+		NetworkTransport peer1Trans = newTCPTransport.result;
+		err = newTCPTransport.err;
+		assertNull("No err", err);
+
+		Node node1 = new Node(config, ps[1].GetID(), keys[1], p,
+			new InmemStore(p, config.CacheSize),
+			peer1Trans,
+			DummyClient.NewInmemDummyApp(testLogger));
+		node1.Init();
+
+		node1.RunAsync(false);
+
+		// Manually prepare EagerSyncRequest and expected EagerSyncResponse
+
+		Map<Long, Long> node1KnownEvents = node1.core.KnownEvents();
+
+		RetResult<Event[]> eventDiff = node0.core.EventDiff(node1KnownEvents);
+		Event[] unknownEvents = eventDiff.result;
+		err = eventDiff.err;
+		assertNull("No error", err);
+
+		RetResult<WireEvent[]> toWire = node0.core.ToWire(unknownEvents);
+		WireEvent[] unknownWireEvents = toWire.result;
+		err = toWire.err;
+		assertNull("No error", err);
+
+		EagerSyncRequest args = new EagerSyncRequest(node0.id, unknownWireEvents);
+		EagerSyncResponse expectedResp = new EagerSyncResponse(node1.id, true);
+
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		// Make actual EagerSyncRequest and check EagerSyncResponse
+		EagerSyncResponse out = new EagerSyncResponse();
+		err = peer0Trans.EagerSync(peer1Trans.LocalAddr(), args, out);
+		assertNull("No err", err);
+
+		// Verify the response
+		assertEquals("EagerSyncResponse.Success should match",
+			expectedResp.isSuccess(), out.isSuccess());
+
+		node1.Shutdown();
+		peer1Trans.Close();
+		node0.Shutdown();
+		peer0Trans.Close();
+	}
+
 //	// @Test
 //	public TestAddTransaction() {
 //		// Start two nodes
@@ -321,8 +307,8 @@ public class NodeTest {
 //		}
 //	}
 //
-//	public Node[] initNodes(KeyPay[] keys,
-//			peers.Peers peers,
+//	private Node[] initNodes(KeyPair[] keys,
+//		peers.Peers peers,
 //		int cacheSize,
 //		long syncLimit,
 //		String storeType,
@@ -330,55 +316,54 @@ public class NodeTest {
 //
 //		Node[] nodes;
 //
-//		for _, k := range keys {
-//			key := fmt.Sprintf("0x%X", crypto.FromECDSAPub(&k.PublicKey))
-//			peer := peers.ByPubKey[key]
-//			id := peer.ID
+//		for (KeyPair k : keys) {
+////			key := fmt.Sprintf("0x%X", crypto.FromECDSAPub(k.getPublic());
+//			String key = crypto.Utils.keyToHexString(k.getPublic());
+//			Peer peer = peers.ByPubKey(key);
+//			long id = peer.GetID();
 //
-//			conf := NewConfig(
-//				5*time.Millisecond,
-//				time.Second,
+//			Config conf = new Config(
+//				Duration.ofMillis(5),
+//				Duration.ofSeconds(1),
 //				cacheSize,
 //				syncLimit,
-//				logger,
-//			)
+//				logger
+//			);
 //
-//			trans, err := net.NewTCPTransport(NetUtils.GetUnusedNetAddr(),
-//				null, 2, time.Second, logger)
-//			if err != null {
-//				t.Fatalf("failed to create transport for peer %d: %s", id, err)
-//			}
+//			RetResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.GetUnusedNetAddr(),
+//					null, 2, Duration.ofSeconds(1), logger);
+//			NetworkTransport trans = newTCPTransport.result;
+//			error err = newTCPTransport.err;
+//			assertNull(String.format("No error to create transport for peer %d", id), err);
 //
-//			peer.NetAddr = trans.LocalAddr()
-//
-//			var store poset.Store
-//			switch storeType {
+//			peer.setNetAddr(trans.LocalAddr());
+//			poset.Store store;
+//			switch (storeType) {
 //			case "badger":
-//				path, _ := ioutil.TempDir("", "badger")
-//				store, err = poset.NewBadgerStore(peers, conf.CacheSize, path)
+//				path, _ := ioutil.TempDir("", "badger");
+//				store, err = new BadgerStore(peers, conf.CacheSize, path)
 //				if err != null {
 //					t.Fatalf("failed to create BadgerStore for peer %d: %s",
 //						id, err)
 //				}
 //			case "inmem":
-//				store = poset.NewInmemStore(peers, conf.CacheSize)
+//				store = new InmemStore(peers, conf.CacheSize);
 //			}
-//			prox := dummy.NewInmemDummyApp(logger)
+//			AppProxy prox = DummyClient.NewInmemDummyApp(logger);
 //
-//			node := NewNode(conf,
+//			Node node = new Node(conf,
 //				id,
 //				k,
 //				peers,
 //				store,
 //				trans,
-//				prox)
+//				prox);
 //
-//			if err := node.Init(); err != null {
-//				t.Fatalf("failed to initialize node%d: %s", id, err)
-//			}
-//			nodes = append(nodes, node)
+//			err = node.Init();
+//			assertNull(String.format("failed to initialize node%d", id), err);
+//			nodes = Appender.append(nodes, node);
 //		}
-//		return nodes
+//		return nodes;
 //	}
 //
 //	public Node[] recycleNodes(Node[] oldNodes, Logger logger) {
@@ -798,40 +783,41 @@ public class NodeTest {
 //			}
 //		}
 //	}
+
+//	public void makeRandomTransactions(Node[] nodes, One2OneChannelInt quit /* chan struct{}*/) {
+//		Random rand = new Random();
 //
-//	public makeRandomTransactions(Node[] nodes, quit chan struct{}) {
-//		go public() {
-//			seq := make(Map<Integer,Integer>)
-//			for {
+//		ExecService.go(() -> {
+//			Map<Integer,Integer> seq = new HashMap<Integer,Integer>();
+//
+//			while(true) {
 //				select {
 //				case <-quit:
 //					return
 //				default:
-//					n := rand.Intn(len(nodes))
-//					node := nodes[n]
-//					submitTransaction(node, byte[](
-//						fmt.Sprintf("node%d transaction %d", n, seq[n])))
-//					seq[n] = seq[n] + 1
-//					time.Sleep(3 * time.Millisecond)
+//					int n = rand.nextInt(nodes.length);
+//					Node node = nodes[n];
+//					submitTransaction(node, String.format("node%d transaction %d", n, seq[n]).getBytes());
+//					seq[n] = seq[n] + 1;
+//					time.Sleep(3 * time.Millisecond);
 //				}
 //			}
-//		}()
+//		});
 //	}
-//
-//	public error submitTransaction(Node n, byte[] tx) {
-//		n.proxy.SubmitCh().out().write(tx); // <- byte[](tx)
-//		return null;
-//	}
-//
+
+	public error submitTransaction(Node n, byte[] tx) {
+		n.proxy.SubmitCh().out().write(tx); // <- byte[](tx)
+		return null;
+	}
+
 //	public void BenchmarkGossip() {
-//		Logger logger = TestUtils.NewTestLogger(this.getClass());
-//		for (int n = 0; n < b.N; n++) {
+//		int N = 5;
+//		for (int n = 0; n < N; n++) {
 //			RResult2<KeyPair[], Peers> initPeers = initPeers(4);
 //			KeyPair[] keys = initPeers.result1;
 //			Peers ps = initPeers.result2;
-//			Node[] nodes = initNodes(keys, ps, 1000, 1000, "inmem", logger, b);
+//			Node[] nodes = initNodes(keys, ps, 1000, 1000, "inmem", testLogger);
 //			gossip(nodes, 50, true, 3*time.Second);
 //		}
 //	}
-
 }
