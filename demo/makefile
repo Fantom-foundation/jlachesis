@@ -4,8 +4,11 @@ txs = 10
 up: conf start watch
 
 # build jlachesis and dummy docker images for local registry.
+compile:
+	cd docker && make compile
+
 build :
-	cd ../docker && make demo
+	cd docker && make docker-all
 
 # generate keys and peers.json file
 conf : 
