@@ -8,15 +8,15 @@ import com.google.protobuf.Parser;
 import common.IProto;
 
 public class BlockSignature {
-	byte[] Validator; // `protobuf:"bytes,1,opt,name=Validator,json=validator,proto3" json:"Validator,omitempty"`
-	long Index; // `protobuf:"varint,2,opt,name=Index,json=index" json:"Index,omitempty"`
-	String Signature; // `protobuf:"bytes,3,opt,name=Signature,json=signature" json:"Signature,omitempty"`
+	byte[] validator; // `protobuf:"bytes,1,opt,name=Validator,json=validator,proto3" json:"Validator,omitempty"`
+	long index; // `protobuf:"varint,2,opt,name=Index,json=index" json:"Index,omitempty"`
+	String signature; // `protobuf:"bytes,3,opt,name=Signature,json=signature" json:"Signature,omitempty"`
 
 	public BlockSignature(byte[] validator, long index, String signature) {
 		super();
-		Validator = validator;
-		Index = index;
-		Signature = signature;
+		this.validator = validator;
+		this.index = index;
+		this.signature = signature;
 	}
 
 	public BlockSignature() {
@@ -24,32 +24,32 @@ public class BlockSignature {
 
 	public BlockSignature(BlockSignature blockSignature) {
 		super();
-		this.Validator = Arrays.copyOf(blockSignature.Validator, blockSignature.Validator.length);
-		this.Index = blockSignature.Index;
-		this.Signature = blockSignature.Signature;
+		this.validator = Arrays.copyOf(blockSignature.validator, blockSignature.validator.length);
+		this.index = blockSignature.index;
+		this.signature = blockSignature.signature;
 	}
 
 	public void Reset() {
-		Validator = null;
-		Index = 0;
-		Signature = "";
+		validator = null;
+		index = 0;
+		signature = "";
 	}
 
-	public byte[] GetValidator() {
-		return Validator;
+	public byte[] getValidator() {
+		return validator;
 	}
 
-	public long GetIndex() {
-		return Index;
+	public long getIndex() {
+		return index;
 	}
 
-	public String GetSignature() {
-			return Signature;
+	public String getSignature() {
+			return signature;
 	}
 
-	public String ValidatorHex() {
+	public String validatorHex() {
 //		return String.format("0x%X", Validator);
-		return crypto.Utils.toHexString(Validator);
+		return crypto.Utils.toHexString(validator);
 	}
 
 	public IProto<BlockSignature, poset.proto.BlockSignature> marshaller() {
@@ -58,21 +58,21 @@ public class BlockSignature {
 			public poset.proto.BlockSignature toProto() {
 				poset.proto.BlockSignature.Builder builder = poset.proto.BlockSignature.newBuilder();
 
-				if (Validator != null) {
-					builder.setValidator(ByteString.copyFrom(Validator));
+				if (validator != null) {
+					builder.setValidator(ByteString.copyFrom(validator));
 				}
-				builder.setIndex(Index);
-				if (Signature != null) {
-					builder.setSignature(Signature);
+				builder.setIndex(index);
+				if (signature != null) {
+					builder.setSignature(signature);
 				}
 				return builder.build();
 			}
 
 			@Override
 			public void fromProto(poset.proto.BlockSignature pBlock) {
-				Validator = pBlock.getValidator().toByteArray();
-				Index = pBlock.getIndex();
-				Signature = pBlock.getSignature();
+				validator = pBlock.getValidator().toByteArray();
+				index = pBlock.getIndex();
+				signature = pBlock.getSignature();
 			}
 
 			@Override
@@ -82,19 +82,19 @@ public class BlockSignature {
 		};
 	}
 
-	public WireBlockSignature ToWire()  {
-		return new WireBlockSignature (Index, Signature);
+	public WireBlockSignature toWire()  {
+		return new WireBlockSignature (index, signature);
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("BlockSignature [Validator=");
-		builder.append(Arrays.toString(Validator));
+		builder.append(Arrays.toString(validator));
 		builder.append(", Index=");
-		builder.append(Index);
+		builder.append(index);
 		builder.append(", Signature=");
-		builder.append(Signature);
+		builder.append(signature);
 		builder.append("]");
 		return builder.toString();
 	}
@@ -103,9 +103,9 @@ public class BlockSignature {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (int) (Index ^ (Index >>> 32));
-		result = prime * result + ((Signature == null) ? 0 : Signature.hashCode());
-		result = prime * result + Arrays.hashCode(Validator);
+		result = prime * result + (int) (index ^ (index >>> 32));
+		result = prime * result + ((signature == null) ? 0 : signature.hashCode());
+		result = prime * result + Arrays.hashCode(validator);
 		return result;
 	}
 
@@ -118,14 +118,14 @@ public class BlockSignature {
 		if (getClass() != obj.getClass())
 			return false;
 		BlockSignature other = (BlockSignature) obj;
-		if (Index != other.Index)
+		if (index != other.index)
 			return false;
-		if (Signature == null) {
-			if (other.Signature != null)
+		if (signature == null) {
+			if (other.signature != null)
 				return false;
-		} else if (!Signature.equals(other.Signature))
+		} else if (!signature.equals(other.signature))
 			return false;
-		if (!Arrays.equals(Validator, other.Validator))
+		if (!Arrays.equals(validator, other.validator))
 			return false;
 		return true;
 	}

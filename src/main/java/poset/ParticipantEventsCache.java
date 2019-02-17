@@ -27,7 +27,7 @@ public class ParticipantEventsCache {
 
 	public ParticipantEventsCache(int size, peers.Peers participants) {
 		this.participants = participants;
-		this.rim = new RollingIndexMap("ParticipantEvents", size, participants.ToIDSlice());
+		this.rim = new RollingIndexMap("ParticipantEvents", size, participants.toIDSlice());
 	}
 
 	public RetResult<Long> participantID(String participant) {

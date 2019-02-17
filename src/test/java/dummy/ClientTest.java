@@ -97,7 +97,7 @@ public class ClientTest {
 
 		byte[] expectedStateHash = initialStateHash;
 
-		for (byte[] t : blocks[0].Transactions()) {
+		for (byte[] t : blocks[0].transactions()) {
 			byte[] tHash = hash.SHA256(t);
 			expectedStateHash = hash.SimpleHashFromTwoHashes(expectedStateHash, tHash);
 		}

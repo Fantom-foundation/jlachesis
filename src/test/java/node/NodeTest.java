@@ -70,7 +70,7 @@ public class NodeTest {
 
 //			String pub = String.format("0x%X", crypto.Utils.FromECDSAPub(keys[i].getPublic()));
 			String pub = crypto.Utils.keyToHexString(key.getPublic());
-			ps.AddPeer(new Peer(
+			ps.addPeer(new Peer(
 				pub,
 				String.format("127.0.0.1:%d", i)
 			));
@@ -312,10 +312,10 @@ public class NodeTest {
 		assertEquals("node0's transactionPool should have 0 elements", 0, l);
 
 		Event node0Head = node0.core.GetHead().result;
-		l = node0Head.Transactions().length;
+		l = node0Head.transactions().length;
 		assertEquals("node0's Head should have 1 element", 1, l);
 
-		String m = new String(node0Head.Transactions()[0]);
+		String m = new String(node0Head.transactions()[0]);
 		assertEquals("Transaction message should match", message, m);
 
 		node1.Shutdown();
@@ -353,7 +353,7 @@ public class NodeTest {
 		for (KeyPair k : keys) {
 //			key := fmt.Sprintf("0x%X", crypto.FromECDSAPub(k.getPublic());
 			String key = crypto.Utils.keyToHexString(k.getPublic());
-			Peer peer = peers.ByPubKey(key);
+			Peer peer = peers.byPubKey(key);
 			long id = peer.GetID();
 
 			Config conf = new Config(
@@ -543,7 +543,7 @@ public class NodeTest {
 		Block expectedBlock = getBlock.result;
 		err = getBlock.err;
 		assertNull(String.format("No error to retrieve block %d from node1", lbi), err);
-		assertEquals("Blocks defer", sBlock.GetBody(), expectedBlock.GetBody());
+		assertEquals("Blocks defer", sBlock.getBody(), expectedBlock.getBody());
 	}
 
 	//@Test
@@ -751,7 +751,7 @@ public class NodeTest {
 					// wait until the target block has retrieved a state hash from
 					// the app
 					Block targetBlock = n.core.poset.Store.GetBlock(target).result;
-					if (targetBlock.GetStateHash().length == 0) {
+					if (targetBlock.getStateHash().length == 0) {
 						done = false;
 						break;
 					}
@@ -795,7 +795,7 @@ public class NodeTest {
 				Block oBlock = nodeBlocks.get(k)[i];
 				assertEquals(String.format("check gossip: difference in block %d."+
 					" node 0: %s, node %d: %s",
-					block.Index(), k), block.GetBody(), oBlock.GetBody());
+					block.Index(), k), block.getBody(), oBlock.getBody());
 			}
 		}
 	}

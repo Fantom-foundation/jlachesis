@@ -70,10 +70,10 @@ public class State implements ProxyHandler {
 	}
 
 	public error commit(poset.Block block)  {
-		committedTxs = Appender.append(committedTxs, block.Transactions());
+		committedTxs = Appender.append(committedTxs, block.transactions());
 		// log tx and update state hash
 		byte[] hash = stateHash;
-		for (byte[] tx : block.Transactions()) {
+		for (byte[] tx : block.transactions()) {
 			logger.info(Arrays.toString(tx));
 			hash = crypto.hash.SimpleHashFromTwoHashes(hash, crypto.hash.SHA256(tx));
 		}

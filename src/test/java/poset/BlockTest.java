@@ -38,12 +38,12 @@ public class BlockTest {
 				"ghi".getBytes(),
 			});
 
-		RetResult<BlockSignature> signCall = block.Sign(privateKey);
+		RetResult<BlockSignature> signCall = block.sign(privateKey);
 		BlockSignature sig = signCall.result;
 		error err = signCall.err;
 		assertNull("No error when signing", err);
 
-		RetResult<Boolean> verifyCall = block.Verify(sig);
+		RetResult<Boolean> verifyCall = block.verify(sig);
 		boolean res = verifyCall.result;
 		err = verifyCall.err;
 		assertNull("No error when verifying", err);
@@ -71,24 +71,24 @@ public class BlockTest {
 					"ghi".getBytes(),
 				});
 
-		RetResult<BlockSignature> signCall = block.Sign(key);
+		RetResult<BlockSignature> signCall = block.sign(key);
 		BlockSignature sig = signCall.result;
 		error err = signCall.err;
 		assertNull("No error when signing", err);
 
-		err = block.SetSignature(sig);
+		err = block.setSignature(sig);
 		assertNull("No error when SetSignature", err);
 
 //		blockSignature, err := block.GetSignature(fmt.Sprintf("0x%X", pubKeyBytes));
 		String pub = Utils.toHexString(pubKeyBytes);
 //		System.out.println(" pub toHexString = " + pub);
 //
-		RetResult<BlockSignature> getSignature = block.GetSignature(pub);
+		RetResult<BlockSignature> getSignature = block.getSignature(pub);
 		BlockSignature blockSignature = getSignature.result;
 		err = getSignature.err;
 		assertNull("No error when GetSignature", err);
 
-		RetResult<Boolean> verifyCall = block.Verify(blockSignature);
+		RetResult<Boolean> verifyCall = block.verify(blockSignature);
 		boolean res = verifyCall.result;
 		err = verifyCall.err;
 		assertNull("No error when verifying signature", err);

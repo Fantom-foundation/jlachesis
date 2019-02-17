@@ -25,9 +25,9 @@ public class RandomPeerSelector {
 		Peer[] selectablePeers = peers.ToPeerSlice();
 	
 		if (selectablePeers.length > 1) {
-			selectablePeers = peers.ExcludePeer(selectablePeers, localAddr).peers;
+			selectablePeers = peers.excludePeer(selectablePeers, localAddr).peers;
 			if (selectablePeers.length > 1) {
-				selectablePeers = peers.ExcludePeer(selectablePeers, last).peers;
+				selectablePeers = peers.excludePeer(selectablePeers, last).peers;
 			}
 		}
 	

@@ -11,10 +11,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class Peers {
 	ReadWriteLock lock = new ReentrantReadWriteLock();
 
-	Peer[] Sorted;
-	PubKeyPeers ByPubKey;
-	IdPeers ById;
-	List<Listener> Listeners;
+	Peer[] sorted;
+	PubKeyPeers byPubKey;
+	IdPeers byId;
+	List<Listener> listeners;
 
 	public class PubKeyPeers extends HashMap<String,Peer> {
 		private static final long serialVersionUID = 9150920875342183234L;
@@ -30,13 +30,13 @@ public class Peers {
 
 	/* Constructors */
 	public Peers() {
-		Sorted = new Peer[0];
-		ByPubKey = new PubKeyPeers();
-		ById = new IdPeers();
-		Listeners = new ArrayList<>();
+		sorted = new Peer[0];
+		byPubKey = new PubKeyPeers();
+		byId = new IdPeers();
+		listeners = new ArrayList<>();
 	}
 
-	public static Peers NewPeersFromSlice(Peer[] source) {
+	public static Peers newPeersFromSlice(Peer[] source) {
 		Peers peers = new Peers();
 
 		for (Peer peer : source) {
@@ -59,11 +59,11 @@ public class Peers {
 			peer.computeID();
 		}
 
-		ByPubKey.put(peer.PubKeyHex, peer);
-		ById.put(peer.ID, peer);
+		byPubKey.put(peer.PubKeyHex, peer);
+		byId.put(peer.ID, peer);
 	}
 
-	public void AddPeer(Peer peer) {
+	public void addPeer(Peer peer) {
 		lock.writeLock().lock();
 		try {
 			addPeerRaw(peer);
@@ -75,24 +75,24 @@ public class Peers {
 	}
 
 	public void internalSort() {
-		Collection<Peer> res = ByPubKey.values();
+		Collection<Peer> res = byPubKey.values();
 
 		Peer[] array = res.toArray(new Peer[res.size()]);
 		Arrays.sort(array, new PeerComparatorByID());
 
-		Sorted = array;
+		sorted = array;
 	}
 
 	/* Remove Methods */
 
-	public void RemovePeer(Peer peer) {
+	public void removePeer(Peer peer) {
 		lock.writeLock().lock();
 		try {
-			if (ByPubKey.containsKey(peer.PubKeyHex)) {
+			if (byPubKey.containsKey(peer.PubKeyHex)) {
 				return;
 			}
-			ByPubKey.remove(peer.PubKeyHex);
-			ById.remove(peer.ID);
+			byPubKey.remove(peer.PubKeyHex);
+			byId.remove(peer.ID);
 
 			internalSort();
 		} finally {
@@ -100,26 +100,26 @@ public class Peers {
 		}
 	}
 
-	public void RemovePeerByPubKey(String pubKey) {
-		RemovePeer(ByPubKey.get(pubKey));
+	public void removePeerByPubKey(String pubKey) {
+		removePeer(byPubKey.get(pubKey));
 	}
 
-	public void RemovePeerById(long id) {
-		RemovePeer(ById.get(id));
+	public void removePeerById(long id) {
+		removePeer(byId.get(id));
 	}
 
 	/* ToSlice Methods */
 
 	public Peer[] ToPeerSlice() {
-		return Sorted;
+		return sorted;
 	}
 
-	public String[] ToPubKeySlice() {
+	public String[] toPubKeySlice() {
 		lock.readLock().lock();
 		try {
-			String[] res = new String[Sorted.length];
-			for (int i = 0; i< Sorted.length; ++i) {
-				res[i] = Sorted[i].PubKeyHex;
+			String[] res = new String[sorted.length];
+			for (int i = 0; i< sorted.length; ++i) {
+				res[i] = sorted[i].PubKeyHex;
 			}
 
 			return res;
@@ -128,12 +128,12 @@ public class Peers {
 		}
 	}
 
-	public long[] ToIDSlice() {
+	public long[] toIDSlice() {
 		lock.readLock().lock();
 		try {
-			long[] res = new long[Sorted.length];
-			for (int i = 0; i< Sorted.length; ++i) {
-				res[i] = Sorted[i].ID;
+			long[] res = new long[sorted.length];
+			for (int i = 0; i< sorted.length; ++i) {
+				res[i] = sorted[i].ID;
 			}
 			return res;
 		} finally {
@@ -142,11 +142,11 @@ public class Peers {
 	}
 
 	/* EventListener */
-	public void OnNewPeer(Listener cb) {
-		Listeners.add(cb);
+	public void onNewPeer(Listener cb) {
+		listeners.add(cb);
 	}
 	public void EmitNewPeer(Peer peer) {
-		for (Listener l : Listeners) {
+		for (Listener l : listeners) {
 			l.listen(peer);
 		}
 	}
@@ -162,7 +162,7 @@ public class Peers {
 	}
 
 	// ExcludePeer is used to exclude a single peer from a list of peers.
-	public ExcludePeerResult ExcludePeer(Peer[] peers, String peer) {
+	public ExcludePeerResult excludePeer(Peer[] peers, String peer) {
 		int index = -1;
 		List<Peer> otherPeers = new ArrayList<Peer>();
 		for (int i = 0; i < peers.length; ++i) {
@@ -179,36 +179,36 @@ public class Peers {
 
 
 	/* Utilities */
-	public int Len() {
+	public int length() {
 		lock.readLock().lock();
 		try {
-			return ByPubKey.size();
+			return byPubKey.size();
 		} finally {
 			lock.readLock().unlock();
 		}
 	}
 
 	public PubKeyPeers getByPubKey() {
-		return ByPubKey;
+		return byPubKey;
 	}
 
 	public IdPeers getById() {
-		return ById;
+		return byId;
 	}
 
-	public Peer ById(long creatorID) {
-		return ById.get(creatorID);
+	public Peer byId(long creatorID) {
+		return byId.get(creatorID);
 	}
 
-	public Peer ByPubKey(String pub) {
-		return ByPubKey.get(pub);
+	public Peer byPubKey(String pub) {
+		return byPubKey.get(pub);
 	}
 
 	public Peer[] getSorted() {
-		return Sorted;
+		return sorted;
 	}
 
 	public List<Listener> getListeners() {
-		return Listeners;
+		return listeners;
 	}
 }

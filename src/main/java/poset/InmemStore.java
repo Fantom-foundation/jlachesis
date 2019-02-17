@@ -83,7 +83,7 @@ public class InmemStore implements Store {
 		this.lastBlock=              -1;
 		this.lastConsensusEvents=   new HashMap<String,String>();
 
-		participants.OnNewPeer(
+		participants.onNewPeer(
 			new Listener() {
 				@Override
 				public void listen(Peer peer) {
@@ -126,13 +126,13 @@ public class InmemStore implements Store {
 	}
 
 	public error SetEvent(Event event) {
-		String key = event.Hex();
+		String key = event.hex();
 		error err = GetEvent(key).err;
 		if (err != null && !StoreErr.Is(err, StoreErrType.KeyNotFound)) {
 			return err;
 		}
 		if (StoreErr.Is(err, StoreErrType.KeyNotFound)) {
-			err = addParticpantEvent(event.Creator(), key, event.Index());
+			err = addParticpantEvent(event.creator(), key, event.index());
 			if (err != null) {
 				return err;
 			}
@@ -235,9 +235,9 @@ public class InmemStore implements Store {
 	}
 
 	public error AddConsensusEvent(Event event ) {
-		consensusCache.Set(event.Hex(), totConsensusEvents);
+		consensusCache.Set(event.hex(), totConsensusEvents);
 		totConsensusEvents++;
-		lastConsensusEvents.put(event.Creator(), event.Hex());
+		lastConsensusEvents.put(event.creator(), event.hex());
 		return null;
 	}
 

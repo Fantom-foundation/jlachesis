@@ -15,7 +15,7 @@ public class ParticipantBlockSignaturesCache {
 
 	public ParticipantBlockSignaturesCache(int size, peers.Peers participants) {
 		this.participants =  participants;
-		this.rim = new RollingIndexMap("ParticipantBlockSignatures", size, participants.ToIDSlice());
+		this.rim = new RollingIndexMap("ParticipantBlockSignatures", size, participants.toIDSlice());
 	}
 
 	public RetResult<Long> participantID(String participant) {
@@ -89,7 +89,7 @@ public class ParticipantBlockSignaturesCache {
 			return err;
 		}
 
-		return rim.Set(id, sig, sig.Index);
+		return rim.Set(id, sig, sig.index);
 	}
 
 	//returns [participant id] => last BlockSignature Index

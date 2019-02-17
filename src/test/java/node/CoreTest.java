@@ -71,7 +71,7 @@ public class CoreTest {
 		String[] expectedOrder = new String[]{"e0", "e2", "e01", "e20", "e12"};
 		for (int i =0; i< unknownBy1.length; ++i) {
 			Event e = unknownBy1[i];
-			String name = getName(index, e.Hex());
+			String name = getName(index, e.hex());
 			assertEquals(String.format("element %d should match",
 				i), expectedOrder[i], name);
 		}
@@ -158,13 +158,13 @@ public class CoreTest {
 		assertEquals("core 0 should have last-index -1 for core 2, not %d", -1, k);
 
 		Event core0Head = cores[0].GetHead().result;
-		assertEquals("core 0 head self-parent should be e0", core0Head.SelfParent(), cores[0].GetHead());
+		assertEquals("core 0 head self-parent should be e0", core0Head.selfParent(), cores[0].GetHead());
 
-		assertEquals("core 0 head other-parent should be e1", core0Head.OtherParent(), index.get("e1"));
+		assertEquals("core 0 head other-parent should be e1", core0Head.otherParent(), index.get("e1"));
 
 		assertNotNull("flag table is not null", core0Head.getMessage().GetFlagTable());
 
-		index.put("e01", core0Head.Hex());
+		index.put("e01", core0Head.hex());
 
 		// core 0 is going to tell core 2 everything it knows
 		err = synchronizeCores(cores, 0, 2, new byte[][]{});
@@ -215,12 +215,12 @@ public class CoreTest {
 		assertEquals("core 2 should have last-index 1 for core 2, not %d", 1, k);
 
 		Event core2Head = cores[2].GetHead().result;
-		assertEquals("core 2 head self-parent should be e2", core2Head.SelfParent(), index.get("e2"));
+		assertEquals("core 2 head self-parent should be e2", core2Head.selfParent(), index.get("e2"));
 
-		assertEquals("core 2 head other-parent should be e01", core2Head.OtherParent(),index.get("e01"));
+		assertEquals("core 2 head other-parent should be e01", core2Head.otherParent(),index.get("e01"));
 
 
-		index.put("e20", core2Head.Hex());
+		index.put("e20", core2Head.hex());
 
 		// core 2 is going to tell core 1 everything it knows
 		err = synchronizeCores(cores, 2, 1, new byte[][]{});
@@ -272,11 +272,11 @@ public class CoreTest {
 		assertEquals("core 1 should have last-index 1 for core 2, not %d", 1, k);
 
 		Event core1Head = cores[1].GetHead().result;
-		assertEquals("core 1 head self-parent should be e1", core1Head.SelfParent(), index.get("e1"));
+		assertEquals("core 1 head self-parent should be e1", core1Head.selfParent(), index.get("e1"));
 
-		assertEquals("core 1 head other-parent should be e20", core1Head.OtherParent(), index.get("e20"));
+		assertEquals("core 1 head other-parent should be e20", core1Head.otherParent(), index.get("e20"));
 
-		index.put("e12", core1Head.Hex());
+		index.put("e12", core1Head.hex());
 	}
 
 
@@ -293,7 +293,7 @@ public class CoreTest {
 //			pubHex := String.format("0x%X", crypto.FromECDSAPub(&key.PublicKey));
 			String pubHex = Utils.keyToHexString(key.getPublic());
 			Peer peer = new Peer(pubHex, "");
-			participants.AddPeer(peer);
+			participants.addPeer(peer);
 			participantKeys.put(peer.GetID(), key);
 		}
 
@@ -351,7 +351,7 @@ public class CoreTest {
 				assertNull("No error getEvent", err);
 
 				err = cores[participant].InsertEvent(event, true);
-				assertNull("No error inserting " + getName(index, event.Hex()), err);
+				assertNull("No error inserting " + getName(index, event.hex()), err);
 			}
 		}
 
@@ -367,8 +367,8 @@ public class CoreTest {
 		err = getEventCall1.err;
 		assertNull("No error when get parent", err);
 
-		Map<String, Long> event1ft = event1.GetFlagTable().result;
-		Map<String, Long> event01ft = event0.MergeFlagTable(event1ft).result;
+		Map<String, Long> event1ft = event1.getFlagTable().result;
+		Map<String, Long> event01ft = event0.mergeFlagTable(event1ft).result;
 
 		Event event01 = new Event(new byte[][]{},
 			new poset.InternalTransaction[]{},
@@ -386,7 +386,7 @@ public class CoreTest {
 		err = getEventCall2.err;
 		assertNull("No error get parent", err);
 
-		Map<String, Long> event20ft = event2.MergeFlagTable(event01ft).result;
+		Map<String, Long> event20ft = event2.mergeFlagTable(event01ft).result;
 
 		Event event20 = new Event(new byte[][]{},
 			new poset.InternalTransaction[]{},
@@ -398,7 +398,7 @@ public class CoreTest {
 				Hash32.Hash32(cores[2].pubKey));
 		assertNull("No error inserting e20", err);
 
-		Map<String, Long> event12ft = event1.MergeFlagTable(event20ft).result;
+		Map<String, Long> event12ft = event1.mergeFlagTable(event20ft).result;
 
 		Event event12 = new Event(new byte[][]{},
 			new poset.InternalTransaction[]{},
@@ -422,12 +422,12 @@ public class CoreTest {
 			// event is not signed because passed by value
 			index.put(name, cores[participant].head);
 		} else {
-			event.Sign(keys.get(creator).getPrivate());
+			event.sign(keys.get(creator).getPrivate());
 			err = cores[participant].InsertEvent(event, true);
 			if (err != null) {
 				return err;
 			}
-			index.put(name, event.Hex());
+			index.put(name, event.hex());
 		}
 		return null;
 	}
@@ -951,7 +951,7 @@ public class CoreTest {
 		// "Test not enough signatures"
 
 		// Append only 1 signatures
-		err = block0.SetSignature(signatures[0]);
+		err = block0.setSignature(signatures[0]);
 		assertNull("No error when SetSignature 0", err);
 
 		// Save Block
@@ -978,7 +978,7 @@ public class CoreTest {
 		// "Test positive"
 		// Append the 2nd and 3rd signatures
 		for (int i = 1; i < 3; i++) {
-			err = block0.SetSignature(signatures[i]);
+			err = block0.setSignature(signatures[i]);
 			assertNull("No error when SetSignature()", err);
 		}
 
@@ -1017,7 +1017,7 @@ public class CoreTest {
 		err = getBlock2.err;
 		assertNull("No Error retrieving latest Block from reset poset", err);
 
-		assertEquals("Blocks match", sBlock.GetBody(), block.GetBody());
+		assertEquals("Blocks match", sBlock.getBody(), block.getBody());
 
 		RetResult3<String, Boolean> lastEventFrom = cores[0].poset.Store.LastEventFrom(cores[0].hexID);
 		String lastEventFrom0 = lastEventFrom.result1;

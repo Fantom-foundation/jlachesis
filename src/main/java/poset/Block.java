@@ -16,81 +16,81 @@ import common.RetResult3;
 import common.error;
 
 public class Block {
-	private BlockBody Body;
-	private Map<String,String> Signatures;
-	private byte[] Hash;
-	private String Hex;
-	private byte[] StateHash;
-	private byte[] FrameHash;
+	private BlockBody body;
+	private Map<String,String> signatures;
+	private byte[] hash;
+	private String hex;
+	private byte[] stateHash;
+	private byte[] frameHash;
 
 	public Block() {
-		Body = null;
-		Signatures = null;
-		Hash = null;
-		Hex = null;
-		StateHash = null;
-		FrameHash = null;
+		body = null;
+		signatures = null;
+		hash = null;
+		hex = null;
+		stateHash = null;
+		frameHash = null;
 	}
 
 	public Block(long blockIndex, long roundReceived, byte[] frameHash, byte[][] txs)  {
-		this.Body = new BlockBody (blockIndex, roundReceived, txs);
-		this.FrameHash = frameHash;
-		this.Signatures = new HashMap<String,String>();
+		this.body = new BlockBody (blockIndex, roundReceived, txs);
+		this.frameHash = frameHash;
+		this.signatures = new HashMap<String,String>();
 	}
 
-	public void Reset() {
-		Body = null;
-		Signatures.clear();
-		Hash = null;
-		Hex = null;
-		StateHash = null;
-		FrameHash = null;
+	public void reset() {
+		body = null;
+		signatures.clear();
+		hash = null;
+		hex = null;
+		stateHash = null;
+		frameHash = null;
 	}
 
 
-	public BlockBody GetBody() {
-		if (this.Body != null) {
-			return this.Body;
+	public BlockBody getBody() {
+		if (this.body != null) {
+			return this.body;
 		}
 		return null;
 	}
 
-	public Map<String,String> GetSignatures() {
-		if (this.Signatures != null) {
-			return this.Signatures;
+	public Map<String,String> getSignatures() {
+		if (this.signatures != null) {
+			return this.signatures;
 		}
 		return null;
 	}
 
-	public byte[] GetHash() {
-		if (this.Hash != null) {
-			return this.Hash;
+	public byte[] getHash() {
+		if (this.hash != null) {
+			return this.hash;
 		}
 		return null;
 	}
 
-	public String GetHex() {
-		if (this.Hex != null) {
-			return this.Hex;
+	public String getHex() {
+		if (this.hex != null) {
+			return this.hex;
 		}
 		return "";
 	}
 
-	public byte[] GetStateHash() {
+	public byte[] stateHash() {
 		if (this.getStateHash() != null) {
 			return this.getStateHash();
 		}
 		return null;
 	}
 
-	public byte[] GetFrameHash() {
-		if (this.FrameHash != null) {
-			return this.FrameHash;
+	public byte[] getFrameHash() {
+		if (this.frameHash != null) {
+			return this.frameHash;
 		}
 		return null;
 	}
 
-	public static RetResult<Block> NewBlockFromFrame(long blockIndex, Frame frame) {
+	public static RetResult<Block> newBlockFromFrame(long blockIndex, Frame frame) {
 		RetResult<byte[]> hash2 = frame.Hash();
 		byte[] frameHash = hash2.result;
 		error err = hash2.err;
@@ -117,22 +117,22 @@ public class Block {
 //	}
 
 	public long Index() {
-		return Body.Index;
+		return body.index;
 	}
 
-	public byte[][] Transactions() {
-		return Body.Transactions;
+	public byte[][] transactions() {
+		return body.transactions;
 	}
 
-	public long RoundReceived() {
-		return Body.RoundReceived;
+	public long roundReceived() {
+		return body.roundReceived;
 	}
 
-	public BlockSignature[] GetBlockSignatures()  {
-		BlockSignature[] res = new BlockSignature[Signatures.size()];
+	public BlockSignature[] getBlockSignatures()  {
+		BlockSignature[] res = new BlockSignature[signatures.size()];
 		int i = 0;
-		for (String val : Signatures.keySet()) {
-			String sig = Signatures.get(val);
+		for (String val : signatures.keySet()) {
+			String sig = signatures.get(val);
 			byte[] validatorBytes = crypto.Utils.decodeString(val.substring(2, val.length())).result;
 			res[i] = new BlockSignature (
 				validatorBytes,
@@ -144,8 +144,8 @@ public class Block {
 		return res;
 	}
 
-	public RetResult<BlockSignature> GetSignature(String validator) {
-		String sig = Signatures.get(validator);
+	public RetResult<BlockSignature> getSignature(String validator) {
+		String sig = signatures.get(validator);
 		BlockSignature res = null;
 		if (sig == null) {
 			return new RetResult<BlockSignature>(res, error.Errorf("signature not found"));
@@ -156,8 +156,8 @@ public class Block {
 				new BlockSignature(validatorBytes, Index(), sig), null);
 	}
 
-	public void AppendTransactions(byte[][] txs) {
-		Body.Transactions = Appender.append(Body.Transactions, txs);
+	public void appendTransactions(byte[][] txs) {
+		body.transactions = Appender.append(body.transactions, txs);
 	}
 
 	public IProto<Block, poset.proto.Block> marshaller() {
@@ -165,24 +165,24 @@ public class Block {
 			@Override
 			public poset.proto.Block toProto() {
 				poset.proto.Block.Builder builder = poset.proto.Block.newBuilder();
-				if (Body != null) {
-					poset.proto.BlockBody pBlockBody = Body.marshaller().toProto();
+				if (body != null) {
+					poset.proto.BlockBody pBlockBody = body.marshaller().toProto();
 					builder.setBody(pBlockBody);
 				}
-				if (Signatures != null) {
-					builder.clearSignatures().putAllSignatures(Signatures);
+				if (signatures != null) {
+					builder.clearSignatures().putAllSignatures(signatures);
 				}
-				if (Hash != null) {
-					builder.setHash(ByteString.copyFrom(Hash));
+				if (hash != null) {
+					builder.setHash(ByteString.copyFrom(hash));
 				}
-				if (Hex != null) {
-					builder.setHex(Hex);
+				if (hex != null) {
+					builder.setHex(hex);
 				}
-				if (StateHash != null) {
-					builder.setStateHash(ByteString.copyFrom(StateHash));
+				if (stateHash != null) {
+					builder.setStateHash(ByteString.copyFrom(stateHash));
 				}
-				if (FrameHash != null) {
-					builder.setFrameHash(ByteString.copyFrom(FrameHash));
+				if (frameHash != null) {
+					builder.setFrameHash(ByteString.copyFrom(frameHash));
 				}
 				return builder.build();
 			}
@@ -190,17 +190,17 @@ public class Block {
 			@Override
 			public void fromProto(poset.proto.Block pBlock) {
 				poset.proto.BlockBody pBody = pBlock.getBody();
-				Body = null;
+				body = null;
 				if (pBody != null) {
-					Body = new BlockBody();
-					Body.marshaller().fromProto(pBody);
+					body = new BlockBody();
+					body.marshaller().fromProto(pBody);
 				}
 
-				Signatures = pBlock.getSignaturesMap();
-				Hash = pBlock.getHash().toByteArray();
-				Hex = pBlock.getHex();
-				StateHash = pBlock.getStateHash().toByteArray();
-				FrameHash = pBlock.getFrameHash().toByteArray();
+				signatures = pBlock.getSignaturesMap();
+				hash = pBlock.getHash().toByteArray();
+				hex = pBlock.getHex();
+				stateHash = pBlock.getStateHash().toByteArray();
+				frameHash = pBlock.getFrameHash().toByteArray();
 			}
 
 			@Override
@@ -210,8 +210,8 @@ public class Block {
 		};
 	}
 
-	public RetResult<BlockSignature> Sign(KeyPair keyPair) {
-		RetResult<byte[]> hash2 = Body.Hash();
+	public RetResult<BlockSignature> sign(KeyPair keyPair) {
+		RetResult<byte[]> hash2 = body.hash();
 		byte[] signBytes = hash2.result;
 		error err = hash2.err;
 		BlockSignature bs = null;
@@ -234,22 +234,22 @@ public class Block {
 		return new RetResult<BlockSignature>(bs, null);
 	}
 
-	public error SetSignature(BlockSignature bs) {
-		Signatures.put(bs.ValidatorHex(), bs.Signature);
+	public error setSignature(BlockSignature bs) {
+		signatures.put(bs.validatorHex(), bs.signature);
 		return null;
 	}
 
-	public RetResult<Boolean> Verify(BlockSignature sig) {
-		RetResult<byte[]> hash2 = Body.Hash();
+	public RetResult<Boolean> verify(BlockSignature sig) {
+		RetResult<byte[]> hash2 = body.hash();
 		byte[] signBytes = hash2.result;
 		error err = hash2.err;
 		if (err != null) {
 			return new RetResult<Boolean>(false, err);
 		}
 
-		PublicKey pubKey = crypto.Utils.ToECDSAPub(sig.Validator);
+		PublicKey pubKey = crypto.Utils.ToECDSAPub(sig.validator);
 
-		RetResult3<BigInteger, BigInteger> decodeSignature = crypto.Utils.DecodeSignature(sig.Signature);
+		RetResult3<BigInteger, BigInteger> decodeSignature = crypto.Utils.DecodeSignature(sig.signature);
 		BigInteger r = decodeSignature.result1;
 		BigInteger s = decodeSignature.result2;
 		err = decodeSignature.err;
@@ -264,12 +264,12 @@ public class Block {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((Body == null) ? 0 : Body.hashCode());
-		result = prime * result + Arrays.hashCode(FrameHash);
-		result = prime * result + Arrays.hashCode(Hash);
-		result = prime * result + ((Hex == null) ? 0 : Hex.hashCode());
-		result = prime * result + ((Signatures == null) ? 0 : Signatures.hashCode());
-		result = prime * result + Arrays.hashCode(StateHash);
+		result = prime * result + ((body == null) ? 0 : body.hashCode());
+		result = prime * result + Arrays.hashCode(frameHash);
+		result = prime * result + Arrays.hashCode(hash);
+		result = prime * result + ((hex == null) ? 0 : hex.hashCode());
+		result = prime * result + ((signatures == null) ? 0 : signatures.hashCode());
+		result = prime * result + Arrays.hashCode(stateHash);
 		return result;
 	}
 
@@ -282,38 +282,38 @@ public class Block {
 		if (getClass() != obj.getClass())
 			return false;
 		Block other = (Block) obj;
-		if (Body == null) {
-			if (other.Body != null)
+		if (body == null) {
+			if (other.body != null)
 				return false;
-		} else if (!Body.equals(other.Body))
+		} else if (!body.equals(other.body))
 			return false;
-		if (!Utils.protoBytesEquals(FrameHash, other.FrameHash))
+		if (!Utils.protoBytesEquals(frameHash, other.frameHash))
 			return false;
-		if (!Utils.protoBytesEquals(Hash, other.Hash))
+		if (!Utils.protoBytesEquals(hash, other.hash))
 			return false;
-		if (!Utils.protoStringEquals(Hex, other.Hex))
+		if (!Utils.protoStringEquals(hex, other.hex))
 			return false;
-		if (Signatures == null) {
-			if (other.Signatures != null)
+		if (signatures == null) {
+			if (other.signatures != null)
 				return false;
-		} else if (!Signatures.equals(other.Signatures))
+		} else if (!signatures.equals(other.signatures))
 			return false;
-		if (!Utils.protoBytesEquals(StateHash, other.StateHash))
+		if (!Utils.protoBytesEquals(stateHash, other.stateHash))
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "Block [Body=" + Body + ", Signatures=" + Signatures + ", Hash=" + Arrays.toString(Hash) + ", Hex=" + Hex
-				+ ", StateHash=" + Arrays.toString(getStateHash()) + ", FrameHash=" + Arrays.toString(FrameHash) + "]";
+		return "Block [Body=" + body + ", Signatures=" + signatures + ", Hash=" + Arrays.toString(hash) + ", Hex=" + hex
+				+ ", StateHash=" + Arrays.toString(getStateHash()) + ", FrameHash=" + Arrays.toString(frameHash) + "]";
 	}
 
 	public byte[] getStateHash() {
-		return StateHash;
+		return stateHash;
 	}
 
 	public void setStateHash(byte[] stateHash) {
-		StateHash = stateHash;
+		this.stateHash = stateHash;
 	}
 }

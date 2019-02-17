@@ -8,20 +8,24 @@ import autils.JsonUtils;
 import common.RetResult;
 import common.error;
 
-// JSONPeers is used to provide peer persistence on disk in the form
-// of a JSON file. This allows human operators to manipulate the file.
-public class JSONPeers {
+/**
+ * JSONPeers is used to provide peer persistence on disk in the form
+ * of a JSON file. This allows human operators to manipulate the file.
+ */
+public class JSONPeers  implements PeerStore {
 	Semaphore l; //    sync.Mutex
 	String path;
 
-	// NewJSONPeers creates a new JSONPeers store.
+	/**
+	 * Creates a new JSONPeers store.
+	 * @param base
+	 */
 	public JSONPeers(String base) {
 		this.l = new Semaphore(1);
 		this.path = Paths.get(base, Peer.jsonPeerPath).toString();
 	}
 
-	// Peers implements the PeerStore interface.
-	public RetResult<Peers> Peers() {
+	public RetResult<Peers> peers() {
 		try {
 			l.acquire();
 
@@ -45,7 +49,7 @@ public class JSONPeers {
 	//		err := dec.Decode(peerSet);
 			 Peer[] peerSet = JsonUtils.StringToObject(new String(buf), Peer[].class);
 
-			return new RetResult<Peers>(Peers.NewPeersFromSlice(peerSet), null);
+			return new RetResult<Peers>(Peers.newPeersFromSlice(peerSet), null);
 		} catch (InterruptedException e) {
 			error err = new error(e.getMessage());
 			return new RetResult<Peers>(null, err);
@@ -54,8 +58,7 @@ public class JSONPeers {
 		}
 	}
 
-	// SetPeers implements the PeerStore interface.
-	public error SetPeers(Peer[] peers) {
+	public error setPeers(Peer[] peers) {
 		try
 		{
 			l.acquire();

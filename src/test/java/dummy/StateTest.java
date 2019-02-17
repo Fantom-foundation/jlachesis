@@ -45,7 +45,7 @@ public class StateTest {
 				});
 		state.commit(block);
 
-		assertArrayEquals("State's commited txs", state.committedTxs, block.Transactions());
+		assertArrayEquals("State's commited txs", state.committedTxs, block.transactions());
 		assertTrue("state snapshots contains block's index", state.snapshots.containsKey(block.Index()));
 	}
 }

@@ -90,7 +90,7 @@ public class Node extends NodeState {
 		PeerSelector peerSelector = new SmartPeerSelector(participants, pubKey,
 				new FlagtableContainer() {
 					@Override
-					public RetResult<Map<String, Long>> GetFlagTable() {
+					public RetResult<Map<String, Long>> getFlagTable() {
 						return core.poset.GetFlagTableOfRandomUndeterminedEvent();
 					}}
 			);
@@ -239,8 +239,8 @@ public class Node extends NodeState {
 				case COMMIT:
 					Block block = commitCh.in().read();
 					logger.field("index",         block.Index())
-						.field("round_received", block.RoundReceived())
-						.field("transactions",   block.Transactions().length)
+						.field("round_received", block.roundReceived())
+						.field("transactions",   block.transactions().length)
 						.debug("Adding EventBlock");
 					error err = commit(block);
 					if  (err != null) {
@@ -615,7 +615,7 @@ public class Node extends NodeState {
 		logger
 			.field("from_id",              resp.getFromID())
 			.field("block_index",          resp.getBlock().Index())
-			.field("block_round_received", resp.getBlock().RoundReceived())
+			.field("block_round_received", resp.getBlock().roundReceived())
 			.field("frame_events",         resp.getFrame().GetEvents().length)
 			.field("frame_roots",          resp.getFrame().GetRoots())
 			.field("snapshot",             resp.getSnapshot())
@@ -818,7 +818,7 @@ public class Node extends NodeState {
 		s.put("consensus_transactions",  "" + consensusTransactions);
 		s.put("undetermined_events",     "" + core.GetUndeterminedEvents().size());
 		s.put("transaction_pool",        "" + core.transactionPool.length);
-		s.put("num_peers",               "" + peerSelector.Peers().Len());
+		s.put("num_peers",               "" + peerSelector.Peers().length());
 		s.put("sync_rate",               "" + String.format("%.2f",SyncRate()));
 		s.put("transactions_per_second", String.format("%.2f",transactionsPerSecond));
 		s.put("events_per_second",       String.format("%.2f",consensusEventsPerSecond));

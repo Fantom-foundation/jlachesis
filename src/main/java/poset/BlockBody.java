@@ -10,34 +10,45 @@ import common.error;
 import crypto.hash;
 
 public class BlockBody {
-	long Index;
-	long RoundReceived;
-	byte[][] Transactions;
+	long index;
+	long roundReceived;
+	byte[][] transactions;
 
 	public BlockBody()
 	{
-		Index = -1;
-		RoundReceived= -1;
-		Transactions= null;
+		index = -1;
+		roundReceived= -1;
+		transactions= null;
 	}
 
 	public BlockBody(long index, long roundReceived, byte[][] transactions) {
 		super();
-		Index = index;
-		RoundReceived = roundReceived;
-		Transactions = transactions;
+		this.index = index;
+		this.roundReceived = roundReceived;
+		this.transactions = transactions;
 	}
 
-	public long GetIndex() {
-		return this.Index;
+	public long getIndex() {
+		return this.index;
 	}
 
-	public long GetRoundReceived() {
-		return this.RoundReceived;
+	public long getRoundReceived() {
+		return this.roundReceived;
 	}
 
-	public byte[][] GetTransactions() {
-		return this.Transactions;
+	public byte[][] getTransactions() {
+		return this.transactions;
+	}
+
+	public RetResult<byte[]> hash() {
+		RetResult<byte[]> marshal = marshaller().protoMarshal();
+
+		byte[] hashBytes = marshal.result;
+		error err = marshal.err;
+		if (err != null) {
+			return new RetResult<byte[]>(null, err);
+		}
+		return new RetResult<byte[]>(hash.SHA256(hashBytes), null);
 	}
 
 	public IProto<BlockBody, poset.proto.BlockBody> marshaller() {
@@ -45,9 +56,9 @@ public class BlockBody {
 			@Override
 			public poset.proto.BlockBody toProto() {
 				poset.proto.BlockBody.Builder builder = poset.proto.BlockBody.newBuilder();
-				builder.setIndex(Index).setRoundReceived(RoundReceived);
-				if (Transactions != null) {
-					Arrays.asList(Transactions).forEach(transaction -> {
+				builder.setIndex(index).setRoundReceived(roundReceived);
+				if (transactions != null) {
+					Arrays.asList(transactions).forEach(transaction -> {
 						builder.addTransactions(ByteString.copyFrom(transaction));
 					});
 				}
@@ -56,14 +67,14 @@ public class BlockBody {
 
 			@Override
 			public void fromProto(poset.proto.BlockBody pBlock) {
-				Index = pBlock.getIndex();
-				RoundReceived = pBlock.getRoundReceived();
+				index = pBlock.getIndex();
+				roundReceived = pBlock.getRoundReceived();
 				int transactionsCount = pBlock.getTransactionsCount();
-				Transactions = new byte[][]{};
+				transactions = new byte[][]{};
 				if (transactionsCount > 0) {
-					Transactions = new byte[transactionsCount][];
+					transactions = new byte[transactionsCount][];
 					for (int i = 0; i < transactionsCount; ++i) {
-						Transactions[i] = pBlock.getTransactions(i).toByteArray();
+						transactions[i] = pBlock.getTransactions(i).toByteArray();
 					}
 				}
 			}
@@ -79,17 +90,17 @@ public class BlockBody {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (int) (Index ^ (Index >>> 32));
-		result = prime * result + (int) (RoundReceived ^ (RoundReceived >>> 32));
-		result = prime * result + Arrays.deepHashCode(Transactions);
+		result = prime * result + (int) (index ^ (index >>> 32));
+		result = prime * result + (int) (roundReceived ^ (roundReceived >>> 32));
+		result = prime * result + Arrays.deepHashCode(transactions);
 		return result;
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("BlockBody [Index=").append(Index).append(", RoundReceived=").append(RoundReceived)
-				.append(", Transactions=").append(Arrays.toString(Transactions)).append("]");
+		builder.append("BlockBody [Index=").append(index).append(", RoundReceived=").append(roundReceived)
+				.append(", Transactions=").append(Arrays.toString(transactions)).append("]");
 		return builder.toString();
 	}
 
@@ -102,23 +113,12 @@ public class BlockBody {
 		if (getClass() != obj.getClass())
 			return false;
 		BlockBody other = (BlockBody) obj;
-		if (Index != other.Index)
+		if (index != other.index)
 			return false;
-		if (RoundReceived != other.RoundReceived)
+		if (roundReceived != other.roundReceived)
 			return false;
-		if (!Arrays.deepEquals(Transactions, other.Transactions))
+		if (!Arrays.deepEquals(transactions, other.transactions))
 			return false;
 		return true;
-	}
-
-	public RetResult<byte[]> Hash() {
-		RetResult<byte[]> marshal = marshaller().protoMarshal();
-
-		byte[] hashBytes = marshal.result;
-		error err = marshal.err;
-		if (err != null) {
-			return new RetResult<byte[]>(null, err);
-		}
-		return new RetResult<byte[]>(hash.SHA256(hashBytes), null);
 	}
 }

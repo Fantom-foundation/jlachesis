@@ -51,10 +51,10 @@ public class EventTest {
 		body.Creator = publicKeyBytes;
 
 		Event event = new Event(new EventMessage(body));
-		error err = event.Sign(key.getPrivate());
+		error err = event.sign(key.getPrivate());
 		assertNull("No Error signing Event", err);
 
-		RetResult<Boolean> verify = event.Verify();
+		RetResult<Boolean> verify = event.verify();
 		boolean res = verify.result;
 		err = verify.err;
 		assertNull("Node Error verifying signature", err);
@@ -70,7 +70,7 @@ public class EventTest {
 		body.Creator = publicKeyBytes;
 
 		Event event = new Event(new EventMessage(body));
-		error err = event.Sign(key.getPrivate());
+		error err = event.sign(key.getPrivate());
 		assertNull("No Error signing Event", err);
 
 		RetResult<byte[]> protoMarshal = event.marshaller().protoMarshal();
@@ -82,7 +82,7 @@ public class EventTest {
 		Event newEvent = new Event();
 		err = newEvent.marshaller().protoUnmarshal(raw);
 		assertNull("No Error unmarshalling Event", err);
-		assertEquals("Events should equal", newEvent.Message, event.Message);
+		assertEquals("Events should equal", newEvent.message, event.message);
 	}
 
 	@Test
@@ -94,28 +94,28 @@ public class EventTest {
 		body.Creator = publicKeyBytes;
 
 		Event event = new Event(new EventMessage(body));
-		error err = event.Sign(key.getPrivate());
+		error err = event.sign(key.getPrivate());
 		assertNull("No Error signing Event", err);
 
-		event.SetWireInfo(1, 66, 2, 67);
+		event.setWireInfo(1, 66, 2, 67);
 
-		InternalTransaction[] internalTransactions = Arrays.copyOf(event.Message.Body.InternalTransactions, event.Message.Body.InternalTransactions.length);
+		InternalTransaction[] internalTransactions = Arrays.copyOf(event.message.Body.InternalTransactions, event.message.Body.InternalTransactions.length);
 
 		WireEvent expectedWireEvent = new WireEvent(
 			new WireBody(
-				/* Transactions: */         event.Message.Body.Transactions,
+				/* Transactions: */         event.message.Body.Transactions,
 				/* InternalTransactions: */ internalTransactions,
 				/* BlockSignatures: */     event.WireBlockSignatures(),
 				/* SelfParentIndex: */      1,
 				/* OtherParentCreatorID: */ 66,
 				/* OtherParentIndex: */    2,
 				/* CreatorID: */           67,
-				/* Index: */  event.Message.Body.Index
+				/* Index: */  event.message.Body.Index
 			),
-			event.Message.Signature
+			event.message.Signature
 		);
 
-		WireEvent wireEvent = event.ToWire();
+		WireEvent wireEvent = event.toWire();
 		assertEquals("WireEvent should equal", expectedWireEvent, wireEvent);
 	}
 
@@ -123,29 +123,29 @@ public class EventTest {
 	public void TestIsLoaded() {
 		//null payload
 		Event event = new Event(null, null, null, new String[]{"p1", "p2"}, "creator".getBytes(), 1, null);
-		assertFalse("IsLoaded() should return false for null Body.Transactions and Body.BlockSignatures", event.IsLoaded());
+		assertFalse("IsLoaded() should return false for null Body.Transactions and Body.BlockSignatures", event.isLoaded());
 
 		//empty payload
-		event.Message.Body.Transactions = new byte[][] {};
-		assertFalse("IsLoaded() should return false for empty Body.Transactions", event.IsLoaded());
+		event.message.Body.Transactions = new byte[][] {};
+		assertFalse("IsLoaded() should return false for empty Body.Transactions", event.isLoaded());
 
-		event.Message.Body.BlockSignatures = new BlockSignature[]{};
-		assertFalse("IsLoaded() should return false for empty Body.BlockSignatures", event.IsLoaded());
+		event.message.Body.BlockSignatures = new BlockSignature[]{};
+		assertFalse("IsLoaded() should return false for empty Body.BlockSignatures", event.isLoaded());
 
 		//initial event
-		event.Message.Body.Index = 0;
-		assertTrue("IsLoaded() should return true for initial event", event.IsLoaded());
+		event.message.Body.Index = 0;
+		assertTrue("IsLoaded() should return true for initial event", event.isLoaded());
 
 		//non-empty tx payload
-		event.Message.Body.Transactions = new byte[][]{"abc".getBytes()};
-		assertTrue("IsLoaded() should return true for non-empty transaction payload", event.IsLoaded());
+		event.message.Body.Transactions = new byte[][]{"abc".getBytes()};
+		assertTrue("IsLoaded() should return true for non-empty transaction payload", event.isLoaded());
 
 		//non-empy signature payload
-		event.Message.Body.Transactions = null;
-		event.Message.Body.BlockSignatures = new BlockSignature[]{
+		event.message.Body.Transactions = null;
+		event.message.Body.BlockSignatures = new BlockSignature[]{
 			new BlockSignature("validator".getBytes(), 0, "r|s")
 		};
-		assertTrue("IsLoaded() should return true for non-empty signature payload", event.IsLoaded() );
+		assertTrue("IsLoaded() should return true for non-empty signature payload", event.isLoaded() );
 	}
 
 	@Test
@@ -156,11 +156,11 @@ public class EventTest {
 		exp.put("z", 2L);
 
 		Event event = new Event(null, null, null, new String[]{"p1", "p2"}, "creator".getBytes(), 1, exp);
-		assertFalse("IsLoaded() should return false for null Body.Transactions and Body.BlockSignatures", event.IsLoaded());
+		assertFalse("IsLoaded() should return false for null Body.Transactions and Body.BlockSignatures", event.isLoaded());
 
-		assertTrue("FlagTable is null", event.Message.FlagTable.length != 0);
+		assertTrue("FlagTable is null", event.message.FlagTable.length != 0);
 
-		RetResult<Map<String, Long>> getFlagTable = event.GetFlagTable();
+		RetResult<Map<String, Long>> getFlagTable = event.getFlagTable();
 		Map<String, Long> res = getFlagTable.result;
 		error err = getFlagTable.err;
 		assertNull("No error", err);
@@ -198,17 +198,17 @@ public class EventTest {
 		Event event = new Event(eventMessage );
 
 		for (HashMap<String, Long> v : syncData) {
-			RetResult<Map<String, Long>> mergeFlagTable = event.MergeFlagTable(v);
+			RetResult<Map<String, Long>> mergeFlagTable = event.mergeFlagTable(v);
 			Map<String, Long> flagTable = mergeFlagTable.result;
 			error err = mergeFlagTable.err;
 			assertNull("No error", err);
 
 			byte[] raw = new FlagTableWrapper(flagTable).marshaller().protoMarshal().result;
-			event.Message.FlagTable = raw;
+			event.message.FlagTable = raw;
 		}
 
 		FlagTableWrapper res = new FlagTableWrapper();
-		res.marshaller().protoUnmarshal(event.Message.FlagTable);
+		res.marshaller().protoUnmarshal(event.message.FlagTable);
 		assertEquals("expected flag table should match", exp, res.Body);
 	}
 

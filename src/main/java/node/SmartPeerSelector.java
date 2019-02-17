@@ -38,12 +38,12 @@ public class SmartPeerSelector implements PeerSelector {
 	public peers.Peer Next() {
 		Peer[] selectablePeers = peers.ToPeerSlice();
 		if (selectablePeers.length > 1) {
-			selectablePeers = peers.ExcludePeer(selectablePeers, localAddr).peers;
+			selectablePeers = peers.excludePeer(selectablePeers, localAddr).peers;
 
 			if (selectablePeers.length > 1) {
-				selectablePeers = peers.ExcludePeer(selectablePeers, last).peers;
+				selectablePeers = peers.excludePeer(selectablePeers, last).peers;
 				if (selectablePeers.length > 1) {
-					RetResult<Map<String, Long>> ftRes = GetFlagTable.GetFlagTable();
+					RetResult<Map<String, Long>> ftRes = GetFlagTable.getFlagTable();
 
 					if (ftRes.err == null) {
 						Map<String, Long> ft = ftRes.result;
@@ -52,7 +52,7 @@ public class SmartPeerSelector implements PeerSelector {
 								long flag = ft.get(id);
 								if (flag == 1 && selectablePeers.length > 1) {
 									// TODO: check it
-									selectablePeers = peers.ExcludePeer(selectablePeers, id).peers;
+									selectablePeers = peers.excludePeer(selectablePeers, id).peers;
 								}
 							}
 						}

@@ -290,7 +290,7 @@ public class BadgerStore implements Store {
 					Event lastEvent = getEventCall.result;
 					err = getEventCall.err;
 					if (err == null) {
-						index = lastEvent.Index();
+						index = lastEvent.index();
 					}
 				}
 
@@ -487,7 +487,7 @@ public class BadgerStore implements Store {
 //		tx = db.NewTransaction(true);
 //		defer tx.Discard();
 		for (Event event : events) {
-			String eventHex = event.Hex();
+			String eventHex = event.hex();
 			//logger.field("eventHex", eventHex).debug("dbSetEvents()");
 			byte[] eventBytes = eventHex.getBytes();
 
@@ -501,11 +501,11 @@ public class BadgerStore implements Store {
 			//insert [event hash] => [event bytes]
 			eventMap.put(eventBytes, val);
 			//insert [topo_index] => [event hash]
-			byte[] topoKey = topologicalEventKey(event.Message.TopologicalIndex);
+			byte[] topoKey = topologicalEventKey(event.message.TopologicalIndex);
 			//logger.field("topoKey", new String(topoKey)).debug("dbSetEvents()");
 			eventMap.put(topoKey, eventBytes);
 			//insert [participant_index] => [event hash]
-			byte[] peKey = participantEventKey(event.Creator(), event.Index());
+			byte[] peKey = participantEventKey(event.creator(), event.index());
 			//logger.field("topoKey", new String(peKey)).debug("dbSetEvents()");
 			eventMap.put(peKey, eventBytes);
 		}
@@ -692,7 +692,7 @@ public class BadgerStore implements Store {
 
 			byte[] pubKey = Appender.sliceFromToEnd(key, prefix.length +1);
 
-			res.AddPeer(new Peer(new String(pubKey), ""));
+			res.addPeer(new Peer(new String(pubKey), ""));
 		}
 
 		return new  RetResult<>(res, err);

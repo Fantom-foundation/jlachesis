@@ -111,7 +111,7 @@ public class NetTransportTest {
 		FastForwardRequest expectedReq = new FastForwardRequest(0);
 
 		Frame frame = new Frame();
-		RetResult<Block> newBlockFromFrame = Block.NewBlockFromFrame(1, frame);
+		RetResult<Block> newBlockFromFrame = Block.newBlockFromFrame(1, frame);
 		Block block = newBlockFromFrame.result;
 		error err = newBlockFromFrame.err;
 

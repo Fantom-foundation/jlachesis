@@ -153,7 +153,7 @@ public class Core {
 				return err;
 			}
 			head = last;
-			seq = lastEvent.Index();
+			seq = lastEvent.index();
 		}
 
 		this.head = head;
@@ -200,7 +200,7 @@ public class Core {
 					if (err != null) {
 						continue;
 					}
-					if (event.OtherParent().equals(eventHash)) {
+					if (event.otherParent().equals(eventHash)) {
 						inDegrees.put(pubKey, inDegrees.get(pubKey)+1);
 					}
 				}
@@ -221,27 +221,27 @@ public class Core {
 
 	public error InsertEvent(poset.Event event, boolean setWireInfo ) {
 
-		logger.field("event", event).field("creator", event.Creator())
-		.field("selfParent", event.SelfParent()).field("index", event.Index())
-		.field("hex", event.Hex()).debugf("InsertEvent(event poset.Event, setWireInfo bool)");
+		logger.field("event", event).field("creator", event.creator())
+		.field("selfParent", event.selfParent()).field("index", event.index())
+		.field("hex", event.hex()).debugf("InsertEvent(event poset.Event, setWireInfo bool)");
 
 		error err = poset.InsertEvent(event, setWireInfo);
 		if (err != null) {
 			return err;
 		}
 
-		if (event.Creator().equals(HexID())) {
-			head = event.Hex();
-			Seq = event.Index();
+		if (event.creator().equals(HexID())) {
+			head = event.hex();
+			Seq = event.index();
 		}
 
-		inDegrees.put(event.Creator(), (long) 0);
-		RetResult<Event> getEvent = poset.Store.GetEvent(event.OtherParent());
+		inDegrees.put(event.creator(), (long) 0);
+		RetResult<Event> getEvent = poset.Store.GetEvent(event.otherParent());
 		Event otherEvent = getEvent.result;
 		err = getEvent.err;
 		if  (err == null) {
-			inDegrees.put(otherEvent.Creator(),
-					inDegrees.get(otherEvent.Creator()) + 1);
+			inDegrees.put(otherEvent.creator(),
+					inDegrees.get(otherEvent.creator()) + 1);
 		}
 		return null;
 	}
@@ -253,13 +253,13 @@ public class Core {
 	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 	public RetResult<poset.BlockSignature> SignBlock(poset.Block block) {
-		RetResult<BlockSignature> signCall = block.Sign(key);
+		RetResult<BlockSignature> signCall = block.sign(key);
 		BlockSignature sig = signCall.result;
 		error err = signCall.err;
 		if (err != null) {
 			return new RetResult<poset.BlockSignature>(new poset.BlockSignature(), err);
 		}
-		err = block.SetSignature(sig);
+		err = block.setSignature(sig);
 		if  (err != null) {
 			return new RetResult<poset.BlockSignature>(new poset.BlockSignature(), err);
 		}
@@ -295,7 +295,7 @@ public class Core {
 		// and the other doesn't
 		for (long id: known.keySet()) {
 			long ct = known.get(id);
-			Peer peer = participants.ById(id);
+			Peer peer = participants.byId(id);
 			if (peer == null) {
 				// unknown peer detected.
 				// TODO: we should handle this nicely
@@ -315,9 +315,9 @@ public class Core {
 				if (err != null) {
 					return new RetResult<poset.Event[]>(new poset.Event[] {}, err);
 				}
-				logger.field("event", ev).field("creator", ev.Creator())
-				.field("selfParent", ev.SelfParent())
-				.field("index", ev.Index()).field("hex", ev.Hex())
+				logger.field("event", ev).field("creator", ev.creator())
+				.field("selfParent", ev.selfParent())
+				.field("index", ev.index()).field("hex", ev.hex())
 				.debugf("Sending Unknown Event");
 				unknown = Appender.append(unknown,  ev);
 			}
@@ -358,7 +358,7 @@ public class Core {
 //				logger.field("ev.CreatorID()", ev.CreatorID()).error("Sync");
 //				return error.Errorf("ev.CreatorID() not known");
 //			}
-			if (ev.Index() > myKnownEvents.get(ev.CreatorID())) {
+			if (ev.index() > myKnownEvents.get(ev.creatorID())) {
 				err = InsertEvent(ev, false);
 				if (err != null) {
 					return err;
@@ -367,7 +367,7 @@ public class Core {
 
 			// assume last event corresponds to other-head
 			if (k == unknownEvents.length-1) {
-				otherHead = ev.Hex();
+				otherHead = ev.hex();
 			}
 		}
 
@@ -403,7 +403,7 @@ public class Core {
 			return err;
 		}
 
-		if (!Utils.bytesEquals(block.GetFrameHash(), frameHash)) {
+		if (!Utils.bytesEquals(block.getFrameHash(), frameHash)) {
 
 			logger.field("err2", err).debug("FastForward()");
 
@@ -460,7 +460,7 @@ public class Core {
 			flagTable = new HashMap<String,Long>();
 			flagTable.put(head, (long) 1);
 		} else {
-			RetResult<Map<String, Long>> getFlagTable = parentEvent.GetFlagTable();
+			RetResult<Map<String, Long>> getFlagTable = parentEvent.getFlagTable();
 			flagTable = getFlagTable.result;
 			err = getFlagTable.err;
 			if (err != null) {
@@ -469,7 +469,7 @@ public class Core {
 		}
 
 		if (errOther == null) {
-			RetResult<Map<String, Long>> mergeFlagTableCall = otherParentEvent.MergeFlagTable(flagTable);
+			RetResult<Map<String, Long>> mergeFlagTableCall = otherParentEvent.mergeFlagTable(flagTable);
 			flagTable = mergeFlagTableCall.result;
 			err = mergeFlagTableCall.err;
 			if (err != null) {
@@ -525,7 +525,7 @@ public class Core {
 	public RetResult<poset.WireEvent[]> ToWire(poset.Event[] events) {
 		poset.WireEvent[] wireEvents = new poset.WireEvent[events.length];
 		for (int i = 0; i < events.length; ++i) {
-			wireEvents[i] = events[i].ToWire();
+			wireEvents[i] = events[i].toWire();
 		}
 		return new RetResult<poset.WireEvent[]>(wireEvents, null);
 	}
@@ -608,7 +608,7 @@ public class Core {
 		if (err != null) {
 			return new RetResult<byte[][]>(txs, err);
 		}
-		txs = ex.Transactions();
+		txs = ex.transactions();
 		return new RetResult<byte[][]>(txs, null);
 	}
 

@@ -9,6 +9,6 @@ public class EventComparatorByTopologicalOrder implements Comparator<Event> {
 	}
 
 	public int compare(Event o1, Event o2) {
-		return Long.compare(o1.Message.TopologicalIndex, o2.Message.TopologicalIndex);
+		return Long.compare(o1.message.TopologicalIndex, o2.message.TopologicalIndex);
 	}
 }

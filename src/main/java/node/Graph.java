@@ -98,7 +98,7 @@ public class Graph {
 					error.panic(err);
 				}
 
-				String hash = event.Hex();
+				String hash = event.hex();
 				res.get(p.GetPubKeyHex()).put(hash, event);
 			}
 		}

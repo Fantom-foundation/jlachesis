@@ -40,7 +40,7 @@ public class PeerTest {
 		//System.out.println("store.path =" +  store.path);
 
 		// Try a read, should get nothing
-		RetResult<Peers> peersCall = store.Peers();
+		RetResult<Peers> peersCall = store.peers();
 		Peers peers = peersCall.result;
 		error err = peersCall.err;
 
@@ -57,20 +57,20 @@ public class PeerTest {
 //			peer.PubKeyHex = fmt.Sprintf("0x%X", scrypto.FromECDSAPub(&key.PublicKey)),
 			peer.PubKeyHex = crypto.Utils.keyToHexString(key.getPublic());
 
-			newPeers.AddPeer(peer);
+			newPeers.addPeer(peer);
 			keys.put(peer.NetAddr, key);
 		}
 
 		Peer[] newPeersSlice = newPeers.ToPeerSlice();
-		err = store.SetPeers(newPeersSlice);
+		err = store.setPeers(newPeersSlice);
 		assertNull("No error when slice", err);
 
 		// Try a read, should find 3 peers
-		peersCall = store.Peers();
+		peersCall = store.peers();
 		peers = peersCall.result;
 		err = peersCall.err;
 		assertNull("No error when slice", err);
-		assertEquals("peers.length is 3", 3, peers.Len());
+		assertEquals("peers.length is 3", 3, peers.length());
 
 		Peer[] peersSlice = peers.ToPeerSlice();
 

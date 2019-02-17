@@ -16,8 +16,8 @@ public class EventComparatorByLamportTimestamp implements Comparator<Event> {
 			return Long.compare(it, jt);
 		}
 
-		BigInteger wsi = crypto.Utils.DecodeSignature(o1.Message.Signature).result1;
-		BigInteger wsj = crypto.Utils.DecodeSignature(o2.Message.Signature).result1;
+		BigInteger wsi = crypto.Utils.DecodeSignature(o1.message.Signature).result1;
+		BigInteger wsj = crypto.Utils.DecodeSignature(o2.message.Signature).result1;
 		return wsi.compareTo(wsj);
 	}
 }

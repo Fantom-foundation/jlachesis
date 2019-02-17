@@ -61,8 +61,8 @@ public class Poset {
 			logger.setLevel(Level.DEBUG);
 		}
 
-		int superMajority = (int) 2*participants.Len()/3 + 1;
-		int trustCount = (int) Math.ceil(((double) participants.Len()) / 3);
+		int superMajority = (int) 2*participants.length()/3 + 1;
+		int trustCount = (int) Math.ceil(((double) participants.length()) / 3);
 
 		int cacheSize = store.CacheSize();
 		RetResult<LRUCache<String,Boolean>> ancestorCacheCre = LRUCache.New(cacheSize);
@@ -114,11 +114,11 @@ public class Poset {
 
 		this.UndeterminedEvents = new ArrayList<String>();
 
-		participants.OnNewPeer(
+		participants.onNewPeer(
 			new Listener() {
 				public void listen(Peer peer) {
-					Poset.this.superMajority = 2*participants.Len()/3 + 1;
-					Poset.this.trustCount = (int) Math.ceil( (double) participants.Len() / 3);
+					Poset.this.superMajority = 2*participants.length()/3 + 1;
+					Poset.this.trustCount = (int) Math.ceil( (double) participants.length() / 3);
 				}
 			}
 		);
@@ -202,20 +202,20 @@ public class Poset {
 			Root root = roots.get(y);
 			if (root != null) {
 				String yCreator = Participants.getById().get(root.SelfParent.CreatorID).GetPubKeyHex();
-				if (ex.Creator().equals(yCreator)) {
-					return new RetResult<Boolean>(ex.Index() >= root.SelfParent.Index, null);
+				if (ex.creator().equals(yCreator)) {
+					return new RetResult<Boolean>(ex.index() >= root.SelfParent.Index, null);
 				}
 			} else {
 				return new RetResult<Boolean>(false, null);
 			}
 		} else {
 			// check if creators are equals and check indexes
-			if (ex.Creator().equals(ey.Creator())){
-				return new RetResult<Boolean>(ex.Index() >= ey.Index(), null);
+			if (ex.creator().equals(ey.creator())){
+				return new RetResult<Boolean>(ex.index() >= ey.index(), null);
 			}
 		}
 
-		RetResult<Boolean> ancestorCall = ancestor(ex.SelfParent(), y);
+		RetResult<Boolean> ancestorCall = ancestor(ex.selfParent(), y);
 		Boolean res = ancestorCall.result;
 		err = ancestorCall.err;
 		if (err != null) {
@@ -226,7 +226,7 @@ public class Poset {
 			return new RetResult<Boolean>(true, null);
 		}
 
-		return ancestor(ex.OtherParent(), y);
+		return ancestor(ex.otherParent(), y);
 	}
 
 	//true if y is a self-ancestor of x
@@ -285,13 +285,13 @@ public class Poset {
 			Root root = roots.get(y);
 			if (root != null) {
 				String yCreator = Participants.getById().get(root.SelfParent.CreatorID).GetPubKeyHex();
-				if (ex.Creator().equals(yCreator)) {
-					return new RetResult<Boolean>(ex.Index() >= root.SelfParent.Index, null);
+				if (ex.creator().equals(yCreator)) {
+					return new RetResult<Boolean>(ex.index() >= root.SelfParent.Index, null);
 				}
 			}
 		} else {
-			if (ex.Creator().equals(ey.Creator())) {
-				return new RetResult<Boolean>(ex.Index() >= ey.Index(), null);
+			if (ex.creator().equals(ey.creator())) {
+				return new RetResult<Boolean>(ex.index() >= ey.index(), null);
 			}
 		}
 
@@ -375,18 +375,18 @@ public class Poset {
 			return err;
 		}
 
-		sentinels.put(ex.Creator(), true);
+		sentinels.put(ex.creator(), true);
 
 		if (x == y) {
 			return null;
 		}
 
-		err = MapSentinels(ex.OtherParent(), y, sentinels);
+		err = MapSentinels(ex.otherParent(), y, sentinels);
 		if  (err != null) {
 			return err;
 		}
 
-		return MapSentinels(ex.SelfParent(), y, sentinels);
+		return MapSentinels(ex.selfParent(), y, sentinels);
 	}
 
 	public RetResult<Long> round(String x) {
@@ -423,7 +423,7 @@ public class Poset {
 			return new RetResult<Long>(Long.MIN_VALUE, err);
 		}
 
-		RetResult<Root> getRoot = Store.GetRoot(ex.Creator());
+		RetResult<Root> getRoot = Store.GetRoot(ex.creator());
 		Root root = getRoot.result;
 		err = getRoot.err;
 		if (err != null) {
@@ -433,12 +433,12 @@ public class Poset {
 		/*
 			The Event is directly attached to the Root.
 		*/
-		if (ex.SelfParent().equals(root.SelfParent.Hash)) {
+		if (ex.selfParent().equals(root.SelfParent.Hash)) {
 			//Root is authoritative EXCEPT if other-parent is not in the root
-			RootEvent other = root.Others.get(ex.Hex());
+			RootEvent other = root.Others.get(ex.hex());
 			boolean ok = other != null;
-			if  (ex.OtherParent().isEmpty() ||
-				(ok && other.Hash.equals(ex.OtherParent()))) {
+			if  (ex.otherParent().isEmpty() ||
+				(ok && other.Hash.equals(ex.otherParent()))) {
 
 				return new RetResult<Long>(root.NextRound, null);
 			}
@@ -448,7 +448,7 @@ public class Poset {
 			The Event's parents are "normal" Events.
 			Use the whitepaper formula: parentRound + roundInc
 		*/
-		RetResult<Long> roundCall = round(ex.SelfParent());
+		RetResult<Long> roundCall = round(ex.selfParent());
 		long spRound = roundCall.result;
 		err = roundCall.err;
 		if ( err != null) {
@@ -459,14 +459,14 @@ public class Poset {
 		long opRound;
 
 
-		if (!ex.OtherParent().isEmpty()) {
+		if (!ex.otherParent().isEmpty()) {
 			//XXX
-			RootEvent other = root.Others.get(ex.Hex());
+			RootEvent other = root.Others.get(ex.hex());
 			boolean ok = other != null;
-			if (ok && other.Hash.equals(ex.OtherParent())) {
+			if (ok && other.Hash.equals(ex.otherParent())) {
 				opRound = root.NextRound;
 			} else {
-				RetResult<Long> roundCall2 = round(ex.OtherParent());
+				RetResult<Long> roundCall2 = round(ex.otherParent());
 				opRound = roundCall2.result;
 				err = roundCall2.err;
 				if (err != null) {
@@ -481,12 +481,12 @@ public class Poset {
 				// if in a flag table there are witnesses of the current round, then
 				// current round is other parent round.
 				String[] ws = Store.RoundWitnesses(opRound);
-				RetResult<Map<String, Long>> getFlagTable = ex.GetFlagTable();
+				RetResult<Map<String, Long>> getFlagTable = ex.getFlagTable();
 				Map<String, Long> ft = getFlagTable.result;
 				for (String k : ft.keySet()) {
 					for (String w : ws) {
-						if (w.equals(k) && !w.equals(ex.Hex())) {
-							RetResult<Boolean> seeCall = see(ex.Hex(), w);
+						if (w.equals(k) && !w.equals(ex.hex())) {
+							RetResult<Boolean> seeCall = see(ex.hex(), w);
 							Boolean see = seeCall.result;
 							err = seeCall.err;
 							if ( err != null) {
@@ -520,8 +520,8 @@ public class Poset {
 		IsSee isSee = new IsSee() {
 			public boolean isSee(Poset poset, String string, String[] witnesses)  {
 				for (String w : ws) {
-					if (w.equals(root) && !w.equals(ex.Hex())) {
-						RetResult<Boolean> seeCall = poset.see(ex.Hex(), w);
+					if (w.equals(root) && !w.equals(ex.hex())) {
+						RetResult<Boolean> seeCall = poset.see(ex.hex(), w);
 						boolean see = seeCall.result;
 						error err = seeCall.err;
 						if (err != null) {
@@ -554,10 +554,10 @@ public class Poset {
 //		}
 
 		// check wp
-		if (ex.Message.WitnessProof != null && ex.Message.WitnessProof.length >= superMajority) {
+		if (ex.message.WitnessProof != null && ex.message.WitnessProof.length >= superMajority) {
 			int count = 0;
 
-			for (String root2 : ex.Message.WitnessProof) {
+			for (String root2 : ex.message.WitnessProof) {
 				if (isSee.isSee(this, root2, ws)) {
 					count++;
 				}
@@ -569,7 +569,7 @@ public class Poset {
 		}
 
 		// check ft
-		Map<String, Long> ft = ex.GetFlagTable().result;
+		Map<String, Long> ft = ex.getFlagTable().result;
 		if (ft.size() >= superMajority) {
 			int count = 0;
 
@@ -607,7 +607,7 @@ public class Poset {
 			return new RetResult<Boolean>(false, err);
 		}
 
-		RetResult<Long> roundCall2 = round(ex.SelfParent());
+		RetResult<Long> roundCall2 = round(ex.selfParent());
 		long spRound = roundCall2.result;
 		err = roundCall2.err;
 		if ( err != null) {
@@ -669,7 +669,7 @@ public class Poset {
 		}
 
 		//We are going to need the Root later
-		RetResult<Root> getRoot = Store.GetRoot(ex.Creator());
+		RetResult<Root> getRoot = Store.GetRoot(ex.creator());
 		Root root = getRoot.result;
 		err = getRoot.err;
 		if ( err != null) {
@@ -678,10 +678,10 @@ public class Poset {
 
 		long plt = Long.MIN_VALUE; //:= int64(Long.MIN_VALUE);
 		//If it is the creator's first Event, use the corresponding Root
-		if (ex.SelfParent().equals(root.SelfParent.Hash)) {
+		if (ex.selfParent().equals(root.SelfParent.Hash)) {
 			plt = root.SelfParent.LamportTimestamp;
 		} else {
-			RetResult<Long> lamportTimestampCall = lamportTimestamp(ex.SelfParent());
+			RetResult<Long> lamportTimestampCall = lamportTimestamp(ex.selfParent());
 			long t = lamportTimestampCall.result;
 			err = lamportTimestampCall.err;
 			if (err != null) {
@@ -690,12 +690,12 @@ public class Poset {
 			plt = t;
 		}
 
-		if (ex.OtherParent() != "") {
+		if (ex.otherParent() != "") {
 			long opLT = Long.MIN_VALUE;
-			err = Store.GetEvent(ex.OtherParent()).err;
+			err = Store.GetEvent(ex.otherParent()).err;
 			if (err == null) {
 				//if we know the other-parent, fetch its Round directly
-				RetResult<Long> lamportTimestamp = lamportTimestamp(ex.OtherParent());
+				RetResult<Long> lamportTimestamp = lamportTimestamp(ex.otherParent());
 				Long t = lamportTimestamp.result;
 				err = lamportTimestamp.err;
 				if (err != null) {
@@ -705,7 +705,7 @@ public class Poset {
 			} else {
 				RootEvent other = root.Others.get(x);
 				ok = other != null;
-				if (ok && other.Hash.equals(ex.OtherParent())){
+				if (ok && other.Hash.equals(ex.otherParent())){
 				//we do not know the other-parent but it is referenced  in Root.Others
 				//we use the Root's LamportTimestamp
 				opLT = other.LamportTimestamp;
@@ -758,8 +758,8 @@ public class Poset {
 
 	//Check the SelfParent is the Creator's last known Event
 	public error checkSelfParent(Event event ) {
-		String selfParent = event.SelfParent();
-		String creator = event.Creator();
+		String selfParent = event.selfParent();
+		String creator = event.creator();
 		RetResult3<String, Boolean> lastEventFromCall = Store.LastEventFrom(creator);
 		String creatorLastKnown = lastEventFromCall.result1;
 		error err = lastEventFromCall.err;
@@ -767,7 +767,7 @@ public class Poset {
 		logger.field("selfParent", selfParent)
 		.field("creator", creator)
 		.field("creatorLastKnown", creatorLastKnown)
-		.field("event", event.Hex())
+		.field("event", event.hex())
 		.debug("checkSelfParent");
 
 		if (err != null) {
@@ -785,7 +785,7 @@ public class Poset {
 
 	//Check if we know the OtherParent
 	public error checkOtherParent(Event event) {
-		String otherParent = event.OtherParent();
+		String otherParent = event.otherParent();
 		if (!otherParent.isEmpty()) {
 			//Check if we have it
 
@@ -793,16 +793,16 @@ public class Poset {
 			error err = getEvent.err;
 			if ( err != null) {
 				//it might still be in the Root
-				RetResult<Root> getRoot = Store.GetRoot(event.Creator());
+				RetResult<Root> getRoot = Store.GetRoot(event.creator());
 				Root root = getRoot.result;
 				err = getRoot.err;
 				if ( err != null) {
 					return err;
 				}
 
-				RootEvent other = root.Others.get(event.Hex());
+				RootEvent other = root.Others.get(event.hex());
 				boolean ok = other != null;
-				if (ok && other.Hash.equals(event.OtherParent())) {
+				if (ok && other.Hash.equals(event.otherParent())) {
 					return null;
 				}
 				return error.Errorf("other-parent not known");
@@ -812,7 +812,7 @@ public class Poset {
 	}
 
 	public RetResult<RootEvent>  createSelfParentRootEvent(Event ev) {
-		String sp = ev.SelfParent();
+		String sp = ev.selfParent();
 		RetResult<Long> lamportTimestampCall = lamportTimestamp(sp);
 		long spLT = lamportTimestampCall.result;
 		error err = lamportTimestampCall.err;
@@ -828,8 +828,8 @@ public class Poset {
 
 		RootEvent selfParentRootEvent = new RootEvent(
 			sp,
-			Participants.getByPubKey().get(ev.Creator()).GetID(),
-			ev.Index() - 1,
+			Participants.getByPubKey().get(ev.creator()).GetID(),
+			ev.index() - 1,
 			spLT,
 			spRound
 			//FlagTable:ev.FlagTable,
@@ -839,17 +839,17 @@ public class Poset {
 	}
 
 	public RetResult<RootEvent> createOtherParentRootEvent(Event ev) {
-		String op = ev.OtherParent();
+		String op = ev.otherParent();
 
 		//it might still be in the Root
-		RetResult<Root> getRootCall = Store.GetRoot(ev.Creator());
+		RetResult<Root> getRootCall = Store.GetRoot(ev.creator());
 		Root root = getRootCall.result;
 		error err = getRootCall.err;
 		if ( err != null) {
 			return new RetResult<RootEvent>(new RootEvent(), err);
 		}
 
-		RootEvent other = root.Others.get(ev.Hex());
+		RootEvent other = root.Others.get(ev.hex());
 		boolean ok = other != null;
 		if (ok && other.Hash.equals(op)) {
 			return new RetResult<RootEvent> (other, null);
@@ -877,8 +877,8 @@ public class Poset {
 		}
 		RootEvent otherParentRootEvent = new RootEvent(
 			op,
-			Participants.getByPubKey().get(otherParent.Creator()).GetID(),
-			otherParent.Index(),
+			Participants.getByPubKey().get(otherParent.creator()).GetID(),
+			otherParent.index(),
 			opLT,
 			opRound
 		);
@@ -887,7 +887,7 @@ public class Poset {
 	}
 
 	public RetResult<Root> createRoot(Event ev) {
-		RetResult<Long> round = round(ev.Hex());
+		RetResult<Long> round = round(ev.hex());
 		long evRound = round.result;
 		error err = round.err;
 
@@ -909,7 +909,7 @@ public class Poset {
 			OtherParent
 		*/
 		RootEvent otherParentRootEvent = null;
-		if (!ev.OtherParent().isEmpty()) {
+		if (!ev.otherParent().isEmpty()) {
 			RetResult<RootEvent> createOtherParentRootEvent = createOtherParentRootEvent(ev);
 			RootEvent opre = createOtherParentRootEvent.result;
 			err = createOtherParentRootEvent.err;
@@ -925,7 +925,7 @@ public class Poset {
 				new HashMap<String,RootEvent>());
 
 		if (otherParentRootEvent != null) {
-			root.Others.put(ev.Hex(), otherParentRootEvent);
+			root.Others.put(ev.hex(), otherParentRootEvent);
 		}
 
 		return new RetResult<Root>(root, null);
@@ -940,7 +940,7 @@ public class Poset {
 		if  (err != null) {
 			return err;
 		}
-		return event.Sign(privKey);
+		return event.sign(privKey);
 	}
 
 	public error setWireInfo(Event event) {
@@ -949,12 +949,12 @@ public class Poset {
 		long otherParentIndex = -1;
 
 		//could be the first Event inserted for this creator. In this case, use Root
-		RetResult3<String, Boolean> lastEventFrom = Store.LastEventFrom(event.Creator());
+		RetResult3<String, Boolean> lastEventFrom = Store.LastEventFrom(event.creator());
 		String lf = lastEventFrom.result1;
 		boolean isRoot = lastEventFrom.result2;
 		error err;
-		if  (isRoot && lf.equals(event.SelfParent())) {
-			RetResult<Root> getRoot = Store.GetRoot(event.Creator());
+		if  (isRoot && lf.equals(event.selfParent())) {
+			RetResult<Root> getRoot = Store.GetRoot(event.creator());
 			Root root = getRoot.result;
 			err = getRoot.err;
 			if (err != null) {
@@ -962,45 +962,45 @@ public class Poset {
 			}
 			selfParentIndex = root.SelfParent.Index;
 		} else {
-			RetResult<Event> getEvent = Store.GetEvent(event.SelfParent());
+			RetResult<Event> getEvent = Store.GetEvent(event.selfParent());
 			Event selfParent = getEvent.result;
 			err = getEvent.err;
 			if (err != null ){
 				return err;
 			}
-			selfParentIndex = selfParent.Index();
+			selfParentIndex = selfParent.index();
 		}
 
-		if (!event.OtherParent().isEmpty()) {
+		if (!event.otherParent().isEmpty()) {
 			//Check Root then regular Events
-			RetResult<Root> getRoot = Store.GetRoot(event.Creator());
+			RetResult<Root> getRoot = Store.GetRoot(event.creator());
 			Root root = getRoot.result;
 			err = getRoot.err;
 			if (err != null) {
 				return err;
 			}
 
-			RootEvent other = root.Others.get(event.Hex());
+			RootEvent other = root.Others.get(event.hex());
 			boolean ok = other != null;
-			if  (ok && other.Hash.equals(event.OtherParent())) {
+			if  (ok && other.Hash.equals(event.otherParent())) {
 				otherParentCreatorID = other.CreatorID;
 				otherParentIndex = other.Index;
 			} else {
-				RetResult<Event> getEvent = Store.GetEvent(event.OtherParent());
+				RetResult<Event> getEvent = Store.GetEvent(event.otherParent());
 				Event otherParent = getEvent.result;
 				err = getEvent.err;
 				if (err != null) {
 					return err;
 				}
-				otherParentCreatorID = Participants.getByPubKey().get(otherParent.Creator()).GetID();
-				otherParentIndex = otherParent.Index();
+				otherParentCreatorID = Participants.getByPubKey().get(otherParent.creator()).GetID();
+				otherParentIndex = otherParent.index();
 			}
 		}
 
-		event.SetWireInfo(selfParentIndex,
+		event.setWireInfo(selfParentIndex,
 			otherParentCreatorID,
 			otherParentIndex,
-			Participants.getByPubKey().get(event.Creator()).GetID());
+			Participants.getByPubKey().get(event.creator()).GetID());
 
 		return null;
 	}
@@ -1022,7 +1022,7 @@ public class Poset {
 	public void removeProcessedSignatures(Map<Long,Boolean> processedSignatures) {
 		ArrayList<BlockSignature> newSigPool = new ArrayList<BlockSignature>();
 		for (BlockSignature bs : SigPool) {
-			boolean ok = processedSignatures.get(bs.Index);
+			boolean ok = processedSignatures.get(bs.index);
 			if (!ok) {
 				newSigPool.add(bs);
 			}
@@ -1038,7 +1038,7 @@ public class Poset {
 	//checks the ancestors are known, and prevents the introduction of forks.
 	public error InsertEvent(Event event, boolean setWireInfo) {
 		//verify signature
-		RetResult<Boolean> verify = event.Verify();
+		RetResult<Boolean> verify = event.verify();
 		Boolean ok = verify.result;
 		error err = verify.err;
 		if  (!ok) {
@@ -1047,10 +1047,10 @@ public class Poset {
 			}
 
 			logger.field("event", event)
-			.field("creator", event.Creator())
-			.field("selfParent", event.SelfParent())
-			.field("index", event.Index())
-			.field("hex", event.Hex())
+			.field("creator", event.creator())
+			.field("selfParent", event.selfParent())
+			.field("index", event.index())
+			.field("hex", event.hex())
 			.debug("Invalid Event signature");
 
 			return error.Errorf("invalid Event signature");
@@ -1064,7 +1064,7 @@ public class Poset {
 			return error.Errorf(String.format("CheckOtherParent: %s", err));
 		}
 
-		event.Message.TopologicalIndex = topologicalIndex;
+		event.message.TopologicalIndex = topologicalIndex;
 		topologicalIndex++;
 
 		if (setWireInfo) {
@@ -1084,18 +1084,18 @@ public class Poset {
 		if (UndeterminedEvents == null) {
 			UndeterminedEvents = new ArrayList<>();
 		}
-		UndeterminedEvents.add(event.Hex());
+		UndeterminedEvents.add(event.hex());
 
-		if (event.IsLoaded()) {
+		if (event.isLoaded()) {
 			PendingLoadedEvents++;
 		}
 
 		if (SigPool == null) {
 			SigPool = new ArrayList<>();
 		}
-		if (event.BlockSignatures() != null) {
+		if (event.blockSignatures() != null) {
 			ArrayList<BlockSignature> blockSignatures = new ArrayList<BlockSignature>();
-			for (BlockSignature bs: event.BlockSignatures()) {
+			for (BlockSignature bs: event.blockSignatures()) {
 				blockSignatures.add(new BlockSignature(bs));
 			}
 			SigPool.addAll(blockSignatures);
@@ -1135,7 +1135,7 @@ public class Poset {
 					return err;
 				}
 
-				ev.SetRound(roundNumber);
+				ev.setRound(roundNumber);
 				updateEvent = true;
 
 				RetResult<RoundInfo> getRound = Store.GetRound(roundNumber);
@@ -1185,8 +1185,8 @@ public class Poset {
 
 				if (witness) {
 					// if event is self head
-					if (core != null && ev.Hex().equals(core.Head()) &&
-						ev.Creator().equals(core.HexID())) {
+					if (core != null && ev.hex().equals(core.Head()) &&
+						ev.creator().equals(core.HexID())) {
 
 //						replaceFlagTable := public(Event event, long round) {
 //							HashMap<String, Long> ft = new HashMap<String, Long>();
@@ -1198,19 +1198,19 @@ public class Poset {
 //						}
 
 						// special case
-						if (ev.Round() == 0) {
+						if (ev.getRound() == 0) {
 							replaceFlagTable(ev, 0);
-							RetResult<Root> getRoot = Store.GetRoot(ev.Creator());
+							RetResult<Root> getRoot = Store.GetRoot(ev.creator());
 							Root root = getRoot.result;
 							err = getRoot.err;
 							if ( err != null) {
 								return err;
 							}
-							ev.Message.WitnessProof = new String[]{root.SelfParent.Hash};
+							ev.message.WitnessProof = new String[]{root.SelfParent.Hash};
 						} else {
-							replaceFlagTable(ev, ev.Round());
-							String[] roots = Store.RoundWitnesses(ev.Round() - 1);
-							ev.Message.WitnessProof = roots;
+							replaceFlagTable(ev, ev.getRound());
+							String[] roots = Store.RoundWitnesses(ev.getRound() - 1);
+							ev.message.WitnessProof = roots;
 						}
 					}
 				}
@@ -1228,12 +1228,12 @@ public class Poset {
 					return err;
 				}
 
-				ev.SetLamportTimestamp(lamportTimestamp);
+				ev.setLamportTimestamp(lamportTimestamp);
 				updateEvent = true;
 			}
 
 			if (updateEvent) {
-				if (ev.CreatorID() == 0) {
+				if (ev.creatorID() == 0) {
 					setWireInfo(ev);
 				}
 				Store.SetEvent(ev);
@@ -1250,7 +1250,7 @@ public class Poset {
 		for (String v : ws) {
 			ft.put(v, (long) 1);
 		}
-		event.ReplaceFlagTable(ft);
+		event.replaceFlagTable(ft);
 	}
 
 	private void setVote(HashMap<String,Map<String,Boolean>> votes, String x, String y, boolean vote) {
@@ -1388,7 +1388,7 @@ public class Poset {
 //							}).debug("DecideFame() in VOTE_LOOP RRR before SetFame called");
 
 							//normal round
-							if ((diff % Participants.Len()) > 0) {
+							if ((diff % Participants.length()) > 0) {
 								if (t >= superMajority) {
 
 //									logger.WithFields(logrus.Fields{
@@ -1547,7 +1547,7 @@ public class Poset {
 					if ( err != null) {
 						return err;
 					}
-					ex.SetRoundReceived(i);
+					ex.setRoundReceived(i);
 
 					err = Store.SetEvent(ex);
 					if ( err != null) {
@@ -1651,21 +1651,21 @@ public class Poset {
 					if (err != null) {
 						return err;
 					}
-					ConsensusTransactions += ev.Transactions().length;
-					if (ev.IsLoaded()) {
+					ConsensusTransactions += ev.transactions().length;
+					if (ev.isLoaded()) {
 						PendingLoadedEvents--;
 					}
 				}
 
 				long lastBlockIndex = Store.LastBlockIndex();
-				RetResult<Block> newBlockFromFrame = Block.NewBlockFromFrame(lastBlockIndex+1, frame);
+				RetResult<Block> newBlockFromFrame = Block.newBlockFromFrame(lastBlockIndex+1, frame);
 				Block block = newBlockFromFrame.result;
 				err = newBlockFromFrame.err;
 				if ( err != null) {
 					return err;
 				}
 
-				if (block.Transactions().length > 0) {
+				if (block.transactions().length > 0) {
 					err = Store.SetBlock(block);
 					if (err != null){
 						return err;
@@ -1744,7 +1744,7 @@ public class Poset {
 		//The events are in topological order. Each time we run into the first Event
 		//of a participant, we create a Root for it.
 		for (Event ev : events) {
-			String c = ev.Creator();
+			String c = ev.creator();
 			if (roots.get(c) == null) {
 				RetResult<Root> createRoot = createRoot(ev);
 				Root root = createRoot.result;
@@ -1752,14 +1752,14 @@ public class Poset {
 				if ( err != null) {
 					new RetResult<Frame>(new Frame(), err);
 				}
-				roots.put(ev.Creator(), root);
+				roots.put(ev.creator(), root);
 			}
 		}
 
 		//Every participant needs a Root in the Frame. For the participants that
 		//have no Events in this Frame, we create a Root from their last consensus
 		//Event, or their last known Root
-		for (String peer : Participants.ToPubKeySlice()) {
+		for (String peer : Participants.toPubKeySlice()) {
 			if (roots.get(peer) == null) {
 				Root root;
 				RetResult3<String,Boolean> lastConsensusCall = Store.LastConsensusEventFrom(peer);
@@ -1798,27 +1798,27 @@ public class Poset {
 		EventMessage[] eventMessages = new EventMessage[events.size()];
 		for (int i = 0; i < events.size(); ++i) {
 			Event ev = events.get(i);
-			treated.put(ev.Hex(), true);
-			String otherParent = ev.OtherParent();
+			treated.put(ev.hex(), true);
+			String otherParent = ev.otherParent();
 			if (!otherParent.isEmpty()) {
 				Boolean opt = treated.get(otherParent);
 				if (opt == null || !opt) {
-					if (ev.SelfParent() != roots.get(ev.Creator()).SelfParent.Hash) {
+					if (ev.selfParent() != roots.get(ev.creator()).SelfParent.Hash) {
 						RetResult<RootEvent> createOtherParentRootEvent = createOtherParentRootEvent(ev);
 						RootEvent other = createOtherParentRootEvent.result;
 						err = createOtherParentRootEvent.err;
 						if ( err != null) {
 							new RetResult<Frame>(new Frame(), err);
 						}
-						roots.get(ev.Creator()).Others.put(ev.Hex(), other);
+						roots.get(ev.creator()).Others.put(ev.hex(), other);
 					}
 				}
 			}
-			eventMessages[i] = new EventMessage(ev.Message);
+			eventMessages[i] = new EventMessage(ev.message);
 		}
 
 		//order roots
-		Root[] orderedRoots = new Root[Participants.Len()];
+		Root[] orderedRoots = new Root[Participants.length()];
 		for (int i=0; i<Participants.ToPeerSlice().length; ++i) {
 			Peer peer = Participants.ToPeerSlice()[i];
 			orderedRoots[i] = roots.get(peer.GetPubKeyHex());
@@ -1844,65 +1844,65 @@ public class Poset {
 			BlockSignature bs = SigPool.get(i);
 			//check if validator belongs to list of participants
 //			String validatorHex = String.format("0x%X", bs.Validator);
-			String validatorHex = bs.ValidatorHex();
+			String validatorHex = bs.validatorHex();
 
 			Peer ok = Participants.getByPubKey().get(validatorHex);
 			if (ok == null){
 				logger
-					.field("index",     bs.Index)
+					.field("index",     bs.index)
 					.field("validator", validatorHex)
 					.warn("Verifying Block signature. Unknown validator");
 				continue;
 			}
 			//only check if bs is greater than AnchorBlock, otherwise simply remove
 			if (AnchorBlock < 0 ||
-				bs.Index > AnchorBlock) {
-				RetResult<Block> getBlock = Store.GetBlock(bs.Index);
+				bs.index > AnchorBlock) {
+				RetResult<Block> getBlock = Store.GetBlock(bs.index);
 				Block block = getBlock.result;
 				error err = getBlock.err;
 				if (err != null) {
 					logger
-						.field("index", bs.Index)
+						.field("index", bs.index)
 						.field("msg",   err)
 						.warn("Verifying Block signature. Could not fetch Block");
 					continue;
 				}
-				RetResult<Boolean> verify = block.Verify(bs);
+				RetResult<Boolean> verify = block.verify(bs);
 				Boolean valid = verify.result;
 				err = verify.err;
 				if ( err != null) {
 					logger
-						.field("index", bs.Index)
+						.field("index", bs.index)
 						.field("msg",   err)
 						.error("Verifying Block signature");
 					return err;
 				}
 				if (!valid) {
 					logger
-						.field("index",     bs.Index)
-						.field("validator", Participants.ByPubKey(validatorHex))
+						.field("index",     bs.index)
+						.field("validator", Participants.byPubKey(validatorHex))
 						.field("block",     block)
 						.warn("Verifying Block signature. Invalid signature");
 					continue;
 				}
 
-				block.SetSignature(bs);
+				block.setSignature(bs);
 
 				err = Store.SetBlock(block);
 				if ( err != null) {
 					logger
-						.field("index", bs.Index)
+						.field("index", bs.index)
 						.field("msg",   err)
 						.warn("Saving Block");
 				}
 
-				if (block.GetSignatures().size() > trustCount &&
+				if (block.getSignatures().size() > trustCount &&
 					(AnchorBlock < 0 ||
 						block.Index() > AnchorBlock)) {
 					setAnchorBlock(block.Index());
 					logger
 						.field("block_index", block.Index())
-						.field("signatures",  block.GetSignatures().size())
+						.field("signatures",  block.getSignatures().size())
 						.field("trustCount",  trustCount)
 						.debug("Setting AnchorBlock");
 				}
@@ -1931,7 +1931,7 @@ public class Poset {
 			return new RetResult3<Block,Frame>(null, null, err);
 		}
 
-		RetResult<Frame> getFrame = GetFrame(block.RoundReceived());
+		RetResult<Frame> getFrame = GetFrame(block.roundReceived());
 		Frame frame = getFrame.result;
 		err = getFrame.err;
 		if ( err != null) {
@@ -2008,7 +2008,7 @@ public class Poset {
 			return err;
 		}
 
-		setLastConsensusRound(block.RoundReceived());
+		setLastConsensusRound(block.roundReceived());
 
 		//Insert Frame Events
 		for (EventMessage ev : frame.Events) {
@@ -2079,7 +2079,7 @@ public class Poset {
 		String otherParent = "";
 		error err;
 
-		Peer creator = Participants.ById(wevent.Body.CreatorID);
+		Peer creator = Participants.byId(wevent.Body.CreatorID);
 		// FIXIT: creator can be null when wevent.Body.CreatorID == 0
 		if (creator == null) {
 			return new RetResult<Event>(null, error.Errorf(
@@ -2102,7 +2102,7 @@ public class Poset {
 			}
 		}
 		if (wevent.Body.OtherParentIndex >= 0) {
-			Peer otherParentCreator = Participants.ById(wevent.Body.OtherParentCreatorID);
+			Peer otherParentCreator = Participants.byId(wevent.Body.OtherParentCreatorID);
 			if (otherParentCreator != null) {
 				RetResult<String> participantEventCall = Store.ParticipantEvent(otherParentCreator.GetPubKeyHex(), wevent.Body.OtherParentIndex);
 				otherParent = participantEventCall.result;
@@ -2173,7 +2173,7 @@ public class Poset {
 		);
 
 		logger
-			.field("event.Signature",  event.Message.Signature)
+			.field("event.Signature",  event.message.Signature)
 			.field("wevent.Signature", wevent.Signature)
 			.debug("Return Event from ReadFromWire");
 
@@ -2184,8 +2184,8 @@ public class Poset {
 	//from MORE than 1/3 of participants
 	public error CheckBlock(Block block) {
 		int validSignatures = 0;
-		for(BlockSignature s : block.GetBlockSignatures()) {
-			boolean ok = block.Verify(s).result;
+		for(BlockSignature s : block.getBlockSignatures()) {
+			boolean ok = block.verify(s).result;
 			if (ok) {
 				validSignatures++;
 			}
@@ -2232,7 +2232,7 @@ public class Poset {
 			if (err != null) {
 				continue;
 			}
-			RetResult<Map<String, Long>> getFlagTable = ev.GetFlagTable();
+			RetResult<Map<String, Long>> getFlagTable = ev.getFlagTable();
 			Map<String, Long> ft = getFlagTable.result;
 			err = getFlagTable.err;
 			if (err != null) {
@@ -2297,8 +2297,8 @@ public class Poset {
 		for (long pid_id : Store.KnownEvents().keySet()) {
 			long index = Store.KnownEvents().get(pid_id);
 			logger.warn("    index=" + index +
-				" peer=" + Participants.ById(pid_id).GetNetAddr() +
-				" pubKeyHex=" + Participants.ById(pid_id).GetPubKeyHex());
+				" peer=" + Participants.byId(pid_id).GetNetAddr() +
+				" pubKeyHex=" + Participants.byId(pid_id).GetPubKeyHex());
 		}
 	}
 

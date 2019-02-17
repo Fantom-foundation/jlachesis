@@ -43,7 +43,7 @@ public class BadgerStoreTest {
 			KeyPair key = crypto.Utils.GenerateECDSAKeyPair().result;
 			byte[] pubKey = crypto.Utils.FromECDSAPub(key.getPublic());
 			Peer peer = new Peer(crypto.Utils.toHexString(pubKey), "");
-			participants.AddPeer(peer);
+			participants.addPeer(peer);
 			participantPubs = Appender.append(participantPubs,
 				new pub(peer.GetID(), key, pubKey, peer.GetPubKeyHex()));
 		}
@@ -76,7 +76,7 @@ public class BadgerStoreTest {
 	}
 
 	private BadgerStore createTestDB(String dir) {
-		Peers participants = Peers.NewPeersFromSlice(new peers.Peer[]{
+		Peers participants = Peers.newPeersFromSlice(new peers.Peer[]{
 			new Peer("0xaa", ""),
 			new Peer("0xbb", ""),
 			new Peer("0xcc", ""),
@@ -131,14 +131,14 @@ public class BadgerStoreTest {
 		err = dbGetParticipants.err;
 		assertNull("No error", err);
 
-		assertEquals("store.participants  length should be 3", 3, store.participants.Len());
+		assertEquals("store.participants  length should be 3", 3, store.participants.length());
 
-		assertEquals("store.participants length should match", dbParticipants.Len(), store.participants.Len());
+		assertEquals("store.participants length should match", dbParticipants.length(), store.participants.length());
 
 		PubKeyPeers byPubKey = dbParticipants.getByPubKey();
 		for (String dbP : byPubKey.keySet()) {
 			Peer dbPeer = byPubKey.get(dbP);
-			Peer peer = store.participants.ByPubKey(dbP);
+			Peer peer = store.participants.byPubKey(dbP);
 			assertNotNull(String.format("BadgerStore participants should contain %s", dbP), peer);
 			assertEquals(String.format("participant %s ID should match", dbP), dbPeer.GetID(), peer.GetID());
 		}
@@ -171,8 +171,8 @@ public class BadgerStoreTest {
 					p.pubKey,
 					k, null);
 
-				event.Sign(p.privKey.getPrivate());
-				event.Message.TopologicalIndex = topologicalIndex;
+				event.sign(p.privKey.getPrivate());
+				event.message.TopologicalIndex = topologicalIndex;
 				topologicalIndex++;
 				topologicalEvents = Appender.append(topologicalEvents, event);
 
@@ -189,15 +189,15 @@ public class BadgerStoreTest {
 			Event[] evs = events.get(p);
 			for (int k  = 0; k< evs.length; ++k) {
 				Event ev = evs[k];
-				RetResult<Event> dbGetEvent = store.dbGetEvent(ev.Hex());
+				RetResult<Event> dbGetEvent = store.dbGetEvent(ev.hex());
 				Event rev = dbGetEvent.result;
 				err = dbGetEvent.err;
 				assertNull("No error", err);
 
-				assertEquals(String.format("events[%s][%d].Body should match", p, k), ev.Message.Body, rev.Message.Body);
-				assertEquals(String.format("events[%s][%d].Signature should match", p, k), ev.Message.Signature, rev.Message.Signature);
+				assertEquals(String.format("events[%s][%d].Body should match", p, k), ev.message.Body, rev.message.Body);
+				assertEquals(String.format("events[%s][%d].Signature should match", p, k), ev.message.Signature, rev.message.Signature);
 
-				RetResult<Boolean> verify = rev.Verify();
+				RetResult<Boolean> verify = rev.verify();
 				boolean ver = verify.result;
 				err = verify.err;
 				assertNull("No error", err);
@@ -215,12 +215,12 @@ public class BadgerStoreTest {
 		for (int i = 0; i< dbTopologicalEvents.length; ++i) {
 			Event dte = dbTopologicalEvents[i];
 			Event te = topologicalEvents[i];
-			assertEquals(String.format("dbTopologicalEvents[%d].Hex should match", i), te.Hex(), dte.Hex());
-			assertEquals(String.format("dbTopologicalEvents[%d].Body should match", i), te.Message.Body, dte.Message.Body);
+			assertEquals(String.format("dbTopologicalEvents[%d].Hex should match", i), te.hex(), dte.hex());
+			assertEquals(String.format("dbTopologicalEvents[%d].Body should match", i), te.message.Body, dte.message.Body);
 			assertEquals(String.format("dbTopologicalEvents[%d].Signature should match", i),
-						te.Message.Signature, dte.Message.Signature);
+						te.message.Signature, dte.message.Signature);
 
-			RetResult<Boolean> verify = dte.Verify();
+			RetResult<Boolean> verify = dte.verify();
 			boolean ver = verify.result;
 			err = verify.err;
 			assertNull("No error", err);
@@ -240,7 +240,7 @@ public class BadgerStoreTest {
 			Event[] expectedEvents = Appender.sliceFromToEnd(events.get(p.hex), skipIndex+1);
 			for (int k =0; k < expectedEvents.length; ++k) {
 				Event e = expectedEvents[k];
-				assertEquals(String.format("ParticipantEvents[%s][%d] should match", p.hex, k), e.Hex(), pEvents[k]);
+				assertEquals(String.format("ParticipantEvents[%s][%d] should match", p.hex, k), e.hex(), pEvents[k]);
 			}
 		}
 
@@ -264,7 +264,7 @@ public class BadgerStoreTest {
 				p.pubKey,
 				0, null);
 			events.put(p.hex, event);
-			round.AddEvent(event.Hex(), true);
+			round.AddEvent(event.hex(), true);
 		}
 
 		error err = store.dbSetRound(0, round);
@@ -304,7 +304,7 @@ public class BadgerStoreTest {
 		PubKeyPeers byPubKey = store.participants.getByPubKey();
 		for (String p : byPubKey.keySet()) {
 			Peer peer = byPubKey.get(p);
-			Peer dbPeer = participantsFromDB.ByPubKey(p);
+			Peer dbPeer = participantsFromDB.byPubKey(p);
 			assertNotNull(String.format("DB contains participant %s", p), dbPeer);
 			assertEquals(String.format("DB participant %s should have matching ID", p), peer.GetID(), dbPeer.GetID());
 		}
@@ -332,18 +332,18 @@ public class BadgerStoreTest {
 
 		Block block = new Block(index, roundReceived, frameHash, transactions);
 
-		RetResult<BlockSignature> signCall = block.Sign(participants[0].privKey);
+		RetResult<BlockSignature> signCall = block.sign(participants[0].privKey);
 		BlockSignature sig1 = signCall.result;
 		error err = signCall.err;
 		assertNull("No error", err);
 
-		signCall = block.Sign(participants[1].privKey);
+		signCall = block.sign(participants[1].privKey);
 		BlockSignature sig2 = signCall.result;
 		err = signCall.err;
 		assertNull("No error", err);
 
-		block.SetSignature(sig1);
-		block.SetSignature(sig2);
+		block.setSignature(sig1);
+		block.setSignature(sig2);
 
 		// "Store Block"
 		err = store.dbSetBlock(block);
@@ -361,13 +361,13 @@ public class BadgerStoreTest {
 		err = dbGetBlock.err;
 		assertNull("No error", err);
 
-		String val1Sig = storedBlock.GetSignatures().get(participants[0].hex);
+		String val1Sig = storedBlock.getSignatures().get(participants[0].hex);
 		assertNotNull("Validator1 signature is stored in block", val1Sig);
-		assertEquals("Validator1 block signatures matches", val1Sig, sig1.Signature);
+		assertEquals("Validator1 block signatures matches", val1Sig, sig1.signature);
 
-		String val2Sig = storedBlock.GetSignatures().get(participants[1].hex);
+		String val2Sig = storedBlock.getSignatures().get(participants[1].hex);
 		assertNotNull("Validator2 signature not stored in block", val2Sig);
-		assertEquals("Validator2 block signatures matches", val2Sig, sig2.Signature);
+		assertEquals("Validator2 block signatures matches", val2Sig, sig2.signature);
 
 		removeBadgerStore(store);
 	}
@@ -390,8 +390,8 @@ public class BadgerStoreTest {
 				new String[]{"", ""},
 				p.pubKey,
 				0, null);
-			event.Sign(p.privKey.getPrivate());
-			events[id] = event.Message;
+			event.sign(p.privKey.getPrivate());
+			events[id] = event.message;
 			roots[id] = new Root(id);
 		}
 		Frame frame = new Frame(1L, roots, events);
@@ -446,13 +446,13 @@ public class BadgerStoreTest {
 
 			for (int k = 0; k < evs.length; ++k) {
 				Event ev = evs[k];
-				RetResult<Event> getEvent = store.GetEvent(ev.Hex());
+				RetResult<Event> getEvent = store.GetEvent(ev.hex());
 				Event rev = getEvent.result;
 				error err = getEvent.err;
 				assertNull("No error", err);
 
-				assertEquals(String.format("events[%s][%d].Body should match", p, k), ev.Message.Body, rev.Message.Body);
-				assertEquals(String.format("events[%s][%d].Signature should match", p, k), ev.Message.Signature, rev.Message.Signature);
+				assertEquals(String.format("events[%s][%d].Body should match", p, k), ev.message.Body, rev.message.Body);
+				assertEquals(String.format("events[%s][%d].Signature should match", p, k), ev.message.Signature, rev.message.Signature);
 			}
 		}
 
@@ -469,7 +469,7 @@ public class BadgerStoreTest {
 			for (int k = 0; k < expectedEvents.length; ++k) {
 				Event e = expectedEvents[k];
 				assertEquals(String.format("ParticipantEvents[%s][%d] should be match",
-						p.hex, k), e.Hex(), pEvents[k]);
+						p.hex, k), e.hex(), pEvents[k]);
 			}
 		}
 
@@ -482,7 +482,7 @@ public class BadgerStoreTest {
 
 			Event[] evs = events.get(p.hex);
 			Event expectedLast = evs[evs.length-1];
-			assertEquals(String.format("%s last should match", p.hex), expectedLast.Hex(), last);
+			assertEquals(String.format("%s last should match", p.hex), expectedLast.hex(), last);
 		}
 
 		HashMap<Long, Long> expectedKnown = new HashMap<Long,Long>();
@@ -520,7 +520,7 @@ public class BadgerStoreTest {
 				p.pubKey,
 				0, null);
 			events.put(p.hex,event);
-			round.AddEvent(event.Hex(), true);
+			round.AddEvent(event.hex(), true);
 		}
 
 		error err = store.SetRound(0, round);
@@ -564,18 +564,18 @@ public class BadgerStoreTest {
 		};
 		byte[] frameHash = "this is the frame hash".getBytes();
 		Block block = new Block(index, roundReceived, frameHash, transactions);
-		RetResult<BlockSignature> signCall = block.Sign(participants[0].privKey);
+		RetResult<BlockSignature> signCall = block.sign(participants[0].privKey);
 		BlockSignature sig1 = signCall.result;
 		error err = signCall.err;
 		assertNull("No error", err);
 
-		signCall = block.Sign(participants[1].privKey);
+		signCall = block.sign(participants[1].privKey);
 		BlockSignature sig2 = signCall.result;
 		err = signCall.err;
 		assertNull("No error", err);
 
-		block.SetSignature(sig1);
-		block.SetSignature(sig2);
+		block.setSignature(sig1);
+		block.setSignature(sig2);
 
 		//"Store Block"
 		err = store.SetBlock(block);
@@ -593,13 +593,13 @@ public class BadgerStoreTest {
 		err = getBlock2.err;
 		assertNull("No error", err);
 
-		String val1Sig = storedBlock.GetSignatures().get(participants[0].hex);
+		String val1Sig = storedBlock.getSignatures().get(participants[0].hex);
 		assertNotNull("Validator1 signature is stored in block", val1Sig);
-		assertEquals("Validator1 block signatures should match", val1Sig, sig1.Signature);
+		assertEquals("Validator1 block signatures should match", val1Sig, sig1.signature);
 
-		String val2Sig = storedBlock.GetSignatures().get(participants[1].hex);
+		String val2Sig = storedBlock.getSignatures().get(participants[1].hex);
 		assertNotNull("Validator2 signature not stored in block", val2Sig);
-		assertEquals("Validator2 block signatures should match", val2Sig, sig2.Signature);
+		assertEquals("Validator2 block signatures should match", val2Sig, sig2.signature);
 
 		removeBadgerStore(store);
 	}
@@ -623,8 +623,8 @@ public class BadgerStoreTest {
 					new String[]{"", ""},
 					p.pubKey,
 					0, null);
-			event.Sign(p.privKey.getPrivate());
-			events[id] = event.Message;
+			event.sign(p.privKey.getPrivate());
+			events[id] = event.message;
 			roots[id] = new Root(id);
 		}
 		Frame frame = new Frame(1L, roots, events);

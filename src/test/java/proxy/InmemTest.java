@@ -96,7 +96,7 @@ public class InmemTest {
 
 		public RetResult<byte[]> CommitHandler(Block block) {
 			logger.debug("CommitBlock");
-			transactions = Appender.append(transactions, block.Transactions());
+			transactions = Appender.append(transactions, block.transactions());
 			return new RetResult<>(goldStateHash(), null);
 		}
 

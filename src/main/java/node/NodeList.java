@@ -53,7 +53,7 @@ public class NodeList extends LinkedHashMap<PrivateKey, Node> {
 				transp,
 				DummyClient.NewInmemDummyApp(logger));
 
-			participants.AddPeer(peer);
+			participants.addPeer(peer);
 			this.put(key.getPrivate(), n);
 		}
 
@@ -169,7 +169,7 @@ public class NodeList extends LinkedHashMap<PrivateKey, Node> {
 					continue LOOP;
 				}
 				Block block = node.GetBlock(target).result;
-				if (block.GetStateHash().length == 0) {
+				if (block.getStateHash().length == 0) {
 					continue LOOP;
 				}
 			}

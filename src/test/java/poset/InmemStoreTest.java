@@ -37,7 +37,7 @@ public class InmemStoreTest {
 			Peer peer = new Peer(crypto.Utils.toHexString(pubKey), "");
 			participantPubs = Appender.append(participantPubs,
 				new pub(i, key, pubKey, peer.GetPubKeyHex()));
-			participants.AddPeer(peer);
+			participants.addPeer(peer);
 			participantPubs[participantPubs.length-1].id = peer.GetID();
 		}
 
@@ -66,7 +66,7 @@ public class InmemStoreTest {
 					new String[]{"", ""},
 					p.pubKey,
 					k, null);
-				event.Hex(); //just to set private variables
+				event.hex(); //just to set private variables
 				items = Appender.append(items, event);
 				error err = store.SetEvent(event);
 				assertNull("No error when setEvent", err);
@@ -80,12 +80,12 @@ public class InmemStoreTest {
 			Event[] evs = events.get(p);
 			for (int k = 0; k< evs.length; ++k) {
 				ev = evs[k];
-				RetResult<Event> getEvent = store.GetEvent(ev.Hex());
+				RetResult<Event> getEvent = store.GetEvent(ev.hex());
 				Event rev = getEvent.result;
 				err = getEvent.err;
 				assertNull("No error when GetEvent", err);
 				assertEquals(String.format("events[%s][%d] should be %s, not %s", p, k, ev, rev),
-					 ev.Message.Body, rev.Message.Body);
+					 ev.message.Body, rev.message.Body);
 			}
 		}
 
@@ -103,7 +103,7 @@ public class InmemStoreTest {
 			for (int k = 0; k < expectedEvents.length; ++k) {
 				Event e = expectedEvents[k];
 				assertEquals(String.format("ParticipantEvents[%s][%d] should be match",
-						p.hex, k), e.Hex(), pEvents[k]);
+						p.hex, k), e.hex(), pEvents[k]);
 			}
 		}
 
@@ -140,7 +140,7 @@ public class InmemStoreTest {
 				p.pubKey,
 				0, null);
 			events.put(p.hex, event);
-			round.AddEvent(event.Hex(), true);
+			round.AddEvent(event.hex(), true);
 		}
 
 		//"Store Round"
@@ -184,18 +184,18 @@ public class InmemStoreTest {
 		byte[] frameHash = "this is the frame hash".getBytes();
 		Block block = new Block(index, roundReceived, frameHash, transactions);
 
-		RetResult<BlockSignature> signCall = block.Sign(participants[0].privKey);
+		RetResult<BlockSignature> signCall = block.sign(participants[0].privKey);
 		BlockSignature sig1 = signCall.result;
 		error err = signCall.err;
 		assertNull("No error when sign", err);
 
-		RetResult<BlockSignature> signCall2 = block.Sign(participants[1].privKey);
+		RetResult<BlockSignature> signCall2 = block.sign(participants[1].privKey);
 		BlockSignature sig2 = signCall2.result;
 		err = signCall2.err;
 		assertNull("No error when sign", err);
 
-		block.SetSignature(sig1);
-		block.SetSignature(sig2);
+		block.setSignature(sig1);
+		block.setSignature(sig2);
 
 		//"Store Block"
 		err = store.SetBlock(block);
@@ -213,12 +213,12 @@ public class InmemStoreTest {
 		err = getBlock.err;
 		assertNull("No error when GetBlock", err);
 
-		String val1Sig = storedBlock.GetSignatures().get(participants[0].hex);
+		String val1Sig = storedBlock.getSignatures().get(participants[0].hex);
 		assertNotNull("Validator1 signature is stored in block", val1Sig);
-		assertEquals("Validator1 block signatures differ", sig1.Signature, val1Sig);
+		assertEquals("Validator1 block signatures differ", sig1.signature, val1Sig);
 
-		String val2Sig = storedBlock.GetSignatures().get(participants[1].hex);
+		String val2Sig = storedBlock.getSignatures().get(participants[1].hex);
 		assertNotNull("Validator2 signature is stored in block", val2Sig);
-		assertEquals("Validator2 block signatures differ", sig2.Signature, val2Sig);
+		assertEquals("Validator2 block signatures differ", sig2.signature, val2Sig);
 	}
 }

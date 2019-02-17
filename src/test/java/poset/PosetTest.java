@@ -140,9 +140,9 @@ public class PosetTest {
 
 		public void signAndAddEvent(Event event, String name,
 				HashMap<String,String> index , Event[] orderedEvents) {
-				event.Sign(Key.getPrivate());
+				event.sign(Key.getPrivate());
 				Events = Appender.append(Events, event);
-				index.put(name, event.Hex());
+				index.put(name, event.hex());
 
 				// TODO orderedEvents cant be appended
 				orderedEvents = Appender.append(orderedEvents, event);
@@ -241,7 +241,7 @@ public class PosetTest {
 			byte[] pub = crypto.Utils.FromECDSAPub(key.getPublic());
 //			pubHex := fmt.Sprintf("0x%X", pub)
 			String pubHex = crypto.Utils.toHexString(pub);
-			participants.AddPeer(new Peer(pubHex, ""));
+			participants.addPeer(new Peer(pubHex, ""));
 			keys.put(pubHex, key);
 		}
 
@@ -533,7 +533,7 @@ public class PosetTest {
 			KeyPair key = crypto.Utils.GenerateECDSAKeyPair().result;
 			TestNode node = new TestNode(key, i);
 			nodes = Appender.append(nodes, node);
-			participants.AddPeer(new Peer(node.PubHex, ""));
+			participants.addPeer(new Peer(node.PubHex, ""));
 		}
 
 		InmemStore store = new InmemStore(participants, cacheSize);
@@ -542,32 +542,32 @@ public class PosetTest {
 		for (int i =0; i< nodes.length; ++i) {
 			TestNode node = nodes[i];
 			Event event = new Event(null, null, null, new String[]{"", ""}, node.Pub, 0, null);
-			event.Sign(node.Key.getPrivate());
-			index.put(String.format("e%d", i), event.Hex());
+			event.sign(node.Key.getPrivate());
+			index.put(String.format("e%d", i), event.hex());
 			poset.InsertEvent(event, true);
 		}
 
 		//a and e2 need to have different hashes
 		Event eventA = new Event(new byte[][]{"yo".getBytes()}, null, null, new String[]{"", ""},
 				nodes[2].Pub, 0, null);
-		eventA.Sign(nodes[2].Key.getPrivate());
-		index.put("a", eventA.Hex());
+		eventA.sign(nodes[2].Key.getPrivate());
+		index.put("a", eventA.hex());
 		error err = poset.InsertEvent(eventA, true);
 		assertNotNull("InsertEvent should return error for 'a'", err);
 
 		Event event01 = new Event(null, null, null,
 			new String[]{index.get(e0), index.get(a)}, //e0 and a
 			nodes[0].Pub, 1, null);
-		event01.Sign(nodes[0].Key.getPrivate());
-		index.put(e01, event01.Hex());
+		event01.sign(nodes[0].Key.getPrivate());
+		index.put(e01, event01.hex());
 		err = poset.InsertEvent(event01, true);
 		assertNotNull(String.format("InsertEvent should return error for %s", e01), err);
 
 		Event event20 = new Event(null, null, null,
 			new String[]{index.get(e2), index.get(e01)}, //e2 and e01
 			nodes[2].Pub, 1, null);
-		event20.Sign(nodes[2].Key.getPrivate());
-		index.put(e20, event20.Hex());
+		event20.sign(nodes[2].Key.getPrivate());
+		index.put(e20, event20.hex());
 		err = poset.InsertEvent(event20, true);
 		assertNotNull(String.format("InsertEvent should return error for %s", e20), err);
 	}
@@ -616,10 +616,10 @@ public class PosetTest {
 		error err = getEventCall.err;
 		assertNull("No error", err);
 
-		if (!(e0Event.Message.SelfParentIndex == -1 &&
-			e0Event.Message.OtherParentCreatorID == -1 &&
-			e0Event.Message.OtherParentIndex == -1 &&
-			e0Event.Message.CreatorID == poset.Participants.ByPubKey(e0Event.Creator()).GetID())) {
+		if (!(e0Event.message.SelfParentIndex == -1 &&
+			e0Event.message.OtherParentCreatorID == -1 &&
+			e0Event.message.OtherParentIndex == -1 &&
+			e0Event.message.CreatorID == poset.Participants.byPubKey(e0Event.creator()).GetID())) {
 			fail(String.format("Invalid wire info on %s", e0));
 		}
 
@@ -633,10 +633,10 @@ public class PosetTest {
 		err = getEvent.err;
 		assertNull("No error", err);
 
-		if (!(e21Event.Message.SelfParentIndex == 1 &&
-			e21Event.Message.OtherParentCreatorID == poset.Participants.ByPubKey(e10Event.Creator()).GetID() &&
-			e21Event.Message.OtherParentIndex == 1 &&
-			e21Event.Message.CreatorID == poset.Participants.ByPubKey(e21Event.Creator()).GetID())) {
+		if (!(e21Event.message.SelfParentIndex == 1 &&
+			e21Event.message.OtherParentCreatorID == poset.Participants.byPubKey(e10Event.creator()).GetID() &&
+			e21Event.message.OtherParentIndex == 1 &&
+			e21Event.message.CreatorID == poset.Participants.byPubKey(e21Event.creator()).GetID())) {
 			fail(String.format("Invalid wire info on %s", e21));
 		}
 
@@ -645,14 +645,14 @@ public class PosetTest {
 		err = getEvent.err;
 		assertNull("No error", err);
 
-		if (!(f1Event.Message.SelfParentIndex == 2 &&
-			f1Event.Message.OtherParentCreatorID == poset.Participants.ByPubKey(e0Event.Creator()).GetID() &&
-			f1Event.Message.OtherParentIndex == 2 &&
-			f1Event.Message.CreatorID == poset.Participants.ByPubKey(f1Event.Creator()).GetID())) {
+		if (!(f1Event.message.SelfParentIndex == 2 &&
+			f1Event.message.OtherParentCreatorID == poset.Participants.byPubKey(e0Event.creator()).GetID() &&
+			f1Event.message.OtherParentIndex == 2 &&
+			f1Event.message.CreatorID == poset.Participants.byPubKey(f1Event.creator()).GetID())) {
 			fail(String.format("Invalid wire info on %s", f1));
 		}
 
-		String e0CreatorID = "" + poset.Participants.ByPubKey(e0Event.Creator()).GetID();
+		String e0CreatorID = "" + poset.Participants.byPubKey(e0Event.creator()).GetID();
 
 		Hierarchy[] toCheck = new Hierarchy[]{
 			new Hierarchy(e0, "Root" + e0CreatorID, ""),
@@ -703,7 +703,7 @@ public class PosetTest {
 		Event ev = getEvent.result;
 		error err = getEvent.err;
 		assertNull("No error", err);
-		return ev.SelfParent() == selfAncestor && ev.OtherParent() == ancestor;
+		return ev.selfParent() == selfAncestor && ev.otherParent() == ancestor;
 	}
 
 
@@ -720,7 +720,7 @@ public class PosetTest {
 			error err = getEvent.err;
 			assertNull("No error", err);
 
-			WireEvent evWire = ev.ToWire();
+			WireEvent evWire = ev.toWire();
 
 			RetResult<Event> readWireInfo = poset.ReadWireInfo(evWire);
 			Event evFromWire = readWireInfo.result;
@@ -728,14 +728,14 @@ public class PosetTest {
 			assertNull("No error", err);
 
 			assertArrayEquals(String.format("Error converting %s.Body.BlockSignatures"+
-					" from light wire", k), ev.Message.Body.BlockSignatures,
-						evFromWire.Message.Body.BlockSignatures);
+					" from light wire", k), ev.message.Body.BlockSignatures,
+						evFromWire.message.Body.BlockSignatures);
 
 			assertEquals(String.format("Error converting %s.Body from light wire", k),
-				ev.Message.Body,evFromWire.Message.Body);
-			assertEquals(String.format("Error converting %s.Signature from light wire", k), ev.Message.Signature,
-				evFromWire.Message.Signature);
-			RetResult<Boolean> verify = evFromWire.Verify();
+				ev.message.Body,evFromWire.message.Body);
+			assertEquals(String.format("Error converting %s.Signature from light wire", k), ev.message.Signature,
+				evFromWire.message.Signature);
+			RetResult<Boolean> verify = evFromWire.verify();
 			boolean ok = verify.result;
 			err = verify.err;
 			assertTrue(String.format("Error verifying signature for %s from ligh wire: %s",
@@ -3253,7 +3253,7 @@ public class PosetTest {
 		Event[] diff = null;
 		for (long id: known.keySet()) {
 			long ct = known.get(id);
-			String pk = poset.Participants.ById(id).GetPubKeyHex();
+			String pk = poset.Participants.byId(id).GetPubKeyHex();
 			// get participant Events with index > ct
 			RetResult<String[]> pEventsCall = poset.Store.ParticipantEvents(pk, ct);
 			String[] participantEvents = pEventsCall.result;

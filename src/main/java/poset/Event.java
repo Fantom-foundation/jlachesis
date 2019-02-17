@@ -17,7 +17,7 @@ import node.FlagtableContainer;
 import poset.proto.FlagTableWrapper.Builder;
 
 public class Event implements FlagtableContainer {
-	EventMessage Message;
+	EventMessage message;
 
 	//used for sorting
 	long round;
@@ -65,9 +65,9 @@ public class Event implements FlagtableContainer {
 		}
 		byte[] ft = builder.build().toByteArray();
 
-		this.Message = new EventMessage();
-		this.Message.Body = body;
-		this.Message.FlagTable = ft;
+		this.message = new EventMessage();
+		this.message.Body = body;
+		this.message.FlagTable = ft;
 
 		// TODO I added these init
 		this.round = -1;
@@ -80,9 +80,9 @@ public class Event implements FlagtableContainer {
 
 	public Event(EventMessage eventMessage) {
 		// TBD add stub
-		this.Message = new EventMessage();
-		this.Message.Body = eventMessage.Body;
-		this.Message.FlagTable = eventMessage.FlagTable;
+		this.message = new EventMessage();
+		this.message.Body = eventMessage.Body;
+		this.message.FlagTable = eventMessage.FlagTable;
 
 		// TODO I added these init
 		this.round = -1;
@@ -95,7 +95,7 @@ public class Event implements FlagtableContainer {
 
 	public Event() {
 		// TODO I added these init
-		this.Message = null;
+		this.message = null;
 
 		this.round = -1;
 		this.lamportTimestamp = -1;
@@ -110,57 +110,56 @@ public class Event implements FlagtableContainer {
 	}
 
 	// Round returns round of event.
-	public long Round() {
+	public long GetRound() {
 		if (round < 0) {
 			return -1;
 		}
 		return round;
 	}
 
-	public String Creator() {
+	public String creator() {
 		if (creator == null || creator.isEmpty()) {
-//			creator = String.format("0x%X", Message.Body.Creator);
-			creator = crypto.Utils.toHexString(Message.Body.Creator);
+			creator = crypto.Utils.toHexString(message.Body.Creator);
 		}
 		return creator;
 	}
 
-	public String SelfParent() {
-		return Message.Body.Parents[0];
+	public String selfParent() {
+		return message.Body.Parents[0];
 	}
 
-	public String OtherParent() {
-		return Message.Body.Parents[1];
+	public String otherParent() {
+		return message.Body.Parents[1];
 	}
 
-	public byte[][] Transactions() {
-		return Message.Body.Transactions;
+	public byte[][] transactions() {
+		return message.Body.Transactions;
 	}
 
-	public long Index() {
-		return Message.Body.Index;
+	public long index() {
+		return message.Body.Index;
 	}
 
-	public BlockSignature[] BlockSignatures() {
-		return Message.Body.BlockSignatures;
+	public BlockSignature[] blockSignatures() {
+		return message.Body.BlockSignatures;
 	}
 
 	//True if Event contains a payload or is the initial Event of its creator
-	public boolean IsLoaded() {
-		if (Message.Body.Index == 0) {
+	public boolean isLoaded() {
+		if (message.Body.Index == 0) {
 			return true;
 		}
 
-		boolean hasTransactions = Message.Body.Transactions != null &&
-			(Message.Body.Transactions.length > 0 ||
-					(Message.Body.InternalTransactions != null && Message.Body.InternalTransactions.length > 0));
+		boolean hasTransactions = message.Body.Transactions != null &&
+			(message.Body.Transactions.length > 0 ||
+					(message.Body.InternalTransactions != null && message.Body.InternalTransactions.length > 0));
 
 		return hasTransactions;
 	}
 
 	//ecdsa sig
-	public error Sign(PrivateKey privKey) {
-		RetResult<byte[]> hash2 = Message.Body.Hash();
+	public error sign(PrivateKey privKey) {
+		RetResult<byte[]> hash2 = message.Body.Hash();
 		byte[] signBytes = hash2.result;
 		error err = hash2.err;
 		if (err != null) {
@@ -174,22 +173,22 @@ public class Event implements FlagtableContainer {
 		if (err != null) {
 			return err;
 		}
-		Message.Signature = crypto.Utils.encodeSignature(R, S);
+		message.Signature = crypto.Utils.encodeSignature(R, S);
 		return err;
 	}
 
-	public RetResult<Boolean> Verify() {
-		byte[] pubBytes = Message.Body.Creator;
+	public RetResult<Boolean> verify() {
+		byte[] pubBytes = message.Body.Creator;
 		PublicKey pubKey = crypto.Utils.ToECDSAPub(pubBytes);
 
-		RetResult<byte[]> hash2 = Message.Body.Hash();
+		RetResult<byte[]> hash2 = message.Body.Hash();
 		byte[] signBytes = hash2.result;
 		error err = hash2.err;
 		if (err != null) {
 			return new RetResult<Boolean>(false, err);
 		}
 
-		RetResult3<BigInteger, BigInteger> decodeSignature = crypto.Utils.DecodeSignature(Message.Signature);
+		RetResult3<BigInteger, BigInteger> decodeSignature = crypto.Utils.DecodeSignature(message.Signature);
 		BigInteger r = decodeSignature.result1;
 		BigInteger s = decodeSignature.result2;
 		err = decodeSignature.err;
@@ -201,9 +200,9 @@ public class Event implements FlagtableContainer {
 	}
 
 	//sha256 hash of body
-	public RetResult<byte[]> Hash() {
+	public RetResult<byte[]> hash() {
 		if (hash == null || hash.length == 0) {
-			RetResult<byte[]> hash2 = Message.Body.Hash();
+			RetResult<byte[]> hash2 = message.Body.Hash();
 			byte[] hash = hash2.result;
 			error err = hash2.err;
 			if (err != null) {
@@ -214,40 +213,40 @@ public class Event implements FlagtableContainer {
 		return new RetResult<byte[]>(this.hash, null);
 	}
 
-	public String Hex() {
+	public String hex() {
 		if (hex == null || hex.isEmpty()) {
-			byte[] hash = Hash().result;
+			byte[] hash = hash().result;
 //			hex = String.format("0x%X", hash);
 			hex = crypto.Utils.toHexString(hash);
 		}
 		return hex;
 	}
 
-	public void SetRound(long r) {
+	public void setRound(long r) {
 		round = r;
 	}
 
-	public void SetLamportTimestamp(long t) {
+	public void setLamportTimestamp(long t) {
 		lamportTimestamp = t;
 	}
 
-	public void SetRoundReceived(long rr) {
+	public void setRoundReceived(long rr) {
 		roundReceived = rr;
 	}
 
-	public void SetWireInfo(long selfParentIndex, long otherParentCreatorID, long otherParentIndex,
+	public void setWireInfo(long selfParentIndex, long otherParentCreatorID, long otherParentIndex,
 		long creatorID) {
-		Message.SelfParentIndex = selfParentIndex;
-		Message.OtherParentCreatorID = otherParentCreatorID;
-		Message.OtherParentIndex = otherParentIndex;
-		Message.CreatorID = creatorID;
+		message.SelfParentIndex = selfParentIndex;
+		message.OtherParentCreatorID = otherParentCreatorID;
+		message.OtherParentIndex = otherParentIndex;
+		message.CreatorID = creatorID;
 	}
 
 	public WireBlockSignature[] WireBlockSignatures()  {
-		if (Message.Body.BlockSignatures != null){
-			WireBlockSignature[] wireSignatures = new WireBlockSignature[Message.Body.BlockSignatures.length];
-			for (int i = 0; i < Message.Body.BlockSignatures.length; ++i) {
-				wireSignatures[i] = Message.Body.BlockSignatures[i].ToWire();
+		if (message.Body.BlockSignatures != null){
+			WireBlockSignature[] wireSignatures = new WireBlockSignature[message.Body.BlockSignatures.length];
+			for (int i = 0; i < message.Body.BlockSignatures.length; ++i) {
+				wireSignatures[i] = message.Body.BlockSignatures[i].toWire();
 			}
 
 			return wireSignatures;
@@ -255,45 +254,45 @@ public class Event implements FlagtableContainer {
 		return null;
 	}
 
-	public WireEvent ToWire()  {
-		InternalTransaction[] transactions = new InternalTransaction[Message.Body.InternalTransactions.length];
+	public WireEvent toWire()  {
+		InternalTransaction[] transactions = new InternalTransaction[message.Body.InternalTransactions.length];
 
-		for (int i = 0; i <Message.Body.InternalTransactions.length; ++i) {
-			transactions[i] = Message.Body.InternalTransactions[i];
+		for (int i = 0; i <message.Body.InternalTransactions.length; ++i) {
+			transactions[i] = message.Body.InternalTransactions[i];
 		}
 
 		WireBody wireBody = new WireBody(
-				Message.Body.Transactions,
+				message.Body.Transactions,
 				transactions,
 				WireBlockSignatures(),
-				Message.SelfParentIndex,
-				Message.OtherParentCreatorID,
-				Message.OtherParentIndex,
-				Message.CreatorID,
-				Message.Body.Index);
+				message.SelfParentIndex,
+				message.OtherParentCreatorID,
+				message.OtherParentIndex,
+				message.CreatorID,
+				message.Body.Index);
 
 		return new WireEvent(
 			wireBody,
-			Message.Signature,
-			Message.FlagTable,
-			Message.WitnessProof
+			message.Signature,
+			message.FlagTable,
+			message.WitnessProof
 		);
 	}
 
 	// ReplaceFlagTable replaces flag tabl
-	public error ReplaceFlagTable(Map<String,Long> flagTable) {
+	public error replaceFlagTable(Map<String,Long> flagTable) {
 		FlagTableWrapper ftw = new FlagTableWrapper(flagTable);
 
 		RetResult<byte[]> byteArrayCall = ftw.marshaller().protoMarshal();
-		Message.FlagTable = byteArrayCall.result;
+		message.FlagTable = byteArrayCall.result;
 		error err = byteArrayCall.err;
 		return err;
 	}
 
 	// GetFlagTable returns the flag tabl
-	public RetResult<Map<String,Long>> GetFlagTable() {
+	public RetResult<Map<String,Long>> getFlagTable() {
 		FlagTableWrapper flagTable = new FlagTableWrapper();
-		error err = flagTable.marshaller().protoUnmarshal(Message.FlagTable);
+		error err = flagTable.marshaller().protoUnmarshal(message.FlagTable);
 		return new RetResult<Map<String,Long>>(flagTable.Body, err);
 	}
 
@@ -302,9 +301,9 @@ public class Event implements FlagtableContainer {
 	 * @param dst
 	 * @return
 	 */
-	public RetResult<Map<String,Long>> MergeFlagTable(Map<String,Long> dst) {
+	public RetResult<Map<String,Long>> mergeFlagTable(Map<String,Long> dst) {
 		FlagTableWrapper src = new FlagTableWrapper();
-		error err = src.marshaller().protoUnmarshal(Message.FlagTable);
+		error err = src.marshaller().protoUnmarshal(message.FlagTable);
 		if (err != null) {
 			return new RetResult<Map<String,Long>>(null, err);
 		}
@@ -319,8 +318,8 @@ public class Event implements FlagtableContainer {
 			@Override
 			public poset.proto.Event toProto() {
 				poset.proto.Event.Builder builder = poset.proto.Event.newBuilder();
-				if (Message != null) {
-					builder.setMessage(Message.marshaller().toProto());
+				if (message != null) {
+					builder.setMessage(message.marshaller().toProto());
 				}
 				builder.setRound(round)
 				.setLamportTimestamp(lamportTimestamp)
@@ -340,10 +339,10 @@ public class Event implements FlagtableContainer {
 			@Override
 			public void fromProto(poset.proto.Event proto) {
 				poset.proto.EventMessage msg = proto.getMessage();
-				Message = null;
+				message = null;
 				if (msg != null) {
-					Message = new EventMessage();
-					Message.marshaller().fromProto(msg);
+					message = new EventMessage();
+					message.marshaller().fromProto(msg);
 				}
 
 				round = proto.getRound();
@@ -361,75 +360,16 @@ public class Event implements FlagtableContainer {
 		};
 	}
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((Message == null) ? 0 : Message.hashCode());
-		result = prime * result + ((creator == null) ? 0 : creator.hashCode());
-		result = prime * result + Arrays.hashCode(hash);
-		result = prime * result + ((hex == null) ? 0 : hex.hashCode());
-		result = prime * result + (int) (lamportTimestamp ^ (lamportTimestamp >>> 32));
-		result = prime * result + (int) (round ^ (round >>> 32));
-		result = prime * result + (int) (roundReceived ^ (roundReceived >>> 32));
-		return result;
+	public long creatorID() {
+		return message.CreatorID;
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Event other = (Event) obj;
-		if (Message == null) {
-			if (other.Message != null)
-				return false;
-		} else if (!Message.equals(other.Message))
-			return false;
-		if (creator == null) {
-			if (other.creator != null)
-				return false;
-		} else if (!creator.equals(other.creator))
-			return false;
-		if (!Arrays.equals(hash, other.hash))
-			return false;
-		if (hex == null) {
-			if (other.hex != null)
-				return false;
-		} else if (!hex.equals(other.hex))
-			return false;
-		if (lamportTimestamp != other.lamportTimestamp)
-			return false;
-		if (round != other.round)
-			return false;
-		if (roundReceived != other.roundReceived)
-			return false;
-		return true;
-	}
-
-	@Override
-	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("Event [Message=").append(Message).append(", round=").append(round).append(", lamportTimestamp=")
-				.append(lamportTimestamp).append(", roundReceived=").append(roundReceived).append(", creator=")
-				.append(creator).append(", hash=").append(Arrays.toString(hash)).append(", hex=").append(hex)
-				.append("]");
-		return builder.toString();
-	}
-
-	public long CreatorID() {
-		return Message.CreatorID;
-	}
-
-	public long OtherParentCreatorID() {
-		return Message.OtherParentCreatorID;
+	public long otherParentCreatorID() {
+		return message.OtherParentCreatorID;
 	}
 
 	public EventMessage getMessage() {
-		return Message;
+		return message;
 	}
 
 	public long getRound() {
@@ -459,4 +399,64 @@ public class Event implements FlagtableContainer {
 	public static String rootSelfParent(long participantID) {
 		return String.format("Root%d", participantID);
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((message == null) ? 0 : message.hashCode());
+		result = prime * result + ((creator == null) ? 0 : creator.hashCode());
+		result = prime * result + Arrays.hashCode(hash);
+		result = prime * result + ((hex == null) ? 0 : hex.hashCode());
+		result = prime * result + (int) (lamportTimestamp ^ (lamportTimestamp >>> 32));
+		result = prime * result + (int) (round ^ (round >>> 32));
+		result = prime * result + (int) (roundReceived ^ (roundReceived >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Event other = (Event) obj;
+		if (message == null) {
+			if (other.message != null)
+				return false;
+		} else if (!message.equals(other.message))
+			return false;
+		if (creator == null) {
+			if (other.creator != null)
+				return false;
+		} else if (!creator.equals(other.creator))
+			return false;
+		if (!Arrays.equals(hash, other.hash))
+			return false;
+		if (hex == null) {
+			if (other.hex != null)
+				return false;
+		} else if (!hex.equals(other.hex))
+			return false;
+		if (lamportTimestamp != other.lamportTimestamp)
+			return false;
+		if (round != other.round)
+			return false;
+		if (roundReceived != other.roundReceived)
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("Event [Message=").append(message).append(", round=").append(round).append(", lamportTimestamp=")
+				.append(lamportTimestamp).append(", roundReceived=").append(roundReceived).append(", creator=")
+				.append(creator).append(", hash=").append(Arrays.toString(hash)).append(", hex=").append(hex)
+				.append("]");
+		return builder.toString();
+	}
+
 }

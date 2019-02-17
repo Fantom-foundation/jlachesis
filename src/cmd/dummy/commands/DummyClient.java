@@ -2,7 +2,6 @@ package dummy.commands;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -19,7 +18,6 @@ import lachesis.ConfigUtils;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
-import sun.misc.Unsafe;
 
 
 @Command(name = "dummy", header = "%n@|Dummy Socket Client for Lachesis|@")
@@ -54,19 +52,19 @@ public class DummyClient implements Runnable {
         CommandLine.run(new DummyClient(), args);
     }
 
-	public static void disableWarning() {
-	    try {
-	        Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
-	        theUnsafe.setAccessible(true);
-	        Unsafe u = (Unsafe) theUnsafe.get(null);
-
-	        Class cls = Class.forName("jdk.internal.module.IllegalAccessLogger");
-	        Field logger = cls.getDeclaredField("logger");
-	        u.putObjectVolatile(cls, u.staticFieldOffset(logger), null);
-	    } catch (Exception e) {
-	        // ignore
-	    }
-	}
+//	public static void disableWarning() {
+//	    try {
+//	        Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
+//	        theUnsafe.setAccessible(true);
+//	        Unsafe u = (Unsafe) theUnsafe.get(null);
+//
+//	        Class cls = Class.forName("jdk.internal.module.IllegalAccessLogger");
+//	        Field logger = cls.getDeclaredField("logger");
+//	        u.putObjectVolatile(cls, u.staticFieldOffset(logger), null);
+//	    } catch (Exception e) {
+//	        // ignore
+//	    }
+//	}
 
 
 	public void run() {

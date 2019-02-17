@@ -5,5 +5,5 @@ import java.util.Map;
 import common.RetResult;
 
 public interface FlagtableContainer {
-	RetResult<Map<String,Long>> GetFlagTable();
+	RetResult<Map<String,Long>> getFlagTable();
 }

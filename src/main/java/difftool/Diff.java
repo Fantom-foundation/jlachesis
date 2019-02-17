@@ -141,13 +141,13 @@ public class Diff {
 
 			// NOTE: the same blocks Hashes are different because their Signatures.
 			// So, compare bodies only.
-			if (!b0.GetBody().equals(b1.GetBody())) {
+			if (!b0.getBody().equals(b1.getBody())) {
 				diff.FirstBlockIndex = i;
-				diff.AddDescr(String.format("block:\n%+v \n!= \n%+v\n", b0.GetBody(), b1.GetBody()));
+				diff.AddDescr(String.format("block:\n%+v \n!= \n%+v\n", b0.getBody(), b1.getBody()));
 
-				diff.FirstRoundIndex = b0.RoundReceived();
-				if (diff.FirstRoundIndex > b1.RoundReceived()) {
-					diff.FirstRoundIndex = b1.RoundReceived();
+				diff.FirstRoundIndex = b0.roundReceived();
+				if (diff.FirstRoundIndex > b1.roundReceived()) {
+					diff.FirstRoundIndex = b1.roundReceived();
 				}
 
 				return true;

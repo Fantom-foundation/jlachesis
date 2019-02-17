@@ -90,8 +90,8 @@ public class InmemAppProxy implements AppProxy {
 		byte[] stateHash = commitHandler.result;
 		error err = commitHandler.err;
 
-		logger.field("round_received", block.RoundReceived())
-			.field("txs",           block.Transactions().length)
+		logger.field("round_received", block.roundReceived())
+			.field("txs",           block.transactions().length)
 			.field("state_hash",     stateHash)
 			.field("err",            err)
 			.debug("InmemAppProxy.CommitBlock");

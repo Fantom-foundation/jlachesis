@@ -1,25 +1,29 @@
 package peers;
 
 import java.util.Arrays;
-import java.util.concurrent.locks.Lock;
 
-// StaticPeers is used to provide a static list of peers.
+/**
+ * StaticPeers is used to provide a static list of peers.
+ */
 public class StaticPeers {
-	Peer[] StaticPeers;
-	Lock l; //sync.Mutex           
+	Peer[] staticPeers = new Peer[0];
 
-	// Peers implements the PeerStore interface.
-	public synchronized Peer[] Peers() {
-		Peer[] peers = Arrays.copyOf(StaticPeers, StaticPeers.length);
+	/**
+	 * Peers implements the PeerStore interface.
+	 */
+	public synchronized Peer[] peers() {
+		Peer[] peers = Arrays.copyOf(staticPeers, staticPeers.length);
 		return peers;
 	}
-	
-	// SetPeers implements the PeerStore interface.
-	public synchronized void SetPeers(Peer[] p)  {
+
+	/**
+	 * SetPeers implements the PeerStore interface.
+	 */
+	public synchronized void setPeers(Peer[] p)  {
 		if (p == null) {
-			StaticPeers = null;
+			staticPeers = null;
 		} else  {
-			StaticPeers = Arrays.copyOf(p, p.length);
+			staticPeers = Arrays.copyOf(p, p.length);
 		}
 	}
 }

@@ -56,7 +56,7 @@ public class Lachesis {
 		}
 
 		JSONPeers peerStore = new peers.JSONPeers(Config.DataDir);
-		RetResult<peers.Peers> peersCall = peerStore.Peers();
+		RetResult<peers.Peers> peersCall = peerStore.peers();
 		peers.Peers participants = peersCall.result;
 		error err = peersCall.err;
 
@@ -64,7 +64,7 @@ public class Lachesis {
 			return err;
 		}
 
-		if (participants.Len() < 2) {
+		if (participants.length() < 2) {
 			return error.Errorf("peers.json should define at least two peers");
 		}
 
