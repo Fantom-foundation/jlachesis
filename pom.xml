@@ -3,7 +3,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>jlachesis</artifactId>
-	<version>0.0.1</version>
+	<version>0.2.1</version>
 	<groupId>com.jlachesis</groupId>
 	<properties>
 		<maven.compiler.source>1.8</maven.compiler.source>
@@ -184,6 +184,8 @@
 		            <descriptorRefs>
 		                <descriptorRef>jar-with-dependencies</descriptorRef>
 		            </descriptorRefs>
+		            <outputDirectory>docker</outputDirectory>
+		            <outputDirectory>target</outputDirectory>
 		        </configuration>
 		        <executions>
 		                <execution>

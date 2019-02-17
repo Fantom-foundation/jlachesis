@@ -332,7 +332,7 @@ public class Core {
 
 	public error Sync(poset.WireEvent[] unknownEvents)  {
 
-		logger.field("unknown_events", unknownEvents.length)
+		logger.field("unknown_events", unknownEvents)
 		.field("transaction_pool", transactionPool.length)
 		.field("internal_transaction_pool", internalTransactionPool.length)
 		.field("block_signature_pool", blockSignaturePool.length)
@@ -344,20 +344,23 @@ public class Core {
 		// add unknown events
 		for (int k = 0; k < unknownEvents.length; ++k) {
 			poset.WireEvent we = unknownEvents[k];
-
-			logger.field("unknown_events", we).debug("unknownEvents");
+			logger.field("we", we).error("Sync");
 
 			RetResult<Event> readWireInfo = poset.ReadWireInfo(we);
 			Event ev = readWireInfo.result;
+			logger.field("ev", ev).error("Sync");
 			error err = readWireInfo.err;
 			if (err != null) {
-				logger.field("EventBlock", we).error("poset.ReadEventBlockInfo(we)");
 				return err;
-
 			}
+
+//			if (!myKnownEvents.containsKey(ev.CreatorID())) {
+//				logger.field("ev.CreatorID()", ev.CreatorID()).error("Sync");
+//				return error.Errorf("ev.CreatorID() not known");
+//			}
 			if (ev.Index() > myKnownEvents.get(ev.CreatorID())) {
 				err = InsertEvent(ev, false);
-				if ( err != null) {
+				if (err != null) {
 					return err;
 				}
 			}

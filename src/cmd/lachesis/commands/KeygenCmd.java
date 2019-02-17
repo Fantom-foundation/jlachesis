@@ -1,10 +1,14 @@
 package lachesis.commands;
 
+import java.io.IOException;
+import java.security.KeyPair;
+
 import autils.FileUtils;
 import common.Cmd;
 import common.RetResult;
 import common.error;
-import crypto.PemDump;
+import crypto.PemKey;
+import crypto.Utils;
 import picocli.CommandLine.Option;
 
 public class KeygenCmd extends Cmd {
@@ -54,9 +58,9 @@ public class KeygenCmd extends Cmd {
 	}
 
 	public error keygen(Cmd cmd, String[] args) {
-		RetResult<PemDump> generatePemKey = crypto.PemKey.GeneratePemKey();
-		PemDump pemDump = generatePemKey.result;
-		error err = generatePemKey.err;
+		RetResult<KeyPair> generateKey = crypto.Utils.GenerateECDSAKeyPair();
+		KeyPair keyPair = generateKey.result;
+		error err = generateKey.err;
 		if (err != null) {
 			return error.Errorf("error generating PemDump");
 		}
@@ -71,21 +75,25 @@ public class KeygenCmd extends Cmd {
 			return error.Errorf(String.format("A key already lives under: %s", privKeyFile));
 		}
 
-//		err := ioutil.WriteFile(privKeyFile, (byte[]) pemDump.PrivateKey, 0666);
-		err = FileUtils.writeToFile(privKeyFile, pemDump.PrivateKey.getBytes(), FileUtils.MOD_666);
+		String ecString = "";
+		try {
+			ecString = PemKey.toECString(keyPair.getPrivate());
+		} catch (IOException e) {
+			return error.Errorf("error output private key's string" + e.getMessage());
+		}
+
+		err = FileUtils.writeToFile(privKeyFile, ecString.getBytes(), FileUtils.MOD_666);
 		if (err != null) {
 			return error.Errorf(String.format("writing private key: %s", err));
 		}
 		System.out.printf("Your private key has been saved to: %s\n", privKeyFile);
-
 
 		err = FileUtils.mkdirs(pubKeyFile, FileUtils.MOD_700).err;
 		if  (err != null) {
 			return error.Errorf(String.format("writing public key: %s", err));
 		}
 
-//		err := ioutil.WriteFile(pubKeyFile, (byte[]) pemDump.PublicKey, 0666);
-		err = FileUtils.writeToFile(pubKeyFile, pemDump.PublicKey.getBytes(), FileUtils.MOD_666);
+		err = FileUtils.writeToFile(pubKeyFile, Utils.keyToHexString(keyPair.getPublic()).getBytes(), FileUtils.MOD_666);
 		if  (err != null) {
 			return error.Errorf(String.format("writing public key: %s", err));
 		}
