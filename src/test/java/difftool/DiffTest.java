@@ -23,8 +23,8 @@ public class DiffTest {
 
 		NodeList nodes = new NodeList(3, logger);
 
-		Stoppable stop = nodes.StartRandTxStream();
-		nodes.WaitForBlock(5);
+		Stoppable stop = nodes.startRandTxStream();
+		nodes.waitForBlock(5);
 		stop.stop();
 
 		Node[] nodeArray = nodes.Values();

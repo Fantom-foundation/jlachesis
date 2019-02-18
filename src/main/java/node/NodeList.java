@@ -59,7 +59,7 @@ public class NodeList extends LinkedHashMap<PrivateKey, Node> {
 
 		for (Node n : this.values()) {
 			n.Init();
-			n.RunAsync(true);
+			n.runAsync(true);
 		}
 	}
 
@@ -85,8 +85,11 @@ public class NodeList extends LinkedHashMap<PrivateKey, Node> {
 		return nodes;
 	}
 
-	// StartRandTxStream sends random txs to nodes until stop() called
-	public Stoppable StartRandTxStream() {
+	/**
+	 * StartRandTxStream sends random txs to nodes until stop() called
+	 * @return
+	 */
+	public Stoppable startRandTxStream() {
 		One2OneChannelInt stopCh = Channel.one2oneInt(); //make(chan struct{});
 
 		Stoppable stop = new Stoppable() {
@@ -100,22 +103,6 @@ public class NodeList extends LinkedHashMap<PrivateKey, Node> {
 			int seq = 0;
 			while(true) {
 				logger.field("seq", seq).debug("StartRandTxStream()");
-
-				// TBD conversion ok?
-//					select {
-//					case <-stopCh:
-//						return
-//					case <-time.After(delay):
-//						keys = n.Keys();
-//						count = len(n);
-//						for (int i = 0; i < count; i++) {
-//							j := rand.Intn(count);
-//							node := n[keys[j]];
-//							byte[] tx = String.format("node#%d transaction %d", node.ID(), seq).bytes();
-//							node.PushTx(tx);
-//							seq++;
-//						}
-//					}
 
 				final CSTimer tim = new CSTimer ();
 				final Alternative alt = new Alternative (new Guard[] {stopCh.in(), tim});
@@ -135,7 +122,7 @@ public class NodeList extends LinkedHashMap<PrivateKey, Node> {
 							int j = rand.nextInt(count);
 							node.Node node = get(keys[j]);
 							byte[] tx = String.format("node#%d transaction %d", node.ID(), seq).getBytes();
-							node.PushTx(tx);
+							node.pushTx(tx);
 							seq++;
 						}
 						break;
@@ -146,8 +133,11 @@ public class NodeList extends LinkedHashMap<PrivateKey, Node> {
 		return stop;
 	}
 
-	// WaitForBlock waits until the target block has retrieved a state hash from the app
-	public void WaitForBlock(long target) {
+	/**
+	 * WaitForBlock waits until the target block has retrieved a state hash from the app
+	 * @param target
+	 */
+	public void waitForBlock(long target) {
 	LOOP:
 		while (true) {
 
@@ -159,16 +149,16 @@ public class NodeList extends LinkedHashMap<PrivateKey, Node> {
 				e.printStackTrace();
 			}
 			for (Node node : this.values()) {
-				logger.field("node.GetLastBlockIndex", node.GetLastBlockIndex()).debug("WaitForBlock()");
+				logger.field("node.GetLastBlockIndex", node.getLastBlockIndex()).debug("WaitForBlock()");
 
-				if (node.GetLastBlockIndex() <0) {
+				if (node.getLastBlockIndex() <0) {
 					continue;
 				}
 
-				if (target > node.GetLastBlockIndex()) {
+				if (target > node.getLastBlockIndex()) {
 					continue LOOP;
 				}
-				Block block = node.GetBlock(target).result;
+				Block block = node.getBlock(target).result;
 				if (block.getStateHash().length == 0) {
 					continue LOOP;
 				}

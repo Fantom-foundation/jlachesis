@@ -102,7 +102,7 @@ public class NodeTest {
 			DummyClient.NewInmemDummyApp(testLogger));
 		node0.Init();
 
-		node0.RunAsync(false);
+		node0.runAsync(false);
 
 		NewTCPTransportCall = TCPTransport.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
 				Duration.ofSeconds(1), testLogger);
@@ -115,7 +115,7 @@ public class NodeTest {
 			peer1Trans,
 			DummyClient.NewInmemDummyApp(testLogger));
 		node1.Init();
-		node1.RunAsync(false);
+		node1.runAsync(false);
 
 		// Manually prepare SyncRequest and expected SyncResponse
 
@@ -160,9 +160,9 @@ public class NodeTest {
 
 		assertEquals("SyncResponse.KnownEvents should match", expectedResp.getKnown(), out.getKnown());
 
-		node1.Shutdown();
+		node1.shutdown();
 		peer1Trans.Close();
-		node0.Shutdown();
+		node0.shutdown();
 		peer0Trans.Close();
 	}
 
@@ -188,7 +188,7 @@ public class NodeTest {
 			DummyClient.NewInmemDummyApp(testLogger));
 		node0.Init();
 
-		node0.RunAsync(false);
+		node0.runAsync(false);
 
 		newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
 				Duration.ofSeconds(1), testLogger);
@@ -202,7 +202,7 @@ public class NodeTest {
 			DummyClient.NewInmemDummyApp(testLogger));
 		node1.Init();
 
-		node1.RunAsync(false);
+		node1.runAsync(false);
 
 		// Manually prepare EagerSyncRequest and expected EagerSyncResponse
 
@@ -236,9 +236,9 @@ public class NodeTest {
 		assertEquals("EagerSyncResponse.Success should match",
 			expectedResp.isSuccess(), out.isSuccess());
 
-		node1.Shutdown();
+		node1.shutdown();
 		peer1Trans.Close();
-		node0.Shutdown();
+		node0.shutdown();
 		peer0Trans.Close();
 	}
 
@@ -267,7 +267,7 @@ public class NodeTest {
 			peer0Proxy);
 		node0.Init();
 
-		node0.RunAsync(false);
+		node0.runAsync(false);
 
 		newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
 				Duration.ofSeconds(1), testLogger);
@@ -283,7 +283,7 @@ public class NodeTest {
 			peer1Proxy);
 		node1.Init();
 
-		node1.RunAsync(false);
+		node1.runAsync(false);
 		// Submit a Tx to node0
 
 		try {
@@ -318,9 +318,9 @@ public class NodeTest {
 		String m = new String(node0Head.transactions()[0]);
 		assertEquals("Transaction message should match", message, m);
 
-		node1.Shutdown();
+		node1.shutdown();
 		peer1Trans.Close();
-		node0.Shutdown();
+		node0.shutdown();
 		peer0Trans.Close();
 	}
 
@@ -416,7 +416,7 @@ public class NodeTest {
 		Config conf = oldNode.conf;
 		long id = oldNode.id;
 		KeyPair key = oldNode.core.key;
-		Peers ps = oldNode.peerSelector.Peers();
+		Peers ps = oldNode.peerSelector.peers();
 
 		Store store;
 		error err;
@@ -446,13 +446,13 @@ public class NodeTest {
 
 	public void runNodes(Node[] nodes, boolean gossip) {
 		for (Node n: nodes) {
-			ExecService.go(()-> n.Run(gossip));
+			ExecService.go(()-> n.run(gossip));
 		}
 	}
 
 	public void shutdownNodes(Node[] nodes) {
 		for (Node n : nodes) {
-			n.Shutdown();
+			n.shutdown();
 		}
 	}
 
@@ -533,13 +533,13 @@ public class NodeTest {
 
 		long lbi = nodes[0].core.GetLastBlockIndex();
 		assertTrue(String.format("LastBlockIndex is too low: %d", lbi), lbi <= 0);
-		RetResult<Block> getBlock = nodes[0].GetBlock(lbi);
+		RetResult<Block> getBlock = nodes[0].getBlock(lbi);
 		Block sBlock = getBlock.result;
 		err = getBlock.err;
 		assertEquals("No Error retrieving latest Block"+
 				" from reset hasposetraph", err);
 
-		getBlock = nodes[1].GetBlock(lbi);
+		getBlock = nodes[1].getBlock(lbi);
 		Block expectedBlock = getBlock.result;
 		err = getBlock.err;
 		assertNull(String.format("No error to retrieve block %d from node1", lbi), err);
@@ -579,7 +579,7 @@ public class NodeTest {
 			}
 		});
 
-		node4.RunAsync(true);
+		node4.runAsync(true);
 
 		// Gossip some more
 		Node[] nodes = Appender.append(normalNodes, node4);
@@ -590,7 +590,7 @@ public class NodeTest {
 		long start = node4.core.poset.getFirstConsensusRound();
 		checkGossip(nodes, start);
 
-		node4.Shutdown();
+		node4.shutdown();
 		shutdownNodes(normalNodes);
 	}
 
@@ -610,7 +610,7 @@ public class NodeTest {
 		checkGossip(nodes, 0);
 
 		Node node4 = nodes[3];
-		node4.Shutdown();
+		node4.shutdown();
 
 		long secondTarget = target + 50;
 		err = bombardAndWait(Appender.slice(nodes,0,3), secondTarget, Duration.ofSeconds(6));
@@ -641,7 +641,7 @@ public class NodeTest {
 			}
 		});
 
-		node4.RunAsync(true);
+		node4.runAsync(true);
 
 		nodes[3] = node4;
 
@@ -653,7 +653,7 @@ public class NodeTest {
 		long start = node4.core.poset.getFirstConsensusRound();
 		checkGossip(nodes, start);
 
-		node4.Shutdown();
+		node4.shutdown();
 		shutdownNodes(nodes);
 	}
 
@@ -664,12 +664,12 @@ public class NodeTest {
 		Peers ps = initPeers.result2;
 		Node[] nodes = initNodes(keys, ps, 1000, 400, "inmem", testLogger);
 
-		nodes[0].Shutdown();
+		nodes[0].shutdown();
 
 		error err = nodes[1].gossip(nodes[0].localAddr, null);
 		assertNotNull("Expected Timeout Error", err);
 
-		nodes[1].Shutdown();
+		nodes[1].shutdown();
 	}
 
 	//@Test

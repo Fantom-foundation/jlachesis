@@ -35,7 +35,7 @@ public class Service {
 
 	@RequestMapping("/stats")
     String stats() {
-		Map<String, String> stats = node.GetStats();
+		Map<String, String> stats = node.getStats();
 		return JsonUtils.ObjectToString(stats);
     }
 
@@ -45,7 +45,7 @@ public class Service {
 
 	@RequestMapping("/participants")
     String participants() {
-		RetResult<Peers> getParticipants = node.GetParticipants();
+		RetResult<Peers> getParticipants = node.getParticipants();
 		Peers participants = getParticipants.result;
 		error err = getParticipants.err;
 		if (err != null) {
@@ -58,7 +58,7 @@ public class Service {
 
 	@RequestMapping("/event")
     String event(@RequestBody String param) {
-		RetResult<Event> getEvent = node.GetEvent(param);
+		RetResult<Event> getEvent = node.getEvent(param);
 		Event event = getEvent.result;
 		error err = getEvent.err;
 		if (err != null) {
@@ -71,7 +71,7 @@ public class Service {
 
 	@RequestMapping("/lasteventfrom")
     String lastevents(@RequestBody String param) {
-		RetResult3<String, Boolean> getLastEventFrom = node.GetLastEventFrom(param);
+		RetResult3<String, Boolean> getLastEventFrom = node.getLastEventFrom(param);
 		String event = getLastEventFrom.result1;
 		error err = getLastEventFrom.err;
 		if (err != null) {
@@ -84,13 +84,13 @@ public class Service {
 
 	@RequestMapping("/events")
     String events() {
-		Map<Long, Long> knownEvents = node.GetKnownEvents();
+		Map<Long, Long> knownEvents = node.getKnownEvents();
 		return JsonUtils.ObjectToString(knownEvents);
     }
 
 	@RequestMapping("/consensusevents")
     String consensusEvents() {
-		String[] consensusEvents = node.GetConsensusEvents();
+		String[] consensusEvents = node.getConsensusEvents();
 		return JsonUtils.ObjectToString(consensusEvents);
     }
 
@@ -108,7 +108,7 @@ public class Service {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(err.Error()).toString();
 		}
 
-		RetResult<RoundInfo> getRound = node.GetRound(roundIndex);
+		RetResult<RoundInfo> getRound = node.getRound(roundIndex);
 		RoundInfo round = getRound.result;
 		err = getRound.err;
 		if (err != null) {
@@ -121,7 +121,7 @@ public class Service {
 
 	@RequestMapping("/lastround")
     String lastRound() {
-		long lastRound = node.GetLastRound();
+		long lastRound = node.getLastRound();
 		return "" + lastRound;
     }
 
@@ -140,7 +140,7 @@ public class Service {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(err.Error()).toString();
 		}
 
-		String[] roundWitnesses = node.GetRoundWitnesses(roundWitnessesIndex);
+		String[] roundWitnesses = node.getRoundWitnesses(roundWitnessesIndex);
 		return JsonUtils.ObjectToString(roundWitnesses);
     }
 
@@ -159,7 +159,7 @@ public class Service {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(err.Error()).toString();
 		}
 
-		int roundEvent = node.GetRoundEvents(roundEventsIndex);
+		int roundEvent = node.getRoundEvents(roundEventsIndex);
 		return JsonUtils.ObjectToString(roundEvent);
     }
 
@@ -172,7 +172,7 @@ public class Service {
 		} catch (Exception e) {
 			err = error.Errorf(e.getMessage());
 		}
-		RetResult<Root> getRoot = node.GetRoot(rootIndex);
+		RetResult<Root> getRoot = node.getRoot(rootIndex);
 		Root root = getRoot.result;
 
 		err = getRoot.err;
@@ -199,7 +199,7 @@ public class Service {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(err.Error()).toString();
 		}
 
-		RetResult<Block> getBlock = node.GetBlock(blockIndex);
+		RetResult<Block> getBlock = node.getBlock(blockIndex);
 		Block block = getBlock.result;
 		err = getBlock.err;
 		if (err != null) {

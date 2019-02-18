@@ -238,11 +238,11 @@ public class RunCmd extends Cmd {
 				while (true) {
 					try {
 						Thread.sleep(10 * time.Second);
-						long ct = engine.getNode().GetConsensusTransactionsCount();
+						long ct = engine.getNode().getConsensusTransactionsCount();
 						// 3 - number of notes in test; 10 - number of transactions sended at once
 						if (ct >= 3*10*config.Lachesis.getTestN()) {
 							Thread.sleep(10 * time.Second);
-							engine.getNode().Shutdown();
+							engine.getNode().shutdown();
 							break;
 						}
 					} catch (InterruptedException e) {
@@ -255,7 +255,7 @@ public class RunCmd extends Cmd {
 //			go tester.PingNodesN(p.getSorted(), p.getByPubKey(), config.Lachesis.getTestN(), config.Lachesis.getTestDelay(), config.Lachesis.getLogger())
 		}
 
-		engine.getNode().Register();
+		engine.getNode().register();
 		engine.Run();
 
 		return null;

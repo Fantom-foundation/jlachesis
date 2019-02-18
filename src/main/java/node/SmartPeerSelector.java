@@ -6,13 +6,15 @@ import java.util.Random;
 import common.RetResult;
 import peers.Peer;
 
-//Selection based on FlagTable of a randomly chosen undermined event
+/**
+ * Selection based on FlagTable of a randomly chosen undermined event
+ */
 public class SmartPeerSelector implements PeerSelector {
 	peers.Peers peers;
 	String localAddr;
 	String last;
 
-	FlagtableContainer GetFlagTable;
+	FlagtableContainer flagTable;
 
 	private Random rand;
 
@@ -21,21 +23,21 @@ public class SmartPeerSelector implements PeerSelector {
 
 		this.localAddr = localAddr;
 		this.peers =     participants;
-		this.GetFlagTable = GetFlagTable;
+		this.flagTable = GetFlagTable;
 
 		this.rand = new Random();
 		this.rand.setSeed(System.currentTimeMillis());
 	}
 
-	public peers.Peers Peers() {
+	public peers.Peers peers() {
 		return peers;
 	}
 
-	public void UpdateLast(String peer) {
+	public void updateLast(String peer) {
 		last = peer;
 	}
 
-	public peers.Peer Next() {
+	public peers.Peer next() {
 		Peer[] selectablePeers = peers.ToPeerSlice();
 		if (selectablePeers.length > 1) {
 			selectablePeers = peers.excludePeer(selectablePeers, localAddr).peers;
@@ -43,7 +45,7 @@ public class SmartPeerSelector implements PeerSelector {
 			if (selectablePeers.length > 1) {
 				selectablePeers = peers.excludePeer(selectablePeers, last).peers;
 				if (selectablePeers.length > 1) {
-					RetResult<Map<String, Long>> ftRes = GetFlagTable.getFlagTable();
+					RetResult<Map<String, Long>> ftRes = flagTable.getFlagTable();
 
 					if (ftRes.err == null) {
 						Map<String, Long> ft = ftRes.result;

@@ -125,7 +125,7 @@ public class Node extends NodeState {
 	public error Init() {
 		String[] peerAddresses = null;
 
-		for (Peer p : peerSelector.Peers().ToPeerSlice()) {
+		for (Peer p : peerSelector.peers().ToPeerSlice()) {
 			peerAddresses = Appender.append(peerAddresses, p.GetNetAddr());
 		}
 		logger.field("peers", peerAddresses).debug("Initialize Node");
@@ -141,12 +141,12 @@ public class Node extends NodeState {
 		return core.SetHeadAndSeq();
 	}
 
-	public void RunAsync(boolean gossip) {
+	public void runAsync(boolean gossip) {
 		logger.debug("RunAsync(gossip bool)");
-		ExecService.go(() -> Run(gossip));
+		ExecService.go(() -> run(gossip));
 	}
 
-	public void Run(boolean gossip) {
+	public void run(boolean gossip) {
 		// The ControlTimer allows the background routines to control the
 		// heartbeat timer when the node is in the Gossiping state. The timer should
 		// only be running when there are uncommitted transactions in the system.
@@ -198,29 +198,6 @@ public class Node extends NodeState {
 
 	public void doBackgroundWork() {
 		while (true) {
-//			select {
-//			case t := <- submitCh:
-////				logger.debug("Adding Transactions to Transaction Pool")
-//				addTransaction(t);
-//				resetTimer();
-//			case t := <- submitInternalCh:
-////				logger.debug("Adding Internal Transaction")
-//				addInternalTransaction(t);
-//				resetTimer();
-//			case block := <- commitCh:
-////				logger.WithFields(logrus.Fields{
-////					"index":          block.Index(),
-////					"round_received": block.RoundReceived(),
-////					"transactions":   len(block.Transactions()),
-////				}).debug("Adding EventBlock")
-//				error err = commit(block);
-//				if  (err != null) {
-////					logger.field("error", err).error("Adding EventBlock")
-//				}
-//			case <-shutdownCh:
-//				return;
-//			}
-
 			final Alternative alt = new Alternative (new Guard[] {submitCh.in(), submitInternalCh.in(), commitCh.in(), shutdownCh.in()});
 			final int SUBMIT = 0, SUBMIT_INT = 1, COMMIT = 2, SHUTDOWN = 3;
 			switch (alt.priSelect ()) {
@@ -236,6 +213,7 @@ public class Node extends NodeState {
 					logger.debug("Adding Internal Transaction");
 					addInternalTransaction(t1);
 					resetTimer();
+					break;
 				case COMMIT:
 					Block block = commitCh.in().read();
 					logger.field("index",         block.Index())
@@ -246,6 +224,7 @@ public class Node extends NodeState {
 					if  (err != null) {
 						logger.field("error", err).error("Adding EventBlock");
 					}
+					break;
 				case SHUTDOWN:
 					shutdownCh.in().read();
 					return;
@@ -253,40 +232,15 @@ public class Node extends NodeState {
 		}
 	}
 
-	// lachesis is interrupted when a gossip function, launched asynchronously, changes
-	// the state from Gossiping to CatchingUp, or when the node is shutdow
-	// Otherwise, it processes RPC requests, periodicaly initiates gossip while there
-	// is something to gossip about, or waits.
+	/**
+	 * lachesis is interrupted when a gossip function, launched asynchronously, changes
+	 * the state from Gossiping to CatchingUp, or when the node is shutdown
+	 * Otherwise, it processes RPC requests, periodicaly initiates gossip while there
+	 * is something to gossip about, or waits.
+	 */
 	public void lachesis(boolean gossip) {
 		One2OneChannelInt returnCh = Channel.one2oneInt(); // TBD // make(chan struct{}, 100)
 		while (true) {
-//			select {
-//			case rpc := <-netCh:
-//				goFunc(public() {
-//					rpcJobs.increment();
-//					logger.debug("Processing RPC");
-//					processRPC(rpc);
-//					resetTimer();
-//					rpcJobs.decrement();
-//				})
-//			case <-controlTimer.tickCh:
-//				if (gossip && gossipJobs.get() < 1) {
-//					Peer peer = peerSelector.Next();
-//					goFunc(public() {
-//						gossipJobs.increment();
-//						gossip(peer.NetAddr, returnCh);
-//						gossipJobs.decrement();
-//					});
-//					logger.debug("Gossip");
-//				}
-//				logStats();
-//				resetTimer();
-//			case <-returnCh:
-//				return;
-//			case <-shutdownCh:
-//				return;
-//			}
-
 			final Alternative alt = new Alternative (new Guard[] {netCh.in(), controlTimer.tickCh.in(), returnCh.in(), shutdownCh.in()});
 			final int NET = 0, TIME = 1, RETURN = 2, SHUTDOWN = 3;
 
@@ -301,10 +255,11 @@ public class Node extends NodeState {
 						resetTimer();
 						rpcJobs.incrementAndGet();
 					});
+					break;
 				case TIME:
 					controlTimer.tickCh.in().read();
 					if (gossip && gossipJobs.get() < 1) {
-						Peer peer = peerSelector.Next();
+						Peer peer = peerSelector.next();
 						goFunc(() -> {
 							gossipJobs.incrementAndGet();
 							gossip(peer.GetNetAddr(), returnCh);
@@ -314,12 +269,14 @@ public class Node extends NodeState {
 					}
 					logStats();
 					resetTimer();
+					break;
 				case RETURN:
 					Block block = commitCh.in().read();
 					error err = commit(block);
 					if  (err != null) {
 						logger.field("error", err).error("Adding EventBlock");
 					}
+					return;
 				case SHUTDOWN:
 					shutdownCh.in().read();
 					return;
@@ -459,11 +416,16 @@ public class Node extends NodeState {
 		rpc.Respond(resp, respErr);
 	}
 
-	// This function is usually called in a go-routine and needs to inform the
-	// calling routine (usually the lachesis routine) when it is time to exit the
-	// Gossiping state and retur
+	/**
+	 * This function is usually called in a go-routine and needs to inform the
+	 * calling routine (usually the lachesis routine) when it is time to exit the
+	 * Gossiping state and return
+	 *
+	 * @param peerAddr
+	 * @param parentReturnCh
+	 * @return
+	 */
 	public error gossip(String peerAddr, One2OneChannelInt parentReturnCh /* chan struct{} */)  {
-
 		// pull
 		RetResult3<Boolean, Map<Long, Long>> pullCall = pull(peerAddr);
 		boolean syncLimit = pullCall.result1;
@@ -489,7 +451,7 @@ public class Node extends NodeState {
 
 		// update peer selector
 		selectorLock.lock();
-		peerSelector.UpdateLast(peerAddr);
+		peerSelector.updateLast(peerAddr);
 		selectorLock.unlock();
 
 		return null;
@@ -602,7 +564,7 @@ public class Node extends NodeState {
 		waitRoutines();
 
 		// fastForwardRequest
-		Peer peer = peerSelector.Next();
+		Peer peer = peerSelector.next();
 		long start = System.nanoTime();
 		RetResult<net.FastForwardResponse> requestFastForwardCall = requestFastForward(peer.GetNetAddr());
 		FastForwardResponse resp = requestFastForwardCall.result;
@@ -761,7 +723,7 @@ public class Node extends NodeState {
 		}
 	}
 
-	public void Shutdown() {
+	public void shutdown() {
 		if (getState() != NodeStates.Shutdown) {
 			// mqtt.FireEvent("Shutdown()", "/mq/lachesis/node")
 			logger.debug("Shutdown()");
@@ -784,14 +746,7 @@ public class Node extends NodeState {
 		}
 	}
 
-	public Map<String,String> GetStats() {
-//		toString := public (long i) string {
-//			if i == null {
-//				return "null"
-//			}
-//			return strconv.FormatInt(*i, 10)
-//		}
-
+	public Map<String,String> getStats() {
 		long timeElapsed = System.nanoTime() - start;
 		double timeElapsedSeconds = timeElapsed/time.Second;
 
@@ -818,8 +773,8 @@ public class Node extends NodeState {
 		s.put("consensus_transactions",  "" + consensusTransactions);
 		s.put("undetermined_events",     "" + core.GetUndeterminedEvents().size());
 		s.put("transaction_pool",        "" + core.transactionPool.length);
-		s.put("num_peers",               "" + peerSelector.Peers().length());
-		s.put("sync_rate",               "" + String.format("%.2f",SyncRate()));
+		s.put("num_peers",               "" + peerSelector.peers().length());
+		s.put("sync_rate",               "" + String.format("%.2f",syncRate()));
 		s.put("transactions_per_second", String.format("%.2f",transactionsPerSecond));
 		s.put("events_per_second",       String.format("%.2f",consensusEventsPerSecond));
 		s.put("rounds_per_second",       String.format("%.2f", consensusRoundsPerSecond));
@@ -831,7 +786,7 @@ public class Node extends NodeState {
 	}
 
 	public void logStats() {
-		Map<String,String> stats = GetStats();
+		Map<String,String> stats = getStats();
 		logger
 			.field("last_consensus_round",   stats.get("last_consensus_round"))
 			.field("last_block_index",       stats.get("last_block_index"))
@@ -857,23 +812,22 @@ public class Node extends NodeState {
 	/*
 	 * Diff tool interface implementation (tmp)
 	 */
-	public long GetLastBlockIndex() {
+	public long getLastBlockIndex() {
 		return core.poset.Store.LastBlockIndex();
 	}
 
-	public String[] RoundWitnesses(long i) {
+	public String[] roundWitnesses(long i) {
 		return core.poset.Store.RoundWitnesses(i);
 	}
 
-	public RetResult<poset.Frame> GetFrame(long i) {
+	public RetResult<poset.Frame> getFrame(long i) {
 		return core.poset.Store.GetFrame(i);
 	}
 
-	/*
+	/**
 	 * Node's method candidates
 	 */
-
-	public void PushTx(byte[] tx) {
+	public void pushTx(byte[] tx) {
 		coreLock.lock();
 		try {
 			core.AddTransactions(new byte[][]{tx});
@@ -883,11 +837,11 @@ public class Node extends NodeState {
 		}
 	}
 
-	public void Register() {
+	public void register() {
 	}
 
 
-	public double SyncRate() {
+	public double syncRate() {
 		double syncErrorRate = 0;
 		if (syncRequests != 0) {
 			syncErrorRate = syncErrors / ((double) syncRequests);
@@ -895,56 +849,56 @@ public class Node extends NodeState {
 		return 1 - syncErrorRate;
 	}
 
-	public RetResult<peers.Peers> GetParticipants() {
+	public RetResult<peers.Peers> getParticipants() {
 		return core.poset.Store.Participants();
 	}
 
-	public RetResult<poset.Event> GetEvent(String event) {
+	public RetResult<poset.Event> getEvent(String event) {
 		return core.poset.Store.GetEvent(event);
 	}
 
-	public RetResult3<String,Boolean> GetLastEventFrom(String participant) {
+	public RetResult3<String,Boolean> getLastEventFrom(String participant) {
 		return core.poset.Store.LastEventFrom(participant);
 	}
 
-	public Map<Long,Long> GetKnownEvents() {
+	public Map<Long,Long> getKnownEvents() {
 		return core.poset.Store.KnownEvents();
 	}
 
-	public RetResult<Map<Long,Long>> GetEvents()  {
+	public RetResult<Map<Long,Long>> getEvents()  {
 		Map<Long, Long> res = core.KnownEvents();
 		return new RetResult(res, null);
 	}
 
-	public String[] GetConsensusEvents() {
+	public String[] getConsensusEvents() {
 		return core.poset.Store.ConsensusEvents();
 	}
 
-	public long GetConsensusTransactionsCount() {
+	public long getConsensusTransactionsCount() {
 		return core.GetConsensusTransactionsCount();
 	}
 
-	public RetResult<poset.RoundInfo> GetRound(long roundIndex) {
+	public RetResult<poset.RoundInfo> getRound(long roundIndex) {
 		return core.poset.Store.GetRound(roundIndex);
 	}
 
-	public long GetLastRound() {
+	public long getLastRound() {
 		return core.poset.Store.LastRound();
 	}
 
-	public String[] GetRoundWitnesses(long roundIndex) {
+	public String[] getRoundWitnesses(long roundIndex) {
 		return core.poset.Store.RoundWitnesses(roundIndex);
 	}
 
-	public int GetRoundEvents(long roundIndex) {
+	public int getRoundEvents(long roundIndex) {
 		return core.poset.Store.RoundEvents(roundIndex);
 	}
 
-	public RetResult<poset.Root> GetRoot(long rootIndex) {
+	public RetResult<poset.Root> getRoot(long rootIndex) {
 		return core.poset.Store.GetRoot("" + rootIndex);
 	}
 
-	public RetResult<poset.Block> GetBlock(long blockIndex) {
+	public RetResult<poset.Block> getBlock(long blockIndex) {
 		return core.poset.Store.GetBlock(blockIndex);
 	}
 

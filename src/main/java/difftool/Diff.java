@@ -114,8 +114,8 @@ public class Diff {
 		Node n0 = diff.node[0];
 		Node n1 = diff.node[1];
 
-		long minH = n0.GetLastBlockIndex();
-		long tmp = n1.GetLastBlockIndex();
+		long minH = n0.getLastBlockIndex();
+		long tmp = n1.getLastBlockIndex();
 		diff.BlocksGap = minH - tmp;
 		if (minH > tmp) {
 			minH = tmp;
@@ -125,14 +125,14 @@ public class Diff {
 		poset.Block b0, b1;
 		long i;
 		for (i = 0; i <= minH; i++) {
-			RetResult<Block> getBlock = n0.GetBlock(i);
+			RetResult<Block> getBlock = n0.getBlock(i);
 			b0 = getBlock.result;
 			diff.Err = getBlock.err;
 			if (diff.Err != null) {
 				return false;
 			}
 
-			RetResult<Block> getBlock2 = n1.GetBlock(i);
+			RetResult<Block> getBlock2 = n1.getBlock(i);
 			b1 = getBlock2.result;
 			diff.Err = getBlock2.err;
 			if (diff.Err != null) {
@@ -162,18 +162,18 @@ public class Diff {
 		Node n0 = diff.node[0];
 		Node n1 = diff.node[1];
 
-		diff.RoundGap = n0.GetLastRound() - n1.GetLastRound();
+		diff.RoundGap = n0.getLastRound() - n1.getLastRound();
 
 		poset.RoundInfo r0, r1;
 		long i;
 		for (i = 0; i <= diff.FirstRoundIndex; i++) {
-			RetResult<RoundInfo> getRound = n0.GetRound(i);
+			RetResult<RoundInfo> getRound = n0.getRound(i);
 			r0 = getRound.result;
 			diff.Err = getRound.err;
 			if (diff.Err != null) {
 				return false;
 			}
-			RetResult<RoundInfo> getRound2 = n1.GetRound(i);
+			RetResult<RoundInfo> getRound2 = n1.getRound(i);
 			r1 = getRound2.result;
 			diff.Err = getRound2.err;
 			if (diff.Err != null) {
@@ -186,8 +186,8 @@ public class Diff {
 				return true;
 			}
 
-			String[] w0 = n0.RoundWitnesses(i);
-			String[] w1 = n1.RoundWitnesses(i);
+			String[] w0 = n0.roundWitnesses(i);
+			String[] w1 = n1.roundWitnesses(i);
 			Arrays.sort(w0, new Comparator<String>() {
 				@Override
 				public int compare(String o1, String o2) {
@@ -212,14 +212,14 @@ public class Diff {
 		Node n1 = diff.node[1];
 
 		poset.Frame f0, f1 ;
-		RetResult<Frame> getFrame = n0.GetFrame(diff.FirstRoundIndex);
+		RetResult<Frame> getFrame = n0.getFrame(diff.FirstRoundIndex);
 		f0 = getFrame.result;
 		diff.Err = getFrame.err;
 		if (diff.Err != null) {
 			return false;
 		}
 
-		getFrame = n1.GetFrame(diff.FirstRoundIndex);
+		getFrame = n1.getFrame(diff.FirstRoundIndex);
 		f1 = getFrame.result;
 		diff.Err = getFrame.err;
 		if (diff.Err != null) {

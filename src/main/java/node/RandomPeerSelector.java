@@ -3,7 +3,7 @@ package node;
 import autils.Utils;
 import peers.Peer;
 
-public class RandomPeerSelector {
+public class RandomPeerSelector implements PeerSelector {
 	peers.Peers peers;
 	String localAddr;
 	String last;
@@ -12,25 +12,25 @@ public class RandomPeerSelector {
 		this.localAddr = localAddr;
 		this.peers = participants;
 	}
-	
-	public peers.Peers Peers() {
+
+	public peers.Peers peers() {
 		return peers;
 	}
-	
-	public void UpdateLast(String peer) {
+
+	public void updateLast(String peer) {
 		last = peer;
 	}
-	
-	public peers.Peer Next() {
+
+	public peers.Peer next() {
 		Peer[] selectablePeers = peers.ToPeerSlice();
-	
+
 		if (selectablePeers.length > 1) {
 			selectablePeers = peers.excludePeer(selectablePeers, localAddr).peers;
 			if (selectablePeers.length > 1) {
 				selectablePeers = peers.excludePeer(selectablePeers, last).peers;
 			}
 		}
-	
+
 		int i = Utils.random().nextInt(selectablePeers.length);
 		return selectablePeers[i];
 	}

@@ -215,7 +215,7 @@ public error initNode() {
 		if (Service != null) {
 			ExecService.go(() -> Service.Serve());
 		}
-		getNode().Run(true);
+		getNode().run(true);
 	}
 
 	public RetResult<KeyPair> Keygen(String datadir) {
