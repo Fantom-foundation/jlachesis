@@ -165,7 +165,6 @@ public class InmemTransport implements Transport {
 				if (rpcResp.Error != null) {
 					err = rpcResp.Error;
 				}
-			// fall through
 			case TIM:
 				tim.setAlarm(tim.read() + timeout.toMillis());
 				err = error.Errorf("command timed out");

@@ -107,47 +107,41 @@ public class DummyClient {
 				final Alternative alt = new Alternative (new Guard[] {lachesisProxy.CommitCh().in(), lachesisProxy.RestoreCh().in(), lachesisProxy.SnapshotRequestCh().in()});
 				final int COMMIT = 0, RESTORE = 1, SNAPSHOT = 2;
 
-				boolean ok;
 				byte[] hash;
 				error err = null;
 				switch (alt.priSelect ()) {
 					case COMMIT:
 						Commit b = lachesisProxy.CommitCh().in().read();
-						ok = b != null;
-						if (!ok) {
+						if (b == null) {
 							return;
 						}
-						logger.debug(String.format("block commit event: %v", b.getBlock()));
+						logger.debug(String.format("block commit event: %s", b.getBlock()));
 						RetResult<byte[]> commitHandler = handler.CommitHandler(b.getBlock());
 						err = commitHandler.err;
 						hash = commitHandler.result;
 						b.Respond(hash, err);
-					// fall through
+						break;
 					case RESTORE:
 						RestoreRequest r = lachesisProxy.RestoreCh().in().read();
-						ok = r != null;
-						if (!ok) {
+						if (r == null) {
 							return;
 						}
-						logger.debug(String.format("snapshot restore command: %v", r.getSnapshot()));
+						logger.debug(String.format("snapshot restore command: %s", r.getSnapshot()));
 						RetResult<byte[]> restoreHandler = handler.RestoreHandler(r.getSnapshot());
 						hash = restoreHandler.result;
 						err = restoreHandler.err;
 						r.Respond(hash, err);
-
+						break;
 					case SNAPSHOT:
 						SnapshotRequest s = lachesisProxy.SnapshotRequestCh().in().read();
-						ok = s != null;
-						if (!ok) {
+						if (s == null) {
 							return;
 						}
-						logger.debug(String.format("get snapshot query: %v", s.getBlockIndex()));
+						logger.debug(String.format("get snapshot query: %d", s.getBlockIndex()));
 						RetResult<byte[]> snapshotHandler = handler.SnapshotHandler(s.getBlockIndex());
 						hash = snapshotHandler.result;
 						err = snapshotHandler.err;
 						s.Respond(hash, err);
-						break;
-					default:
 						break;
 				}
 

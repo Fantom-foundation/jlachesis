@@ -34,6 +34,7 @@ import proxy.proto.ToClient.Query;
 import proxy.proto.ToClient.Restore;
 import proxy.proto.ToServer;
 import proxy.proto.ToServer.Answer;
+import proxy.proto.ToServer.Answer.Builder;
 
 public class GrpcLachesisProxy implements proxy.LachesisProxy {
 
@@ -120,7 +121,7 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 			this.logger.info("after reconnect_ticket " + Instant.now());
 		});
 
-		ExecService.go(() -> {listen_events();});
+		ExecService.go(() -> listen_events());
 	}
 
 	public error Close() {
@@ -145,14 +146,6 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 
 	// SubmitTx implements LachesisProxy interface method
 	public error SubmitTx(byte[] tx) {
-//		r := new proxy.internal.ToServer(
-//			Event: &internal.ToServer_Tx_{
-//				Tx: &internal.ToServer_Tx{
-//					Data: tx,
-//				},
-//			},
-//		);
-
 		logger.debug("SubmitTx: " + new String(tx));
 
 		proxy.proto.ToServer.Tx tx1 = proxy.proto.ToServer.Tx.newBuilder().setData(ByteString.copyFrom(tx)).build();
@@ -165,7 +158,6 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 	/*
 	 * network:
 	 */
-
 	public error sendToServer(ToServer data) {
 		while (true) {
 			error err = streamSend(data);
@@ -187,13 +179,13 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 			ToClient data = streamRecv.result;
 			error err = streamRecv.err;
 			if (err == null) {
-				return new RetResult<ToClient>(null, err);
+				return new RetResult<ToClient>(data, err);
 			}
 			logger.warnf("recv from server err: %s", err);
 
 			err = reConnect();
 			if (err == ErrConnShutdown) {
-				return new RetResult<ToClient>(null, err);
+				return new RetResult<ToClient>(data, err);
 			}
 		}
 	}
@@ -264,7 +256,6 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 		}
 
 		logger.debug("rpc Connect() done");
-
 		setStream(stream);
 
 		reconnect_ticket.out().write(Instant.now()); // <- time.Now()
@@ -322,10 +313,6 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 		}
 	}
 
-	/*
-	 * staff:
-	 */
-
 	public One2OneChannel<proxy.proto.CommitResponse> newCommitResponseCh(UUID uuid) {
 		One2OneChannel<proxy.proto.CommitResponse> respCh = Channel.one2one();
 		ExecService.go(() -> {
@@ -333,9 +320,10 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 			CommitResponse resp = respCh.in().read();
 			boolean ok = resp != null;
 			if (ok) {
-				ToServer.Answer.newBuilder().setUid(UuidUtils.asByteString(uuid))
-						.setData(ByteString.copyFrom(resp.StateHash)).setError(resp.Error.Error());
-//				answer = new ToServer(uuid[:], resp.StateHash, resp.Error);
+				//answer = new ToServer(uuid[:], resp.StateHash, resp.Error);
+				Answer pAnswer = ToServer.Answer.newBuilder().setUid(UuidUtils.asByteString(uuid))
+						.setData(ByteString.copyFrom(resp.StateHash)).setError(resp.Error.Error()).build();
+				answer = ToServer.newBuilder().setAnswer(pAnswer).build();
 			}
 			sendToServer(answer);
 		});
@@ -361,9 +349,7 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 		ExecService.go(() -> {
 			ToServer answer = null;
 			RestoreResponse resp = respCh.in().read();
-			boolean ok = resp != null;
-//			resp, ok := <-respCh;
-			if (ok) {
+			if (resp != null) {
 				answer = newAnswer(UuidUtils.asBytes(uuid), resp.StateHash, resp.Error);
 			}
 			sendToServer(answer);
@@ -372,90 +358,41 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 	}
 
 	public ToServer newAnswer(byte[] uuid, byte[] data, error err) {
+		Builder ansBuilder = ToServer.Answer.newBuilder().setUid(ByteString.copyFrom(uuid));
 		if (err != null) {
-//			return new ToServer (
-//				Event: &internal.ToServer_Answer_{
-//					Answer: &internal.ToServer_Answer{
-//						Uid: uuid,
-//						Payload: &internal.ToServer_Answer_Error{
-//							Error: err.Error(),
-//						},
-//					},
-//				},
-//			);
-
-			Answer answer = ToServer.Answer.newBuilder().setUid(ByteString.copyFrom(uuid)).setError(err.Error())
-					.build();
-			ToServer server = ToServer.newBuilder().setAnswer(answer).build();
-			return server;
+			ansBuilder.setError(err.Error()).build();
+		} else {
+			ansBuilder.setData(ByteString.copyFrom(data)).build();
 		}
-
-//		return &internal.ToServer{
-//			Event: &internal.ToServer_Answer_{
-//				Answer: &internal.ToServer_Answer{
-//					Uid: uuid,
-//					Payload: &internal.ToServer_Answer_Data{
-//						Data: data,
-//					},
-//				},
-//			},
-//		}
-
-		Answer answer = ToServer.Answer.newBuilder().setUid(ByteString.copyFrom(uuid))
-				.setData(ByteString.copyFrom(data)).build();
-		ToServer server = ToServer.newBuilder().setAnswer(answer).build();
-
+		ToServer server = ToServer.newBuilder().setAnswer(ansBuilder.build()).build();
 		return server;
 	}
 
 	public error streamSend(ToServer data) {
-		Object v = stream.get(); // stream.Load();
+		LachesisNode_ConnectClient v = stream.get();
 		if (v == null) {
 			return ErrNeedReconnect;
 		}
-
-		boolean ok = v instanceof LachesisNode_ConnectClient;
-		if (ok) {
-			stream.set((LachesisNode_ConnectClient) v);
-		}
-		if (!ok || stream == null) {
-			return ErrNeedReconnect;
-		}
-		return stream.get().Send(data);
+		return v.Send(data);
 	}
 
 	public RetResult<ToClient> streamRecv() {
-		// logger.field("stream", stream).debug("streamRecv()");
-
-		LachesisNode_ConnectClient v = stream.get();// stream.Load();
+		logger.field("stream", stream).debug("streamRecv()");
+		LachesisNode_ConnectClient v = stream.get();
 		if (v == null) {
 			return new RetResult<ToClient>(null, ErrNeedReconnect);
 		}
-
-		boolean ok = (v instanceof LachesisNode_ConnectClient);
-		if (ok) {
-			stream.set(v);
-		}
-		if (!ok || stream == null) {
-			return new RetResult<ToClient>(null, ErrNeedReconnect);
-		}
-		return stream.get().Recv();
+		return v.Recv();
 	}
 
-	public void setStream(LachesisNode_ConnectClient stream) {
-		this.stream.set(stream); // .Store(stream);
+	public void setStream(LachesisNode_ConnectClient client) {
+		stream.set(client); // .Store(stream);
 	}
 
 	public void closeStream() {
-		Object v = stream.get(); // .Load();
+		LachesisNode_ConnectClient v = stream.get(); // .Load();
 		if (v != null) {
-			boolean ok = v instanceof LachesisNode_ConnectClient;
-			if (ok) {
-				stream.set((LachesisNode_ConnectClient) v);
-			}
-			if (ok && stream != null) {
-				stream.get().CloseSend();
-			}
+			stream.get().CloseSend();
 		}
 	}
 }

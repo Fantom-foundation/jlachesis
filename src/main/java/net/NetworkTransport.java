@@ -126,7 +126,7 @@ public class NetworkTransport implements Transport {
 //		default:
 //			return false;
 //		}
-		//logger.debug("isShutdown() start");
+		logger.debug("isShutdown() start");
 
 		CSTimer tim = new CSTimer();
 		final Alternative alt = new Alternative (new Guard[] {shutdownCh.in(), tim});
@@ -135,7 +135,7 @@ public class NetworkTransport implements Transport {
 		switch (alt.priSelect()) {
 		case SHUTDOWN:
 			int read = shutdownCh.in().read();
-			//logger.field("read", read).debug("isShutdown() ends");
+			logger.field("read", read).debug("isShutdown() ends");
 			return true;
 		case TIM:
 			tim.setAlarm (tim.read() + timeout.toMillis());
@@ -256,7 +256,6 @@ public class NetworkTransport implements Transport {
 
 		// Set a deadline
 		if (timeout.getSeconds() > 0) {
-//			conn.conn.SetDeadline(time.Now().Add(timeout));
 			logger.field("timeout", timeout.toMillis()).debug("SetSoTimeout()");
 			try {
 				conn.conn.setSoTimeout((int) timeout.toMillis());
@@ -422,12 +421,11 @@ public class NetworkTransport implements Transport {
 					}
 					return;
 				}
-
 				w.flush();
-				if (err != null) {
-					 logger.field("error", err).error("Failed to flush response");
-					return;
-				}
+//				if (err != null) {
+//					logger.field("error", err).error("Failed to flush response");
+//					return;
+//				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -469,9 +467,9 @@ public class NetworkTransport implements Transport {
 		case rpcSync:
 			SyncRequest sreq = new SyncRequest();
 			err = dec.Decode(sreq);
-//			if (err != null) {
-//				return err;
-//			}
+			if (err != null) {
+				return err;
+			}
 			rpc.setCommand(sreq);
 			break;
 		case rpcEagerSync:
@@ -504,7 +502,7 @@ public class NetworkTransport implements Transport {
 
 		logger.debug("handleCommand() dispatching the RPC");
 
-		final Alternative alt = new Alternative(new Guard[] { consumeCh.in(), shutdownCh.in() });
+		final Alternative alt = new Alternative(new Guard[] {consumeCh.in(), shutdownCh.in()});
 		final int CONSUME = 0, SHUTDOWN = 1;
 
 		switch (alt.priSelect()) {
@@ -512,7 +510,6 @@ public class NetworkTransport implements Transport {
 			logger.debug("handleCommand() consuming");
 			consumeCh.out().write(rpc);
 			break;
-		// fall through
 		case SHUTDOWN:
 			logger.debug("handleCommand() shutdown case");
 			shutdownCh.in().read();
@@ -543,7 +540,7 @@ public class NetworkTransport implements Transport {
 
 		logger.debug("Wait for a response");
 
-		final Alternative alt2 = new Alternative(new Guard[] { respCh.in(), shutdownCh.in() });
+		final Alternative alt2 = new Alternative(new Guard[] { respCh.in(), shutdownCh.in()});
 		final int RESPONSE = 0, SHUTDOWN2 = 1;
 
 		RPCResponse resp;
@@ -566,7 +563,6 @@ public class NetworkTransport implements Transport {
 			if (err != null) {
 				return err;
 			}
-			// fall through
 		case SHUTDOWN2:
 			shutdownCh.in().read();
 			return ErrTransportShutdown;

@@ -172,7 +172,7 @@ public class NetTransportTest {
 			});
 		}
 		try {
-			wg.wait();
+			wg.await();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}

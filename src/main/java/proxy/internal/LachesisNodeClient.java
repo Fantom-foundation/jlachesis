@@ -49,9 +49,6 @@ public class LachesisNodeClient implements LachesisNode_ConnectClient {
 
 	public error Send(ToServer msg) {
 		logger.debug("Send toServer = " + msg);
-
-		// TODO Auto-generated method stub
-
 		StreamObserver<ToServer> collect = nodeStub.connect(new StreamObserver<ToClient>() {
 			@Override
 			public void onNext(ToClient m) {
@@ -69,11 +66,7 @@ public class LachesisNodeClient implements LachesisNode_ConnectClient {
 				logger.debug("ToClient onCompleted()");
 			}
 		});
-
-//		    Stream.of(1L, 2L, 3L, 4L).map(l -> ToServer.newBuilder().build())
-//		        .forEach(collect::onNext);
 		collect.onCompleted();
-
 		return null;
 	}
 
@@ -97,11 +90,7 @@ public class LachesisNodeClient implements LachesisNode_ConnectClient {
 				logger.debug("onCompleted() ");
 			}
 		});
-
-//		    Stream.of(1L, 2L, 3L, 4L).map(l -> StreamingExample.Metric.newBuilder().setMetric(l).build())
-//		        .forEach(collect::onNext);
 		collect.onCompleted();
-
 		return null;
 	}
 

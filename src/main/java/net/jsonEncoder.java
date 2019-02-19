@@ -34,6 +34,8 @@ public class jsonEncoder {
 			logger.field("s", s).debug("encoded result");
 			w.write(s);
 		} catch (IOException e) {
+			e.printStackTrace();
+
 			return error.Errorf("Encode error=" + e.getMessage());
 		}
 		return null;
