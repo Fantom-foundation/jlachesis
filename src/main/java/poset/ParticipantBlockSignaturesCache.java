@@ -25,7 +25,7 @@ public class ParticipantBlockSignaturesCache {
 			return new RetResult<>(-1L, StoreErr.newStoreErr("ParticipantBlockSignatures", StoreErrType.UnknownParticipant, participant));
 		}
 
-		return new RetResult<>(peer.GetID(), null);
+		return new RetResult<>(peer.getID(), null);
 	}
 
 	//return participant BlockSignatures where index > skip
@@ -70,7 +70,7 @@ public class ParticipantBlockSignaturesCache {
 
 	public RetResult<BlockSignature> GetLast(String participant) {
 
-		RetResult<Object> getLast = rim.GetLast(participants.getByPubKey().get(participant).GetID());
+		RetResult<Object> getLast = rim.GetLast(participants.getByPubKey().get(participant).getID());
 		Object last = getLast.result;
 		error err = getLast.err;
 

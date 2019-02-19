@@ -387,7 +387,7 @@ public class GrpcAppProxy implements AppProxy, LachesisNodeServer {
 		// timeout
 		ExecService.go(() -> {
 			CSTimer tim = new CSTimer();
-			tim.after(tim.read() + timeout.toMillis());
+			tim.setAlarm(tim.read() + timeout.toMillis());
 //			<-time.After(timeout);
 			askings_sync.writeLock().lock();
 			askings.remove(uuid);

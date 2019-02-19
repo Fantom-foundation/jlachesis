@@ -245,10 +245,10 @@ public class PosetTest {
 			keys.put(pubHex, key);
 		}
 
-		Peer[] toPeerSlice = participants.ToPeerSlice();
+		Peer[] toPeerSlice = participants.toPeerSlice();
 		for (int i =0; i < toPeerSlice.length; ++i) {
 			Peer peer = toPeerSlice[i];
-			nodes = Appender.append(nodes, new TestNode(keys.get(peer.GetPubKeyHex()), i));
+			nodes = Appender.append(nodes, new TestNode(keys.get(peer.getPubKeyHex()), i));
 		}
 	}
 
@@ -296,14 +296,14 @@ public class PosetTest {
 		initPosetNodes(n);
 
 		// Needed to have sorted nodes based on participants hash32
-		Peer[] peerSlice = participants.ToPeerSlice();
+		Peer[] peerSlice = participants.toPeerSlice();
 
 		for (int i = 0; i< peerSlice.length; ++i) {
 			Peer peer = peerSlice[i];
 
 			HashMap<String,Long> map = new HashMap<String,Long>();
-			map.put(rootSelfParent(peer.GetID()), 1L);
-			Event event = new Event(null, null, null, new String[]{rootSelfParent(peer.GetID()), ""},
+			map.put(rootSelfParent(peer.getID()), 1L);
+			Event event = new Event(null, null, null, new String[]{rootSelfParent(peer.getID()), ""},
 				nodes[i].Pub, 0, map);
 			nodes[i].signAndAddEvent(event, String.format("e%d", i),
 				index, orderedEvents);
@@ -313,11 +313,11 @@ public class PosetTest {
 
 		poset = createPoset(db, orderedEvents, participants, logger);
 
-		peerSlice = participants.ToPeerSlice();
+		peerSlice = participants.toPeerSlice();
 		// Add reference to each participants' root event
 		for (int i = 0; i< peerSlice.length; ++i) {
 			Peer peer = peerSlice[i];
-			RetResult<Root> getRoot = poset.Store.GetRoot(peer.GetPubKeyHex());
+			RetResult<Root> getRoot = poset.Store.GetRoot(peer.getPubKeyHex());
 			Root root = getRoot.result;
 			error err  = getRoot.err;
 			assertNull("No error", err);
@@ -619,7 +619,7 @@ public class PosetTest {
 		if (!(e0Event.message.SelfParentIndex == -1 &&
 			e0Event.message.OtherParentCreatorID == -1 &&
 			e0Event.message.OtherParentIndex == -1 &&
-			e0Event.message.CreatorID == poset.Participants.byPubKey(e0Event.creator()).GetID())) {
+			e0Event.message.CreatorID == poset.Participants.byPubKey(e0Event.creator()).getID())) {
 			fail(String.format("Invalid wire info on %s", e0));
 		}
 
@@ -634,9 +634,9 @@ public class PosetTest {
 		assertNull("No error", err);
 
 		if (!(e21Event.message.SelfParentIndex == 1 &&
-			e21Event.message.OtherParentCreatorID == poset.Participants.byPubKey(e10Event.creator()).GetID() &&
+			e21Event.message.OtherParentCreatorID == poset.Participants.byPubKey(e10Event.creator()).getID() &&
 			e21Event.message.OtherParentIndex == 1 &&
-			e21Event.message.CreatorID == poset.Participants.byPubKey(e21Event.creator()).GetID())) {
+			e21Event.message.CreatorID == poset.Participants.byPubKey(e21Event.creator()).getID())) {
 			fail(String.format("Invalid wire info on %s", e21));
 		}
 
@@ -646,13 +646,13 @@ public class PosetTest {
 		assertNull("No error", err);
 
 		if (!(f1Event.message.SelfParentIndex == 2 &&
-			f1Event.message.OtherParentCreatorID == poset.Participants.byPubKey(e0Event.creator()).GetID() &&
+			f1Event.message.OtherParentCreatorID == poset.Participants.byPubKey(e0Event.creator()).getID() &&
 			f1Event.message.OtherParentIndex == 2 &&
-			f1Event.message.CreatorID == poset.Participants.byPubKey(f1Event.creator()).GetID())) {
+			f1Event.message.CreatorID == poset.Participants.byPubKey(f1Event.creator()).getID())) {
 			fail(String.format("Invalid wire info on %s", f1));
 		}
 
-		String e0CreatorID = "" + poset.Participants.byPubKey(e0Event.creator()).GetID();
+		String e0CreatorID = "" + poset.Participants.byPubKey(e0Event.creator()).getID();
 
 		Hierarchy[] toCheck = new Hierarchy[]{
 			new Hierarchy(e0, "Root" + e0CreatorID, ""),
@@ -3253,7 +3253,7 @@ public class PosetTest {
 		Event[] diff = null;
 		for (long id: known.keySet()) {
 			long ct = known.get(id);
-			String pk = poset.Participants.byId(id).GetPubKeyHex();
+			String pk = poset.Participants.byId(id).getPubKeyHex();
 			// get participant Events with index > ct
 			RetResult<String[]> pEventsCall = poset.Store.ParticipantEvents(pk, ct);
 			String[] participantEvents = pEventsCall.result;

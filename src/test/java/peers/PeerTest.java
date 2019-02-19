@@ -53,15 +53,15 @@ public class PeerTest {
 		for (int i = 0; i < 3; i++) {
 			KeyPair key = crypto.Utils.GenerateECDSAKeyPair().result;
 			Peer peer = new Peer();
-			peer.NetAddr = String.format("addr%d", i);
+			peer.netAddr = String.format("addr%d", i);
 //			peer.PubKeyHex = fmt.Sprintf("0x%X", scrypto.FromECDSAPub(&key.PublicKey)),
-			peer.PubKeyHex = crypto.Utils.keyToHexString(key.getPublic());
+			peer.pubKeyHex = crypto.Utils.keyToHexString(key.getPublic());
 
 			newPeers.addPeer(peer);
-			keys.put(peer.NetAddr, key);
+			keys.put(peer.netAddr, key);
 		}
 
-		Peer[] newPeersSlice = newPeers.ToPeerSlice();
+		Peer[] newPeersSlice = newPeers.toPeerSlice();
 		err = store.setPeers(newPeersSlice);
 		assertNull("No error when slice", err);
 
@@ -72,14 +72,14 @@ public class PeerTest {
 		assertNull("No error when slice", err);
 		assertEquals("peers.length is 3", 3, peers.length());
 
-		Peer[] peersSlice = peers.ToPeerSlice();
+		Peer[] peersSlice = peers.toPeerSlice();
 
 		for (int i = 0; i < 3; i++) {
 			assertEquals(String.format("peers[%d] NetAddr should match", i),
-				newPeersSlice[i].NetAddr, peersSlice[i].NetAddr);
+				newPeersSlice[i].netAddr, peersSlice[i].netAddr);
 
 			assertEquals(String.format("peers[%d] PubKeyHex should match", i),
-				newPeersSlice[i].PubKeyHex, peersSlice[i].PubKeyHex);
+				newPeersSlice[i].pubKeyHex, peersSlice[i].pubKeyHex);
 
 			RetResult<byte[]> pubKeyBytesCall = peersSlice[i].PubKeyBytes();
 			byte[] pubKeyBytes = pubKeyBytesCall.result;
@@ -88,7 +88,7 @@ public class PeerTest {
 			assertNull("No error when calling PubKeyBytes", err);
 
 			PublicKey pubKey = crypto.Utils.ToECDSAPub(pubKeyBytes);
-			assertEquals(String.format("peers[%d] PublicKey not parsed correctly", i), pubKey,  keys.get(peersSlice[i].NetAddr).getPublic());
+			assertEquals(String.format("peers[%d] PublicKey not parsed correctly", i), pubKey,  keys.get(peersSlice[i].netAddr).getPublic());
 		}
 	}
 

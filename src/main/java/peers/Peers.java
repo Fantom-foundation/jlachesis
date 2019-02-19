@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+/**
+ * Multiple peers
+ */
 public class Peers {
 	ReadWriteLock lock = new ReentrantReadWriteLock();
 
@@ -55,12 +58,12 @@ public class Peers {
 	// This method is private and is not protected by mutex.
 	// Handle with care
 	public void addPeerRaw(Peer peer) {
-		if (peer.ID == 0) {
+		if (peer.id == 0) {
 			peer.computeID();
 		}
 
-		byPubKey.put(peer.PubKeyHex, peer);
-		byId.put(peer.ID, peer);
+		byPubKey.put(peer.pubKeyHex, peer);
+		byId.put(peer.id, peer);
 	}
 
 	public void addPeer(Peer peer) {
@@ -88,11 +91,11 @@ public class Peers {
 	public void removePeer(Peer peer) {
 		lock.writeLock().lock();
 		try {
-			if (byPubKey.containsKey(peer.PubKeyHex)) {
+			if (byPubKey.containsKey(peer.pubKeyHex)) {
 				return;
 			}
-			byPubKey.remove(peer.PubKeyHex);
-			byId.remove(peer.ID);
+			byPubKey.remove(peer.pubKeyHex);
+			byId.remove(peer.id);
 
 			internalSort();
 		} finally {
@@ -110,7 +113,7 @@ public class Peers {
 
 	/* ToSlice Methods */
 
-	public Peer[] ToPeerSlice() {
+	public Peer[] toPeerSlice() {
 		return sorted;
 	}
 
@@ -119,7 +122,7 @@ public class Peers {
 		try {
 			String[] res = new String[sorted.length];
 			for (int i = 0; i< sorted.length; ++i) {
-				res[i] = sorted[i].PubKeyHex;
+				res[i] = sorted[i].pubKeyHex;
 			}
 
 			return res;
@@ -133,7 +136,7 @@ public class Peers {
 		try {
 			long[] res = new long[sorted.length];
 			for (int i = 0; i< sorted.length; ++i) {
-				res[i] = sorted[i].ID;
+				res[i] = sorted[i].id;
 			}
 			return res;
 		} finally {
@@ -141,7 +144,7 @@ public class Peers {
 		}
 	}
 
-	/* EventListener */
+	/** EventListener */
 	public void onNewPeer(Listener cb) {
 		listeners.add(cb);
 	}
@@ -168,7 +171,7 @@ public class Peers {
 		for (int i = 0; i < peers.length; ++i) {
 			Peer p = peers[i];
 
-			if (p.NetAddr != peer && p.PubKeyHex != peer) {
+			if (p.netAddr != peer && p.pubKeyHex != peer) {
 				otherPeers.add(p);
 			} else {
 				index = i;

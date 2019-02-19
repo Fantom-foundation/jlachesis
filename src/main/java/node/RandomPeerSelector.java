@@ -22,7 +22,7 @@ public class RandomPeerSelector implements PeerSelector {
 	}
 
 	public peers.Peer next() {
-		Peer[] selectablePeers = peers.ToPeerSlice();
+		Peer[] selectablePeers = peers.toPeerSlice();
 
 		if (selectablePeers.length > 1) {
 			selectablePeers = peers.excludePeer(selectablePeers, localAddr).peers;

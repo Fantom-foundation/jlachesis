@@ -87,7 +87,7 @@ public class NodeTest {
 		Config config = TestUtils.TestConfig(this.getClass());
 
 		// Start two nodes
-		Peer[] ps = p.ToPeerSlice();
+		Peer[] ps = p.toPeerSlice();
 
 		String address = NetUtils.GetUnusedNetAddr();
 		RetResult<NetworkTransport> NewTCPTransportCall = TCPTransport.NewTCPTransport(address, null, 2,
@@ -96,11 +96,11 @@ public class NodeTest {
 		error err = NewTCPTransportCall.err;
 		assertNull("No err", err);
 
-		Node node0 = new Node(config, ps[0].GetID(), keys[0], p,
+		Node node0 = new Node(config, ps[0].getID(), keys[0], p,
 			new InmemStore(p, config.CacheSize),
 			peer0Trans,
 			DummyClient.NewInmemDummyApp(testLogger));
-		node0.Init();
+		node0.init();
 
 		node0.runAsync(false);
 
@@ -110,24 +110,24 @@ public class NodeTest {
 		err = NewTCPTransportCall.err;
 		assertNull("No err", err);
 
-		Node node1 = new Node(config, ps[1].GetID(), keys[1], p,
+		Node node1 = new Node(config, ps[1].getID(), keys[1], p,
 			new InmemStore(p, config.CacheSize),
 			peer1Trans,
 			DummyClient.NewInmemDummyApp(testLogger));
-		node1.Init();
+		node1.init();
 		node1.runAsync(false);
 
 		// Manually prepare SyncRequest and expected SyncResponse
 
-		Map<Long, Long> node0KnownEvents = node0.core.KnownEvents();
-		Map<Long, Long> node1KnownEvents = node1.core.KnownEvents();
+		Map<Long, Long> node0KnownEvents = node0.core.knownEvents();
+		Map<Long, Long> node1KnownEvents = node1.core.knownEvents();
 
-		RetResult<Event[]> eventDiff = node1.core.EventDiff(node0KnownEvents);
+		RetResult<Event[]> eventDiff = node1.core.eventDiff(node0KnownEvents);
 		Event[] unknownEvents = eventDiff.result;
 		err = eventDiff.err;
 		assertNull("No err", err);
 
-		RetResult<WireEvent[]> toWire = node1.core.ToWire(unknownEvents);
+		RetResult<WireEvent[]> toWire = node1.core.toWire(unknownEvents);
 		WireEvent[] unknownWireEvents = toWire.result;
 		err = toWire.err;
 		assertNull("No err", err);
@@ -174,7 +174,7 @@ public class NodeTest {
 		Config config = TestUtils.TestConfig(this.getClass());
 
 		// Start two nodes
-		Peer[] ps = p.ToPeerSlice();
+		Peer[] ps = p.toPeerSlice();
 
 		RetResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
 				Duration.ofSeconds(1), testLogger);
@@ -182,11 +182,11 @@ public class NodeTest {
 		error err = newTCPTransport.err;
 		assertNull("No err", err);
 
-		Node node0 = new Node(config, ps[0].GetID(), keys[0], p,
+		Node node0 = new Node(config, ps[0].getID(), keys[0], p,
 			new InmemStore(p, config.CacheSize),
 			peer0Trans,
 			DummyClient.NewInmemDummyApp(testLogger));
-		node0.Init();
+		node0.init();
 
 		node0.runAsync(false);
 
@@ -196,24 +196,24 @@ public class NodeTest {
 		err = newTCPTransport.err;
 		assertNull("No err", err);
 
-		Node node1 = new Node(config, ps[1].GetID(), keys[1], p,
+		Node node1 = new Node(config, ps[1].getID(), keys[1], p,
 			new InmemStore(p, config.CacheSize),
 			peer1Trans,
 			DummyClient.NewInmemDummyApp(testLogger));
-		node1.Init();
+		node1.init();
 
 		node1.runAsync(false);
 
 		// Manually prepare EagerSyncRequest and expected EagerSyncResponse
 
-		Map<Long, Long> node1KnownEvents = node1.core.KnownEvents();
+		Map<Long, Long> node1KnownEvents = node1.core.knownEvents();
 
-		RetResult<Event[]> eventDiff = node0.core.EventDiff(node1KnownEvents);
+		RetResult<Event[]> eventDiff = node0.core.eventDiff(node1KnownEvents);
 		Event[] unknownEvents = eventDiff.result;
 		err = eventDiff.err;
 		assertNull("No error", err);
 
-		RetResult<WireEvent[]> toWire = node0.core.ToWire(unknownEvents);
+		RetResult<WireEvent[]> toWire = node0.core.toWire(unknownEvents);
 		WireEvent[] unknownWireEvents = toWire.result;
 		err = toWire.err;
 		assertNull("No error", err);
@@ -251,7 +251,7 @@ public class NodeTest {
 		Logger testLogger = TestUtils.NewTestLogger(this.getClass());
 		Config config = TestUtils.TestConfig(this.getClass());
 
-		Peer[] ps = p.ToPeerSlice();
+		Peer[] ps = p.toPeerSlice();
 
 		RetResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
 				Duration.ofSeconds(1), testLogger);
@@ -261,11 +261,11 @@ public class NodeTest {
 
 		AppProxy peer0Proxy = DummyClient.NewInmemDummyApp(testLogger);
 
-		Node node0 = new Node(config, ps[0].GetID(), keys[0], p,
+		Node node0 = new Node(config, ps[0].getID(), keys[0], p,
 			new InmemStore(p, config.CacheSize),
 			peer0Trans,
 			peer0Proxy);
-		node0.Init();
+		node0.init();
 
 		node0.runAsync(false);
 
@@ -277,11 +277,11 @@ public class NodeTest {
 		AppProxy peer1Proxy = DummyClient.NewInmemDummyApp(testLogger);
 
 
-		Node node1 = new Node(config, ps[1].GetID(), keys[1], p,
+		Node node1 = new Node(config, ps[1].getID(), keys[1], p,
 			new InmemStore(p, config.CacheSize),
 			peer1Trans,
 			peer1Proxy);
-		node1.Init();
+		node1.init();
 
 		node1.runAsync(false);
 		// Submit a Tx to node0
@@ -295,7 +295,7 @@ public class NodeTest {
 		peer0Proxy.SubmitCh().out().write(message.getBytes()); // <- byte[](message);
 
 		// simulate a SyncRequest from node0 to node1
-		Map<Long, Long> node0KnownEvents = node0.core.KnownEvents();
+		Map<Long, Long> node0KnownEvents = node0.core.knownEvents();
 		SyncRequest args = new SyncRequest(node0.id, node0KnownEvents);
 
 		peer1Trans.localAddr();
@@ -311,7 +311,7 @@ public class NodeTest {
 		int l = node0.core.transactionPool.length;
 		assertEquals("node0's transactionPool should have 0 elements", 0, l);
 
-		Event node0Head = node0.core.GetHead().result;
+		Event node0Head = node0.core.getHead().result;
 		l = node0Head.transactions().length;
 		assertEquals("node0's Head should have 1 element", 1, l);
 
@@ -354,7 +354,7 @@ public class NodeTest {
 //			key := fmt.Sprintf("0x%X", crypto.FromECDSAPub(k.getPublic());
 			String key = crypto.Utils.keyToHexString(k.getPublic());
 			Peer peer = peers.byPubKey(key);
-			long id = peer.GetID();
+			long id = peer.getID();
 
 			Config conf = new Config(
 				Duration.ofMillis(5),
@@ -395,7 +395,7 @@ public class NodeTest {
 				trans,
 				prox);
 
-			err = node.Init();
+			err = node.init();
 			assertNull(String.format("failed to initialize node%d", id), err);
 			nodes = Appender.append(nodes, node);
 		}
@@ -438,7 +438,7 @@ public class NodeTest {
 		AppProxy prox = DummyClient.NewInmemDummyApp(logger);
 
 		Node newNode = new Node(conf, id, key, ps, store, trans, prox);
-		err = newNode.Init();
+		err = newNode.init();
 		assertNull("No err when init", err);
 
 		return newNode;
@@ -457,7 +457,7 @@ public class NodeTest {
 	}
 
 	//@Test
-	public void TestGossip() {
+	public void testGossip() {
 		RResult2<KeyPair[], Peers> initPeers = initPeers(4);
 		KeyPair[] keys = initPeers.result1;
 		Peers ps = initPeers.result2;
@@ -472,7 +472,7 @@ public class NodeTest {
 	}
 
 	//@Test
-	public void TestMissingNodeGossip() {
+	public void testMissingNodeGossip() {
 		RResult2<KeyPair[], Peers> initPeers = initPeers(4);
 		KeyPair[] keys = initPeers.result1;
 		Peers ps = initPeers.result2;
@@ -486,7 +486,7 @@ public class NodeTest {
 	}
 
 	//@Test
-	public void TestSyncLimit() {
+	public void testSyncLimit() {
 		RResult2<KeyPair[], Peers> initPeers = initPeers(4);
 		KeyPair[] keys = initPeers.result1;
 		Peers ps = initPeers.result2;
@@ -496,7 +496,7 @@ public class NodeTest {
 		assertNull("No error when gossip", err);
 
 		// create fake node[0] known to artificially reach SyncLimit
-		Map<Long, Long> node0KnownEvents = nodes[0].core.KnownEvents();
+		Map<Long, Long> node0KnownEvents = nodes[0].core.knownEvents();
 		for (long k : node0KnownEvents.keySet()) {
 			node0KnownEvents.put(k,  0L);
 		}
@@ -518,7 +518,7 @@ public class NodeTest {
 	}
 
 	//@Test
-	public void TestFastForward() {
+	public void testFastForward() {
 		RResult2<KeyPair[], Peers> initPeers = initPeers(4);
 		KeyPair[] keys = initPeers.result1;
 		Peers ps = initPeers.result2;
@@ -531,7 +531,7 @@ public class NodeTest {
 		err = nodes[0].fastForward();
 		assertNull("No Error FastForwarding", err);
 
-		long lbi = nodes[0].core.GetLastBlockIndex();
+		long lbi = nodes[0].core.getLastBlockIndex();
 		assertTrue(String.format("LastBlockIndex is too low: %d", lbi), lbi <= 0);
 		RetResult<Block> getBlock = nodes[0].getBlock(lbi);
 		Block sBlock = getBlock.result;
@@ -547,7 +547,7 @@ public class NodeTest {
 	}
 
 	//@Test
-	public void TestCatchUp() {
+	public void testCatchUp() {
 		RResult2<KeyPair[], Peers> initPeers = initPeers(4);
 		KeyPair[] keys = initPeers.result1;
 		Peers ps = initPeers.result2;
@@ -595,7 +595,7 @@ public class NodeTest {
 	}
 
 	//@Test
-	public void TestFastSync() {
+	public void testFastSync() {
 		// Create  config for 4 nodes
 		RResult2<KeyPair[], Peers> initPeers = initPeers(4);
 		KeyPair[] keys = initPeers.result1;
@@ -657,8 +657,8 @@ public class NodeTest {
 		shutdownNodes(nodes);
 	}
 
-	//@Test
-	public void TestShutdown() {
+	@Test
+	public void testShutdown() {
 		RResult2<KeyPair[], Peers> initPeers = initPeers(4);
 		KeyPair[] keys = initPeers.result1;
 		Peers ps = initPeers.result2;
@@ -673,7 +673,7 @@ public class NodeTest {
 	}
 
 	//@Test
-	public void TestBootstrapAllNodes() {
+	public void testBootstrapAllNodes() {
 		recreateTestDir();
 
 		// create a first network with BadgerStore
@@ -743,7 +743,7 @@ public class NodeTest {
 
 			boolean done = true;
 			for (Node n : nodes) {
-				long ce = n.core.GetLastBlockIndex();
+				long ce = n.core.getLastBlockIndex();
 				if (ce < target) {
 					done = false;
 					break;

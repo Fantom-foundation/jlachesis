@@ -39,7 +39,7 @@ public class ParticipantEventsCache {
 
 		}
 
-		return new RetResult<Long>(peer.GetID(), null);
+		return new RetResult<Long>(peer.getID(), null);
 	}
 
 	//return participant events with index > skip

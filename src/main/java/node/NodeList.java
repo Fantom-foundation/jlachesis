@@ -46,7 +46,7 @@ public class NodeList extends LinkedHashMap<PrivateKey, Node> {
 
 			Node n = new Node(
 				config,
-				peer.GetID(),
+				peer.getID(),
 				key,
 				participants,
 				new poset.InmemStore(participants, config.CacheSize),
@@ -58,7 +58,7 @@ public class NodeList extends LinkedHashMap<PrivateKey, Node> {
 		}
 
 		for (Node n : this.values()) {
-			n.Init();
+			n.init();
 			n.runAsync(true);
 		}
 	}
@@ -102,18 +102,18 @@ public class NodeList extends LinkedHashMap<PrivateKey, Node> {
 		{
 			int seq = 0;
 			while(true) {
-				logger.field("seq", seq).debug("StartRandTxStream()");
+				//logger.field("seq", seq).debug("StartRandTxStream()");
 
 				final CSTimer tim = new CSTimer ();
 				final Alternative alt = new Alternative (new Guard[] {stopCh.in(), tim});
 				final int STOP = 0, TIM = 1;
-				tim.setAlarm(tim.read() + delay);
 
 				switch (alt.priSelect ()) {
 					case STOP:
 						stopCh.in().read(); // <-stopCh:
 						return;
 					case TIM:
+						tim.setAlarm(tim.read() + delay);
 						PrivateKey[] keys = Keys();
 						Random rand = new Random();
 

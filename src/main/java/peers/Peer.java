@@ -7,47 +7,63 @@ import common.error;
 
 /**
  * A Peer
- *
  */
 public class Peer {
-	long ID; // `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	String NetAddr; // `protobuf:"bytes,2,opt,name=NetAddr,proto3" json:"NetAddr,omitempty"`
-	String PubKeyHex; // `protobuf:"bytes,3,opt,name=PubKeyHex,proto3" json:"PubKeyHex,omitempty"`
+	long id; // `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	String netAddr; // `protobuf:"bytes,2,opt,name=NetAddr,proto3" json:"NetAddr,omitempty"`
+	String pubKeyHex; // `protobuf:"bytes,3,opt,name=PubKeyHex,proto3" json:"PubKeyHex,omitempty"`
 
 	public static final String jsonPeerPath = "peers.json";
 
 	public Peer(long iD, String netAddr, String pubKeyHex) {
 		super();
-		ID = iD;
-		NetAddr = netAddr;
-		PubKeyHex = pubKeyHex;
+		id = iD;
+		this.netAddr = netAddr;
+		this.pubKeyHex = pubKeyHex;
 	}
 
 	public Peer() {
 		super();
-		ID = -1;
-		NetAddr = "";
-		PubKeyHex = "";
+		id = -1;
+		netAddr = "";
+		pubKeyHex = "";
 	}
 
 	public Peer(String pubKeyHex, String netAddr) {
 		super();
-		PubKeyHex = pubKeyHex;
-		NetAddr =   netAddr;
+		this.pubKeyHex = pubKeyHex;
+		this.netAddr =   netAddr;
 		computeID();
 	}
 
 	public void setNetAddr(String netAddr) {
-		NetAddr = netAddr;
+		this.netAddr = netAddr;
+	}
+
+	public void reset() {
+		id = -1;
+		netAddr = "";
+		pubKeyHex = "";
+	}
+
+	public long getID() {
+		return id;
+	}
+
+	public String getNetAddr() {
+		return netAddr;
+	}
+	public String getPubKeyHex() {
+		return pubKeyHex;
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (int) (ID ^ (ID >>> 32));
-		result = prime * result + ((NetAddr == null) ? 0 : NetAddr.hashCode());
-		result = prime * result + ((PubKeyHex == null) ? 0 : PubKeyHex.hashCode());
+		result = prime * result + (int) (id ^ (id >>> 32));
+		result = prime * result + ((netAddr == null) ? 0 : netAddr.hashCode());
+		result = prime * result + ((pubKeyHex == null) ? 0 : pubKeyHex.hashCode());
 		return result;
 	}
 
@@ -60,17 +76,17 @@ public class Peer {
 		if (getClass() != obj.getClass())
 			return false;
 		Peer other = (Peer) obj;
-		if (ID != other.ID)
+		if (id != other.id)
 			return false;
-		if (NetAddr == null) {
-			if (other.NetAddr != null)
+		if (netAddr == null) {
+			if (other.netAddr != null)
 				return false;
-		} else if (!NetAddr.equals(other.NetAddr))
+		} else if (!netAddr.equals(other.netAddr))
 			return false;
-		if (PubKeyHex == null) {
-			if (other.PubKeyHex != null)
+		if (pubKeyHex == null) {
+			if (other.pubKeyHex != null)
 				return false;
-		} else if (!PubKeyHex.equals(other.PubKeyHex))
+		} else if (!pubKeyHex.equals(other.pubKeyHex))
 			return false;
 		return true;
 	}
@@ -78,8 +94,8 @@ public class Peer {
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("Peer [ID=").append(ID).append(", NetAddr=").append(NetAddr).append(", PubKeyHex=")
-				.append(PubKeyHex).append("]");
+		builder.append("Peer [ID=").append(id).append(", NetAddr=").append(netAddr).append(", PubKeyHex=")
+				.append(pubKeyHex).append("]");
 		return builder.toString();
 	}
 
@@ -87,7 +103,7 @@ public class Peer {
 	public RetResult<byte[]> PubKeyBytes() {
 		//PubKeyHex[2:]
 		try {
-			byte[] decode = crypto.Utils.decodeString(PubKeyHex.substring(2, PubKeyHex.length())).result;
+			byte[] decode = crypto.Utils.decodeString(pubKeyHex.substring(2, pubKeyHex.length())).result;
 			return new RetResult<byte[]>(decode, null);
 		} catch (Exception e){
 			return new RetResult<byte[]>(null, error.Errorf(e.getMessage()));
@@ -100,15 +116,15 @@ public class Peer {
 			@Override
 			public peers.proto.Peer toProto() {
 				peers.proto.Peer.Builder builder = peers.proto.Peer.newBuilder();
-				builder.setID(ID).setNetAddr(NetAddr).setPubKeyHex(PubKeyHex);
+				builder.setID(id).setNetAddr(netAddr).setPubKeyHex(pubKeyHex);
 				return builder.build();
 			}
 
 			@Override
 			public void fromProto(peers.proto.Peer pPeer) {
-				ID = pPeer.getID();
-				NetAddr = pPeer.getNetAddr();
-				PubKeyHex = pPeer.getPubKeyHex();
+				id = pPeer.getID();
+				netAddr = pPeer.getNetAddr();
+				pubKeyHex = pPeer.getPubKeyHex();
 			}
 
 			@Override
@@ -125,24 +141,7 @@ public class Peer {
 		if (err != null) {
 			return err;
 		}
-		ID = Hash32.Hash32(pubKey.result);
+		id = Hash32.Hash32(pubKey.result);
 		return null;
-	}
-
-	public void Reset() {
-		ID = -1;
-		NetAddr = "";
-		PubKeyHex = "";
-	}
-
-	public long GetID() {
-		return ID;
-	}
-
-	public String GetNetAddr() {
-		return NetAddr;
-	}
-	public String GetPubKeyHex() {
-		return PubKeyHex;
 	}
 }

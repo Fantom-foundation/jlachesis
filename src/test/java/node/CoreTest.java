@@ -60,8 +60,8 @@ public class CoreTest {
 		  0   1   2        0   1   2
 		*/
 
-		Map<Long,Long> knownBy1 = cores[1].KnownEvents();
-		RetResult<poset.Event[]> eventDiff = cores[0].EventDiff(knownBy1);
+		Map<Long,Long> knownBy1 = cores[1].knownEvents();
+		RetResult<poset.Event[]> eventDiff = cores[0].eventDiff(knownBy1);
 		Event[] unknownBy1 = eventDiff.result;
 		error err = eventDiff.err;
 		assertNull("No error when event diff", err);
@@ -147,7 +147,7 @@ public class CoreTest {
 
 		checkHeights(cores, expectedHeights);
 
-		Map<Long,Long> knownBy0 = cores[0].KnownEvents();
+		Map<Long,Long> knownBy0 = cores[0].knownEvents();
 		long k = knownBy0.get(Hash32.Hash32(cores[0].pubKey));
 		assertEquals("core 0 should have last-index 1 for core 0, not %d", 1, k);
 
@@ -157,8 +157,8 @@ public class CoreTest {
 		k = knownBy0.get(Hash32.Hash32(cores[2].pubKey));
 		assertEquals("core 0 should have last-index -1 for core 2, not %d", -1, k);
 
-		Event core0Head = cores[0].GetHead().result;
-		assertEquals("core 0 head self-parent should be e0", core0Head.selfParent(), cores[0].GetHead());
+		Event core0Head = cores[0].getHead().result;
+		assertEquals("core 0 head self-parent should be e0", core0Head.selfParent(), cores[0].getHead());
 
 		assertEquals("core 0 head other-parent should be e1", core0Head.otherParent(), index.get("e1"));
 
@@ -203,7 +203,7 @@ public class CoreTest {
 
 		checkHeights(cores, expectedHeights);
 
-		Map<Long, Long> knownBy2 = cores[2].KnownEvents();
+		Map<Long, Long> knownBy2 = cores[2].knownEvents();
 
 		k = knownBy2.get(Hash32.Hash32(cores[0].pubKey));
 		assertEquals("core 2 should have last-index 1 for core 0, not %d", 1, k);
@@ -214,7 +214,7 @@ public class CoreTest {
 		k = knownBy2.get(Hash32.Hash32(cores[2].pubKey));
 		assertEquals("core 2 should have last-index 1 for core 2, not %d", 1, k);
 
-		Event core2Head = cores[2].GetHead().result;
+		Event core2Head = cores[2].getHead().result;
 		assertEquals("core 2 head self-parent should be e2", core2Head.selfParent(), index.get("e2"));
 
 		assertEquals("core 2 head other-parent should be e01", core2Head.otherParent(),index.get("e01"));
@@ -261,7 +261,7 @@ public class CoreTest {
 
 		checkHeights(cores, expectedHeights);
 
-		Map<Long, Long> knownBy1 = cores[1].KnownEvents();
+		Map<Long, Long> knownBy1 = cores[1].knownEvents();
 		k = knownBy1.get(Hash32.Hash32(cores[0].pubKey));
 		assertEquals("core 1 should have last-index 1 for core 0, not %d", 1, k);
 
@@ -271,7 +271,7 @@ public class CoreTest {
 		k = knownBy1.get(Hash32.Hash32(cores[2].pubKey));
 		assertEquals("core 1 should have last-index 1 for core 2, not %d", 1, k);
 
-		Event core1Head = cores[1].GetHead().result;
+		Event core1Head = cores[1].getHead().result;
 		assertEquals("core 1 head self-parent should be e1", core1Head.selfParent(), index.get("e1"));
 
 		assertEquals("core 1 head other-parent should be e20", core1Head.otherParent(), index.get("e20"));
@@ -294,20 +294,20 @@ public class CoreTest {
 			String pubHex = Utils.keyToHexString(key.getPublic());
 			Peer peer = new Peer(pubHex, "");
 			participants.addPeer(peer);
-			participantKeys.put(peer.GetID(), key);
+			participantKeys.put(peer.getID(), key);
 		}
 
-		Peer[] peers = participants.ToPeerSlice();
+		Peer[] peers = participants.toPeerSlice();
 		for (int i = 0; i < peers.length; ++i) {
 			Peer peer = peers[i];
 			Core core = new Core((long) i,
-				participantKeys.get(peer.GetID()),
+				participantKeys.get(peer.getID()),
 				participants,
 				new InmemStore(participants, cacheSize),
 				null,
 				logger );
 
-			String selfParent = String.format("Root%d", peer.GetID());
+			String selfParent = String.format("Root%d", peer.getID());
 
 			HashMap<String, Long> flagTable = new HashMap<String,Long>();
 			flagTable.put(selfParent, 1L);
@@ -316,12 +316,12 @@ public class CoreTest {
 			Event initialEvent = new Event(null,
 				new poset.InternalTransaction[]{},
 				null,
-				new String[]{selfParent, ""}, core.PubKey(), 0, flagTable);
-			error err = core.SignAndInsertSelfEvent(initialEvent);
+				new String[]{selfParent, ""}, core.pubKey(), 0, flagTable);
+			error err = core.signAndInsertSelfEvent(initialEvent);
 
 			assertNull("No error when SignAndInsertSelfEvent", err);
 
-			core.RunConsensus();
+			core.runConsensus();
 
 			cores = Appender.append(cores, core);
 			index.put(String.format("e%d", i), core.head);
@@ -345,12 +345,12 @@ public class CoreTest {
 		error err;
 		for (int i = 0; i < cores.length; i++) {
 			if (i != participant) {
-				RetResult<Event> getEvent = cores[i].GetEvent(index.get(String.format("e%d", i)));
+				RetResult<Event> getEvent = cores[i].getEvent(index.get(String.format("e%d", i)));
 				Event event = getEvent.result;
 				err = getEvent.err;
 				assertNull("No error getEvent", err);
 
-				err = cores[participant].InsertEvent(event, true);
+				err = cores[participant].insertEvent(event, true);
 				assertNull("No error inserting " + getName(index, event.hex()), err);
 			}
 		}
@@ -374,7 +374,7 @@ public class CoreTest {
 			new poset.InternalTransaction[]{},
 			null,
 			new String[]{index.get("e0"), index.get("e1")}, // e0 and e1
-			cores[0].PubKey(), 1, event01ft);
+			cores[0].pubKey(), 1, event01ft);
 
 		err = insertEvent(cores, keys, index, event01, "e01", participant,
 				Hash32.Hash32(cores[0].pubKey));
@@ -392,7 +392,7 @@ public class CoreTest {
 			new poset.InternalTransaction[]{},
 			null,
 			new String[]{index.get("e2"), index.get("e01")}, // e2 and e01
-			cores[2].PubKey(), 1, event20ft);
+			cores[2].pubKey(), 1, event20ft);
 
 		err = insertEvent(cores, keys, index, event20, "e20", participant,
 				Hash32.Hash32(cores[2].pubKey));
@@ -404,7 +404,7 @@ public class CoreTest {
 			new poset.InternalTransaction[]{},
 			null,
 			new String[]{index.get("e1"), index.get("e20")}, // e1 and e20
-			cores[1].PubKey(), 1, event12ft);
+			cores[1].pubKey(), 1, event12ft);
 		err = insertEvent(cores, keys, index, event12, "e12", participant,
 				Hash32.Hash32(cores[1].pubKey));
 		assertNull("No error inserting e12", err);
@@ -415,7 +415,7 @@ public class CoreTest {
 		long creator)  {
 		error err;
 		if (participant == creator) {
-			err = cores[participant].SignAndInsertSelfEvent(event);
+			err = cores[participant].signAndInsertSelfEvent(event);
 			if (err != null) {
 				return err;
 			}
@@ -423,7 +423,7 @@ public class CoreTest {
 			index.put(name, cores[participant].head);
 		} else {
 			event.sign(keys.get(creator).getPrivate());
-			err = cores[participant].InsertEvent(event, true);
+			err = cores[participant].insertEvent(event, true);
 			if (err != null) {
 				return err;
 			}
@@ -435,7 +435,7 @@ public class CoreTest {
 	private void checkHeights(Core[] cores, Map<String,Long>[] expectedHeights) {
 		for (int i = 0; i< cores.length; ++i) {
 			Core core = cores[i];
-			Map<String, Long> heights = core.Heights();
+			Map<String, Long> heights = core.heights();
 			assertEquals(String.format("Cores[%d].Heights() should match",
 					i), expectedHeights[i], heights);
 		}
@@ -445,14 +445,14 @@ public class CoreTest {
 	private void checkInDegree(Core[] cores, Map<String,Long>[] expectedInDegree) {
 		for (int i= 0; i< cores.length; ++i) {
 			Core core = cores[i];
-			Map<String, Long> inDegrees = core.InDegrees();
+			Map<String, Long> inDegrees = core.inDegrees();
 			assertEquals(String.format("Cores[%d].InDegrees() should match",
 				i), expectedInDegree[i], inDegrees);
 		}
 	}
 
 	//@Test
-	public void TestInDegrees() {
+	public void testInDegrees() {
 		initCores(3);
 
 		/*
@@ -775,16 +775,16 @@ public class CoreTest {
 		return cores;
 	}
 
-//	@Test
-	public void TestConsensus() {
+	//@Test
+	public void testConsensus() {
 		cores = initConsensusPoset();
 
-		int l = cores[0].GetConsensusEvents().length;
+		int l = cores[0].getConsensusEvents().length;
 		assertEquals("length of consensus should match", 4, l);
 
-		String[] core0Consensus = cores[0].GetConsensusEvents();
-		String[] core1Consensus = cores[1].GetConsensusEvents();
-		String[] core2Consensus = cores[2].GetConsensusEvents();
+		String[] core0Consensus = cores[0].getConsensusEvents();
+		String[] core1Consensus = cores[1].getConsensusEvents();
+		String[] core2Consensus = cores[2].getConsensusEvents();
 
 		for (int i = 0; i < core0Consensus.length; ++i) {
 			String e = core0Consensus[i];
@@ -793,8 +793,8 @@ public class CoreTest {
 		}
 	}
 
-//	@Test
-	public void TestOverSyncLimit() {
+	//@Test
+	public void testOverSyncLimit() {
 		cores = initConsensusPoset();
 
 		// positive
@@ -805,7 +805,7 @@ public class CoreTest {
 
 		long syncLimit = 10L;
 
-		boolean overSyncLimit = cores[0].OverSyncLimit(known, syncLimit);
+		boolean overSyncLimit = cores[0].overSyncLimit(known, syncLimit);
 		assertTrue(String.format("OverSyncLimit(%s, %d) should return true", known, syncLimit), overSyncLimit);
 
 		// negative
@@ -814,7 +814,7 @@ public class CoreTest {
 		known.put((long) Hash32.Hash32(cores[1].pubKey), 6L);
 		known.put((long) Hash32.Hash32(cores[2].pubKey), 6L);
 
-		overSyncLimit = cores[0].OverSyncLimit(known, syncLimit);
+		overSyncLimit = cores[0].overSyncLimit(known, syncLimit);
 		assertFalse(String.format("OverSyncLimit(%v, %v) should return false", known, syncLimit), overSyncLimit);
 
 		// edge
@@ -823,7 +823,7 @@ public class CoreTest {
 		known.put((long) Hash32.Hash32(cores[1].pubKey), 3L);
 		known.put((long) Hash32.Hash32(cores[2].pubKey), 3L);
 
-		overSyncLimit = cores[0].OverSyncLimit(known, syncLimit);
+		overSyncLimit = cores[0].overSyncLimit(known, syncLimit);
 		assertFalse(String.format("OverSyncLimit(%v, %v) should return false", known, syncLimit), overSyncLimit);
 	}
 
@@ -890,11 +890,11 @@ public class CoreTest {
 	}
 
 	//@Test
-	public void TestConsensusFF() {
+	public void testConsensusFF() {
 		initCores(4);
 		initFFPoset(cores);
 
-		long r = cores[1].GetLastConsensusRoundIndex();
+		long r = cores[1].getLastConsensusRoundIndex();
 		if  (r < 0 || r != 2) {
 			String disp = "null";
 			if (r >=0) {
@@ -903,12 +903,12 @@ public class CoreTest {
 			assertEquals(String.format("Cores[1] last consensus Round should be 1, not %s", disp), 1, r);
 		}
 
-		int l = cores[1].GetConsensusEvents().length;
+		int l = cores[1].getConsensusEvents().length;
 		assertEquals("Node 1 should have 7 consensus eventts", 7, l);
 
-		String[] core1Consensus = cores[1].GetConsensusEvents();
-		String[] core2Consensus = cores[2].GetConsensusEvents();
-		String[] core3Consensus = cores[3].GetConsensusEvents();
+		String[] core1Consensus = cores[1].getConsensusEvents();
+		String[] core2Consensus = cores[2].getConsensusEvents();
+		String[] core3Consensus = cores[3].getConsensusEvents();
 
 		for (int i =0; i < core1Consensus.length; ++i) {
 			String e = core1Consensus[i];
@@ -918,12 +918,12 @@ public class CoreTest {
 	}
 
 	//@Test
-	public void TestCoreFastForward() {
+	public void testCoreFastForward() {
 		initCores(4);
 		initFFPoset(cores);
 
 		// Test no anchor block
-		error err = cores[1].GetAnchorBlockWithFrame().err;
+		error err = cores[1].getAnchorBlockWithFrame().err;
 		assertNotNull("GetAnchorBlockWithFrame should throw an error" +
 				" because there is no anchor block yet", err);
 
@@ -962,13 +962,13 @@ public class CoreTest {
 		cores[1].poset.setAnchorBlock(0L);
 
 			// Now the publiction should find an AnchorBlock
-		RetResult3<Block, Frame> getAnchorBlockWithFrame = cores[1].GetAnchorBlockWithFrame();
+		RetResult3<Block, Frame> getAnchorBlockWithFrame = cores[1].getAnchorBlockWithFrame();
 		Block block = getAnchorBlockWithFrame.result1;
 		Frame frame = getAnchorBlockWithFrame.result2;
 		err = getAnchorBlockWithFrame.err;
 		assertNull("No error when getAnchorBlockWithFrame()", err);
 
-		err = cores[0].FastForward(cores[1].hexID, block, frame);
+		err = cores[0].fastForward(cores[1].hexID, block, frame);
 		// We should get an error because AnchorBlock doesnt contain enough
 		// signatures
 		assertNotNull("FastForward should throw an error because the Block" +
@@ -986,16 +986,16 @@ public class CoreTest {
 		err = cores[1].poset.Store.SetBlock(block0);
 		assertNull("No error when SetBlock() of " + block0, err);
 
-		RetResult3<Block, Frame> getAnchorBlockWithFrame2 = cores[1].GetAnchorBlockWithFrame();
+		RetResult3<Block, Frame> getAnchorBlockWithFrame2 = cores[1].getAnchorBlockWithFrame();
 		block = getAnchorBlockWithFrame2.result1;
 		frame = getAnchorBlockWithFrame2.result2;
 		err = getAnchorBlockWithFrame2.err;
 		assertNull("No error when GetAnchorBlockWithFrame() of core1", err);
 
-		err = cores[0].FastForward(cores[1].hexID, block, frame);
+		err = cores[0].fastForward(cores[1].hexID, block, frame);
 		assertNull("No error when FastForward() of core 0", err);
 
-		Map<Long, Long> knownBy0 = cores[0].KnownEvents();
+		Map<Long, Long> knownBy0 = cores[0].knownEvents();
 		assertNotNull("Map of KnownEvents() of core 0", knownBy0);
 
 		HashMap<Long, Long> expectedKnown = new HashMap<Long,Long>();
@@ -1006,7 +1006,7 @@ public class CoreTest {
 
 		assertEquals("Cores[0].Known should match", expectedKnown, knownBy0);
 
-		long r = cores[0].GetLastConsensusRoundIndex();
+		long r = cores[0].getLastConsensusRoundIndex();
 		assertEquals("Cores[0] last consensus Round should be 1, not %v", 1, r);
 
 		long lbi = cores[0].poset.Store.LastBlockIndex();
@@ -1024,7 +1024,7 @@ public class CoreTest {
 		err = lastEventFrom.err;
 		assertNull("No Error when call LastEventFrom", err);
 
-		String c0h = cores[0].Head();
+		String c0h = cores[0].head();
 		assertEquals("Head should be match", lastEventFrom0, c0h);
 
 		long c0s = cores[0].Seq;
@@ -1032,22 +1032,22 @@ public class CoreTest {
 	}
 
 	private error synchronizeCores(Core[] cores, int from, int to, byte[][] payload) {
-		Map<Long, Long> knownByTo = cores[to].KnownEvents();
-		RetResult<Event[]> eventDiff = cores[from].EventDiff(knownByTo);
+		Map<Long, Long> knownByTo = cores[to].knownEvents();
+		RetResult<Event[]> eventDiff = cores[from].eventDiff(knownByTo);
 		Event[] unknownByTo = eventDiff.result;
 		error err = eventDiff.err;
 		if (err != null) {
 			return err;
 		}
 
-		RetResult<WireEvent[]> toWire = cores[from].ToWire(unknownByTo);
+		RetResult<WireEvent[]> toWire = cores[from].toWire(unknownByTo);
 		WireEvent[] unknownWire = toWire.result;
 		err = toWire.err;
 		if (err != null) {
 			return err;
 		}
 
-		cores[to].AddTransactions(payload);
+		cores[to].addTransactions(payload);
 
 		return cores[to].Sync(unknownWire);
 	}
@@ -1057,7 +1057,7 @@ public class CoreTest {
 		if (err != null) {
 			return err;
 		}
-		cores[to].RunConsensus();
+		cores[to].runConsensus();
 		return null;
 	}
 

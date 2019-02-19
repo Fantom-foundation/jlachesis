@@ -295,7 +295,7 @@ public class BadgerStore implements Store {
 				}
 
 			}
-			known.put(pid.GetID(), index);
+			known.put(pid.getID(), index);
 		}
 		return known;
 	}
@@ -702,7 +702,7 @@ public class BadgerStore implements Store {
 		for (String participant : participants.getByPubKey().keySet()) {
 			Peer id = participants.getByPubKey().get(participant);
 			byte[] key = participantKey(participant);
-			byte[] value = String.valueOf(id.GetID()).getBytes();
+			byte[] value = String.valueOf(id.getID()).getBytes();
 			//logger.field("key", new String(key)).field("value", new String(value)).debug("dbSetParticipants()");
 
 			//insert [participant_participant] => [id]

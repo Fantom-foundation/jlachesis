@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.jcsp.lang.Alternative;
 import org.jcsp.lang.Channel;
@@ -85,7 +86,7 @@ public class Node extends NodeState {
 		One2OneChannel<poset.Block> commitCh = Channel.one2one(); // TBD // make(chan poset.Block, 400);
 		Core core = new Core(id, key, pmap, store, commitCh, conf.getLogger());
 
-		String pubKey = core.HexID();
+		String pubKey = core.hexID();
 
 		PeerSelector peerSelector = new SmartPeerSelector(participants, pubKey,
 				new FlagtableContainer() {
@@ -113,6 +114,8 @@ public class Node extends NodeState {
 		this.gossipJobs = new AtomicLong(0);
 		this.rpcJobs = new AtomicLong(0);
 
+		this.coreLock = new ReentrantLock();
+
 		logger.field("peers", pmap).debug("pmap");
 		logger.field("pubKey", pubKey).debug("pubKey");
 
@@ -122,23 +125,23 @@ public class Node extends NodeState {
 		setState(NodeStates.Gossiping);
 	}
 
-	public error Init() {
+	public error init() {
 		String[] peerAddresses = null;
 
-		for (Peer p : peerSelector.peers().ToPeerSlice()) {
-			peerAddresses = Appender.append(peerAddresses, p.GetNetAddr());
+		for (Peer p : peerSelector.peers().toPeerSlice()) {
+			peerAddresses = Appender.append(peerAddresses, p.getNetAddr());
 		}
 		logger.field("peers", peerAddresses).debug("Initialize Node");
 
 		if (needBoostrap) {
 			logger.debug("Bootstrap");
-			error err = core.Bootstrap();
+			error err = core.bootstrap();
 			if (err != null) {
 				return err;
 			}
 		}
 
-		return core.SetHeadAndSeq();
+		return core.setHeadAndSeq();
 	}
 
 	public void runAsync(boolean gossip) {
@@ -262,7 +265,7 @@ public class Node extends NodeState {
 						Peer peer = peerSelector.next();
 						goFunc(() -> {
 							gossipJobs.incrementAndGet();
-							gossip(peer.GetNetAddr(), returnCh);
+							gossip(peer.getNetAddr(), returnCh);
 							gossipJobs.incrementAndGet();
 						});
 						logger.debug("Gossip");
@@ -312,7 +315,7 @@ public class Node extends NodeState {
 
 		// Check sync limit
 		coreLock.lock();
-		boolean overSyncLimit = core.OverSyncLimit(cmd.getKnown(), conf.SyncLimit);
+		boolean overSyncLimit = core.overSyncLimit(cmd.getKnown(), conf.SyncLimit);
 		coreLock.unlock();
 		if (overSyncLimit) {
 			logger.debug("core.OverSyncLimit(cmd.Known, conf.SyncLimit)");
@@ -321,7 +324,7 @@ public class Node extends NodeState {
 			// Compute Diff
 			long start = System.nanoTime();
 			coreLock.lock();
-			RetResult<Event[]> eventDiffCall = core.EventDiff(cmd.getKnown());
+			RetResult<Event[]> eventDiffCall = core.eventDiff(cmd.getKnown());
 			Event[] eventDiff = eventDiffCall.result;
 			error err = eventDiffCall.err;
 			coreLock.unlock();
@@ -332,7 +335,7 @@ public class Node extends NodeState {
 			}
 
 			// Convert to WireEvents
-			RetResult<WireEvent[]> toWireCall = core.ToWire(eventDiff);
+			RetResult<WireEvent[]> toWireCall = core.toWire(eventDiff);
 			WireEvent[] wireEvents = toWireCall.result;
 			err = toWireCall.err;
 			if (err != null) {
@@ -345,7 +348,7 @@ public class Node extends NodeState {
 
 		// Get Self Known
 		coreLock.lock();
-		Map<Long, Long> knownEvents = core.KnownEvents();
+		Map<Long, Long> knownEvents = core.knownEvents();
 		coreLock.unlock();
 		resp.setKnown(knownEvents);
 
@@ -386,7 +389,7 @@ public class Node extends NodeState {
 
 		// Get latest Frame
 		coreLock.lock();
-		RetResult3<Block, Frame> getAnchorBlockWithFrame = core.GetAnchorBlockWithFrame();
+		RetResult3<Block, Frame> getAnchorBlockWithFrame = core.getAnchorBlockWithFrame();
 		Block block = getAnchorBlockWithFrame.result1;
 		Frame frame = getAnchorBlockWithFrame.result2;
 		error err = getAnchorBlockWithFrame.err;
@@ -461,7 +464,7 @@ public class Node extends NodeState {
 	/* (boolean syncLimit, Map<Long,Long> otherKnownEvents, error err) { */
 		// Compute Known
 		coreLock.lock();
-		Map<Long,Long> knownEvents = core.KnownEvents();
+		Map<Long,Long> knownEvents = core.knownEvents();
 		coreLock.unlock();
 
 		// Send SyncRequest
@@ -506,7 +509,7 @@ public class Node extends NodeState {
 	public error push(String peerAddr, Map<Long,Long> knownEvents)  {
 		// Check SyncLimit
 		coreLock.lock();
-		boolean overSyncLimit = core.OverSyncLimit(knownEvents, conf.SyncLimit);
+		boolean overSyncLimit = core.overSyncLimit(knownEvents, conf.SyncLimit);
 		coreLock.unlock();
 		if (overSyncLimit) {
 			logger.debug("core.OverSyncLimit(knownEvents, conf.SyncLimit)");
@@ -516,7 +519,7 @@ public class Node extends NodeState {
 		// Compute Diff
 		long start = System.nanoTime();
 		coreLock.lock();
-		RetResult<Event[]> eventDiffCall = core.EventDiff(knownEvents);
+		RetResult<Event[]> eventDiffCall = core.eventDiff(knownEvents);
 		Event[] eventDiff = eventDiffCall.result;
 		error err = eventDiffCall.err;
 		coreLock.unlock();
@@ -528,7 +531,7 @@ public class Node extends NodeState {
 
 		if (eventDiff.length > 0) {
 			// Convert to WireEvents
-			RetResult<WireEvent[]> toWire = core.ToWire(eventDiff);
+			RetResult<WireEvent[]> toWire = core.toWire(eventDiff);
 			WireEvent[] wireEvents = toWire.result;
 			err = toWire.err;
 			if (err != null) {
@@ -566,7 +569,7 @@ public class Node extends NodeState {
 		// fastForwardRequest
 		Peer peer = peerSelector.next();
 		long start = System.nanoTime();
-		RetResult<net.FastForwardResponse> requestFastForwardCall = requestFastForward(peer.GetNetAddr());
+		RetResult<net.FastForwardResponse> requestFastForwardCall = requestFastForward(peer.getNetAddr());
 		FastForwardResponse resp = requestFastForwardCall.result;
 		error err = requestFastForwardCall.err;
 		logger.field("Duration", time.Since(start)).debug("requestFastForward(peer.NetAddr)");
@@ -585,7 +588,7 @@ public class Node extends NodeState {
 
 		// prepare core. ie: fresh poset
 		coreLock.lock();
-		err = core.FastForward(peer.GetPubKeyHex(), resp.getBlock(), resp.getFrame());
+		err = core.fastForward(peer.getPubKeyHex(), resp.getBlock(), resp.getFrame());
 		coreLock.unlock();
 		if (err != null) {
 			logger.field("Error", err).error("core.FastForward(peer.PubKeyHex, resp.Block, resp.Frame)");
@@ -649,7 +652,7 @@ public class Node extends NodeState {
 
 		// Run consensus methods
 		start = System.nanoTime();
-		err = core.RunConsensus();
+		err = core.runConsensus();
 		logger.field("Duration", time.Since(start)).debug("core.RunConsensus()");
 		if (err != null) {
 			return err;
@@ -696,7 +699,7 @@ public class Node extends NodeState {
 				if (err != null) {
 					return err;
 				}
-				core.AddBlockSignature(sig);
+				core.addBlockSignature(sig);
 			} finally {
 				coreLock.unlock();
 			}
@@ -708,7 +711,7 @@ public class Node extends NodeState {
 	public void addTransaction(byte[] tx) {
 		coreLock.lock();
 		try {
-			core.AddTransactions(new byte[][]{tx});
+			core.addTransactions(new byte[][]{tx});
 		} finally {
 			coreLock.unlock();
 		}
@@ -717,7 +720,7 @@ public class Node extends NodeState {
 	public void addInternalTransaction(poset.InternalTransaction tx) {
 		coreLock.lock();
 		try {
-			core.AddInternalTransactions(new poset.InternalTransaction[]{tx});
+			core.addInternalTransactions(new poset.InternalTransaction[]{tx});
 		} finally {
 			coreLock.unlock();
 		}
@@ -750,12 +753,12 @@ public class Node extends NodeState {
 		long timeElapsed = System.nanoTime() - start;
 		double timeElapsedSeconds = timeElapsed/time.Second;
 
-		long consensusEvents = core.GetConsensusEventsCount();
+		long consensusEvents = core.getConsensusEventsCount();
 		double consensusEventsPerSecond = consensusEvents / timeElapsedSeconds;
-		long consensusTransactions = core.GetConsensusTransactionsCount();
+		long consensusTransactions = core.getConsensusTransactionsCount();
 		double transactionsPerSecond = consensusTransactions / timeElapsedSeconds;
 
-		long lastConsensusRound = core.GetLastConsensusRoundIndex();
+		long lastConsensusRound = core.getLastConsensusRoundIndex();
 		double consensusRoundsPerSecond = 0;
 		if (lastConsensusRound >= 0) {
 			consensusRoundsPerSecond = lastConsensusRound / timeElapsedSeconds;
@@ -767,18 +770,18 @@ public class Node extends NodeState {
 		s.put("heartbeat",               String.format("%.2f", conf.HeartbeatTimeout.getSeconds()));
 		s.put("node_current",            "" + System.currentTimeMillis() / 1000);
 		s.put("node_start",              "" + start);
-		s.put("last_block_index",        "" + core.GetLastBlockIndex());
+		s.put("last_block_index",        "" + core.getLastBlockIndex());
 		s.put("consensus_events",        "" + consensusEvents);
 		s.put("sync_limit",              "" + conf.SyncLimit);
 		s.put("consensus_transactions",  "" + consensusTransactions);
-		s.put("undetermined_events",     "" + core.GetUndeterminedEvents().size());
+		s.put("undetermined_events",     "" + core.getUndeterminedEvents().size());
 		s.put("transaction_pool",        "" + core.transactionPool.length);
 		s.put("num_peers",               "" + peerSelector.peers().length());
 		s.put("sync_rate",               "" + String.format("%.2f",syncRate()));
 		s.put("transactions_per_second", String.format("%.2f",transactionsPerSecond));
 		s.put("events_per_second",       String.format("%.2f",consensusEventsPerSecond));
 		s.put("rounds_per_second",       String.format("%.2f", consensusRoundsPerSecond));
-		s.put("round_events",            "" + core.GetLastCommittedRoundEventsCount());
+		s.put("round_events",            "" + core.getLastCommittedRoundEventsCount());
 		s.put("id",                      "" + id);
 		s.put("state",                   getState().toString());
 		// mqtt.FireEvent(s, "/mq/lachesis/stats")
@@ -830,7 +833,7 @@ public class Node extends NodeState {
 	public void pushTx(byte[] tx) {
 		coreLock.lock();
 		try {
-			core.AddTransactions(new byte[][]{tx});
+			core.addTransactions(new byte[][]{tx});
 			logger.debugf("PushTx('%s')", tx);
 		} finally {
 			coreLock.unlock();
@@ -866,7 +869,7 @@ public class Node extends NodeState {
 	}
 
 	public RetResult<Map<Long,Long>> getEvents()  {
-		Map<Long, Long> res = core.KnownEvents();
+		Map<Long, Long> res = core.knownEvents();
 		return new RetResult(res, null);
 	}
 
@@ -875,7 +878,7 @@ public class Node extends NodeState {
 	}
 
 	public long getConsensusTransactionsCount() {
-		return core.GetConsensusTransactionsCount();
+		return core.getConsensusTransactionsCount();
 	}
 
 	public RetResult<poset.RoundInfo> getRound(long roundIndex) {

@@ -82,7 +82,6 @@ public class ControlTimer {
 			final Alternative alt = new Alternative (new Guard[] {timer, resetCh.in(), stopCh.in(), shutdownCh.in()});
 			final int TIM = 0, RESET = 1, STOP = 2, SHUTDOWN = 3;
 			switch (alt.priSelect ()) {
-				// fall through
 				case TIM:
 					timer.read();
 					tickCh.out().write(1); // <- struct{}{};

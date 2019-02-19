@@ -45,7 +45,7 @@ public class BadgerStoreTest {
 			Peer peer = new Peer(crypto.Utils.toHexString(pubKey), "");
 			participants.addPeer(peer);
 			participantPubs = Appender.append(participantPubs,
-				new pub(peer.GetID(), key, pubKey, peer.GetPubKeyHex()));
+				new pub(peer.getID(), key, pubKey, peer.getPubKeyHex()));
 		}
 
 		recreateTestDir();
@@ -140,7 +140,7 @@ public class BadgerStoreTest {
 			Peer dbPeer = byPubKey.get(dbP);
 			Peer peer = store.participants.byPubKey(dbP);
 			assertNotNull(String.format("BadgerStore participants should contain %s", dbP), peer);
-			assertEquals(String.format("participant %s ID should match", dbP), dbPeer.GetID(), peer.GetID());
+			assertEquals(String.format("participant %s ID should match", dbP), dbPeer.getID(), peer.getID());
 		}
 
 		removeBadgerStore(store);
@@ -306,7 +306,7 @@ public class BadgerStoreTest {
 			Peer peer = byPubKey.get(p);
 			Peer dbPeer = participantsFromDB.byPubKey(p);
 			assertNotNull(String.format("DB contains participant %s", p), dbPeer);
-			assertEquals(String.format("DB participant %s should have matching ID", p), peer.GetID(), dbPeer.GetID());
+			assertEquals(String.format("DB participant %s should have matching ID", p), peer.getID(), dbPeer.getID());
 		}
 
 		removeBadgerStore(store);

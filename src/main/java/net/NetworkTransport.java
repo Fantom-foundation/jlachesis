@@ -12,6 +12,7 @@ import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Level;
 import org.jcsp.lang.Alternative;
@@ -22,7 +23,6 @@ import org.jcsp.lang.One2OneChannel;
 import org.jcsp.lang.One2OneChannelInt;
 
 import autils.Logger;
-import autils.time;
 import channel.ChannelUtils;
 import channel.ExecService;
 import common.RetResult;
@@ -77,13 +77,16 @@ public class NetworkTransport implements Transport {
 		this.logger = logger;
 		this.maxPool = maxPool;
 		this.shutdownCh = Channel.one2oneInt();
+		this.shutdownLock = new ReentrantLock();
 		this.stream = stream;
 		this.timeout = timeout;
+
+		if (logger == null) {
+			logger = Logger.getLogger(NetworkTransport.class);
+		}
 		this.logger = logger;
 
 		logger.debug("NetworkTransport()");
-
-//		go listen();
 		ExecService.go(() -> listen());
 	}
 
@@ -123,7 +126,7 @@ public class NetworkTransport implements Transport {
 //		default:
 //			return false;
 //		}
-		logger.debug("isShutdown() start");
+		//logger.debug("isShutdown() start");
 
 		CSTimer tim = new CSTimer();
 		final Alternative alt = new Alternative (new Guard[] {shutdownCh.in(), tim});
@@ -132,15 +135,16 @@ public class NetworkTransport implements Transport {
 		switch (alt.priSelect()) {
 		case SHUTDOWN:
 			int read = shutdownCh.in().read();
-			logger.field("read", read).debug("isShutdown() ends");
+			//logger.field("read", read).debug("isShutdown() ends");
 			return true;
 		case TIM:
-		default:
-			tim.setAlarm (tim.read() + 2 * time.Second);
-			logger.debug("isShutdown() ends timeout ");
+			tim.setAlarm (tim.read() + timeout.toMillis());
+			//logger.debug("isShutdown() ends timeout ");
 			return false;
 		}
+		return false;
 	}
+
 
 	/**
 	 * Grabs a pooled connection.
@@ -382,7 +386,7 @@ public class NetworkTransport implements Transport {
 				if (IsShutdown()) {
 					return;
 				}
-				logger.field("error", err).error("Failed to accept connection");
+				//logger.field("error", err).error("Failed to accept connection");
 				continue;
 			}
 			logger.field("node", conn.getLocalAddress())

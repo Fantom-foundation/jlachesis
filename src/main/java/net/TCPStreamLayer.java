@@ -43,11 +43,11 @@ class TCPStreamLayer implements StreamLayer {
 	}
 
 	public RetResult<Socket> accept() {
-		logger.debug("Accept()");
+		//logger.debug("Accept()");
 		Socket accept;
 		try {
 			accept = listener.accept();
-			logger.field("accept", accept).debug("Accept()");
+			//logger.field("accept", accept).debug("Accept()");
 		} catch (IOException e) {
 			return new RetResult<Socket>(null, error.Errorf(e.getMessage()));
 		}

@@ -201,7 +201,7 @@ public class Poset {
 			}
 			Root root = roots.get(y);
 			if (root != null) {
-				String yCreator = Participants.getById().get(root.SelfParent.CreatorID).GetPubKeyHex();
+				String yCreator = Participants.getById().get(root.SelfParent.CreatorID).getPubKeyHex();
 				if (ex.creator().equals(yCreator)) {
 					return new RetResult<Boolean>(ex.index() >= root.SelfParent.Index, null);
 				}
@@ -284,7 +284,7 @@ public class Poset {
 			}
 			Root root = roots.get(y);
 			if (root != null) {
-				String yCreator = Participants.getById().get(root.SelfParent.CreatorID).GetPubKeyHex();
+				String yCreator = Participants.getById().get(root.SelfParent.CreatorID).getPubKeyHex();
 				if (ex.creator().equals(yCreator)) {
 					return new RetResult<Boolean>(ex.index() >= root.SelfParent.Index, null);
 				}
@@ -368,7 +368,7 @@ public class Poset {
 			Root root = roots.get(x);
 			if (root != null) {
 				Peer creator = Participants.getById().get(root.SelfParent.CreatorID);
-				sentinels.put( creator.GetPubKeyHex(), true);
+				sentinels.put( creator.getPubKeyHex(), true);
 				return null;
 			}
 
@@ -828,7 +828,7 @@ public class Poset {
 
 		RootEvent selfParentRootEvent = new RootEvent(
 			sp,
-			Participants.getByPubKey().get(ev.creator()).GetID(),
+			Participants.getByPubKey().get(ev.creator()).getID(),
 			ev.index() - 1,
 			spLT,
 			spRound
@@ -877,7 +877,7 @@ public class Poset {
 		}
 		RootEvent otherParentRootEvent = new RootEvent(
 			op,
-			Participants.getByPubKey().get(otherParent.creator()).GetID(),
+			Participants.getByPubKey().get(otherParent.creator()).getID(),
 			otherParent.index(),
 			opLT,
 			opRound
@@ -992,7 +992,7 @@ public class Poset {
 				if (err != null) {
 					return err;
 				}
-				otherParentCreatorID = Participants.getByPubKey().get(otherParent.creator()).GetID();
+				otherParentCreatorID = Participants.getByPubKey().get(otherParent.creator()).getID();
 				otherParentIndex = otherParent.index();
 			}
 		}
@@ -1000,7 +1000,7 @@ public class Poset {
 		event.setWireInfo(selfParentIndex,
 			otherParentCreatorID,
 			otherParentIndex,
-			Participants.getByPubKey().get(event.creator()).GetID());
+			Participants.getByPubKey().get(event.creator()).getID());
 
 		return null;
 	}
@@ -1185,8 +1185,8 @@ public class Poset {
 
 				if (witness) {
 					// if event is self head
-					if (core != null && ev.hex().equals(core.Head()) &&
-						ev.creator().equals(core.HexID())) {
+					if (core != null && ev.hex().equals(core.head()) &&
+						ev.creator().equals(core.hexID())) {
 
 //						replaceFlagTable := public(Event event, long round) {
 //							HashMap<String, Long> ft = new HashMap<String, Long>();
@@ -1819,9 +1819,9 @@ public class Poset {
 
 		//order roots
 		Root[] orderedRoots = new Root[Participants.length()];
-		for (int i=0; i<Participants.ToPeerSlice().length; ++i) {
-			Peer peer = Participants.ToPeerSlice()[i];
-			orderedRoots[i] = roots.get(peer.GetPubKeyHex());
+		for (int i=0; i<Participants.toPeerSlice().length; ++i) {
+			Peer peer = Participants.toPeerSlice()[i];
+			orderedRoots[i] = roots.get(peer.getPubKeyHex());
 		}
 
 		Frame res = new Frame (roundReceived, orderedRoots, eventMessages);
@@ -1988,14 +1988,14 @@ public class Poset {
 		this.stronglySeeCache = stronglySeeCache;
 		this.roundCache = roundCache;
 
-		Peer[] participants = Participants.ToPeerSlice();
+		Peer[] participants = Participants.toPeerSlice();
 
 		//Initialize new Roots
 		HashMap<String, Root> rootMap = new HashMap<String,Root>();
 		for (int id = 0; id < frame.Roots.length; id++) {
 			Root root = frame.Roots[id];
 			Peer p = participants[id];
-			rootMap.put(p.GetPubKeyHex(), root);
+			rootMap.put(p.getPubKeyHex(), root);
 		}
 		err = Store.Reset(rootMap);
 		if (err != null) {
@@ -2086,7 +2086,7 @@ public class Poset {
 					String.format("unknown wevent.Body.CreatorID=%v", wevent.Body.CreatorID)));
 		}
 
-		RetResult<byte[]> decodeString = crypto.Utils.decodeString(creator.GetPubKeyHex().substring(2, creator.GetPubKeyHex().length()));
+		RetResult<byte[]> decodeString = crypto.Utils.decodeString(creator.getPubKeyHex().substring(2, creator.getPubKeyHex().length()));
 		byte[] creatorBytes = decodeString.result;
 		err = decodeString.err;
 		if (err != null) {
@@ -2094,7 +2094,7 @@ public class Poset {
 		}
 
 		if (wevent.Body.SelfParentIndex >= 0) {
-			RetResult<String> ParticipantEventCall = Store.ParticipantEvent(creator.GetPubKeyHex(), wevent.Body.SelfParentIndex);
+			RetResult<String> ParticipantEventCall = Store.ParticipantEvent(creator.getPubKeyHex(), wevent.Body.SelfParentIndex);
 			selfParent = ParticipantEventCall.result;
 			err = ParticipantEventCall.err;
 			if ( err != null) {
@@ -2104,7 +2104,7 @@ public class Poset {
 		if (wevent.Body.OtherParentIndex >= 0) {
 			Peer otherParentCreator = Participants.byId(wevent.Body.OtherParentCreatorID);
 			if (otherParentCreator != null) {
-				RetResult<String> participantEventCall = Store.ParticipantEvent(otherParentCreator.GetPubKeyHex(), wevent.Body.OtherParentIndex);
+				RetResult<String> participantEventCall = Store.ParticipantEvent(otherParentCreator.getPubKeyHex(), wevent.Body.OtherParentIndex);
 				otherParent = participantEventCall.result;
 				err = participantEventCall.err;
 
@@ -2112,7 +2112,7 @@ public class Poset {
 					//PROBLEM Check if other parent can be found in the root
 					//problem, we do not known the WireEvent's EventHash, and
 					//we do not know the creators of the roots RootEvents
-					RetResult<Root> getRoot = Store.GetRoot(creator.GetPubKeyHex());
+					RetResult<Root> getRoot = Store.GetRoot(creator.getPubKeyHex());
 					Root root = getRoot.result;
 					err = getRoot.err;
 					if ( err != null) {
@@ -2297,8 +2297,8 @@ public class Poset {
 		for (long pid_id : Store.KnownEvents().keySet()) {
 			long index = Store.KnownEvents().get(pid_id);
 			logger.warn("    index=" + index +
-				" peer=" + Participants.byId(pid_id).GetNetAddr() +
-				" pubKeyHex=" + Participants.byId(pid_id).GetPubKeyHex());
+				" peer=" + Participants.byId(pid_id).getNetAddr() +
+				" pubKeyHex=" + Participants.byId(pid_id).getPubKeyHex());
 		}
 	}
 

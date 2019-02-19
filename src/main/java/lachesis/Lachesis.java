@@ -146,7 +146,7 @@ public error initNode() {
 		return error.Errorf("cannot find self pubkey in peers.json");
 	}
 
-	long nodeID = n.GetID();
+	long nodeID = n.getID();
 
 	Config.logger
 		.field("participants", Peers)
@@ -162,7 +162,7 @@ public error initNode() {
 		Config.getProxy()
 	));
 
-	error err = getNode().Init();
+	error err = getNode().init();
 	if ( err != null) {
 		return error.Errorf(String.format("failed to initialize node: %s", err));
 	}

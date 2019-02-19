@@ -36,9 +36,9 @@ public class InmemStoreTest {
 //			peer := new Peer(fmt.Sprintf("0x%X", pubKey), "")
 			Peer peer = new Peer(crypto.Utils.toHexString(pubKey), "");
 			participantPubs = Appender.append(participantPubs,
-				new pub(i, key, pubKey, peer.GetPubKeyHex()));
+				new pub(i, key, pubKey, peer.getPubKeyHex()));
 			participants.addPeer(peer);
-			participantPubs[participantPubs.length-1].id = peer.GetID();
+			participantPubs[participantPubs.length-1].id = peer.getID();
 		}
 
 		this.store = new InmemStore(participants, cacheSize);

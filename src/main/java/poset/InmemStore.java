@@ -34,7 +34,7 @@ public class InmemStore implements Store {
 
 		for (String pk : participants.getByPubKey().keySet()){
 			Peer pid = participants.getByPubKey().get(pk);
-			Root root = new Root(pid.GetID());
+			Root root = new Root(pid.getID());
 			rootsByParticipant.put(pk,  root);
 		}
 
@@ -87,8 +87,8 @@ public class InmemStore implements Store {
 			new Listener() {
 				@Override
 				public void listen(Peer peer) {
-					Root root = new Root(peer.GetID());
-					rootsByParticipant.put(peer.GetPubKeyHex(), root);
+					Root root = new Root(peer.getID());
+					rootsByParticipant.put(peer.getPubKeyHex(), root);
 					rootsBySelfParent = null;
 					RootsBySelfParent();
 			 		ParticipantEventsCache old = participantEventsCache;
@@ -211,10 +211,10 @@ public class InmemStore implements Store {
 		Map<Long, Long> known = participantEventsCache.Known();
 		for (String p : participants.getByPubKey().keySet()) {
 			Peer pid = participants.getByPubKey().get(p);
-			if (known.get(pid.GetID()) == null) {
+			if (known.get(pid.getID()) == null) {
 				Root root = rootsByParticipant.get(p);
 				if (root != null) {
-					known.put(pid.GetID(), root.SelfParent.Index);
+					known.put(pid.getID(), root.SelfParent.Index);
 				}
 			}
 		}

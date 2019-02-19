@@ -83,28 +83,28 @@ public class Core {
 		return id;
 	}
 
-	public byte[] PubKey() {
+	public byte[] pubKey() {
 		if (pubKey == null) {
 			pubKey = crypto.Utils.FromECDSAPub(key.getPublic());
 		}
 		return pubKey;
 	}
 
-	public String HexID() {
+	public String hexID() {
 		if (hexID == null || hexID.isEmpty()) {
-			pubKey = PubKey();
+			pubKey = pubKey();
 //			hexID = String.format("0x%X", pubKey);
 			hexID = crypto.Utils.toHexString(pubKey);
 		}
 		return hexID;
 	}
 
-	public String Head() {
+	public String head() {
 		return head;
 	}
 
 	// Heights returns map with heights for each participants
-	public Map<String,Long> Heights() {
+	public Map<String,Long> heights() {
 		HashMap<String, Long> heights = new HashMap<String,Long>();
 		for (String pubKey : participants.getByPubKey().keySet()) {
 			RetResult<String[]> participantEventsCre = poset.Store.ParticipantEvents(pubKey, -1);
@@ -120,15 +120,15 @@ public class Core {
 		return heights;
 	}
 
-	public Map<String,Long> InDegrees() {
+	public Map<String,Long> inDegrees() {
 		return inDegrees;
 	}
 
-	public error SetHeadAndSeq() {
+	public error setHeadAndSeq() {
 		String head;
 		long seq;
 
-		RetResult3<String, Boolean> lastEventFrom = poset.Store.LastEventFrom(HexID());
+		RetResult3<String, Boolean> lastEventFrom = poset.Store.LastEventFrom(hexID());
 		String last = lastEventFrom.result1;
 		Boolean isRoot = lastEventFrom.result2;
 		error err = lastEventFrom.err;
@@ -137,7 +137,7 @@ public class Core {
 		}
 
 		if (isRoot) {
-			RetResult<Root> getRoot = poset.Store.GetRoot(HexID());
+			RetResult<Root> getRoot = poset.Store.GetRoot(hexID());
 			Root root = getRoot.result;
 			err = getRoot.err;
 			if (err != null) {
@@ -146,7 +146,7 @@ public class Core {
 			head = root.GetSelfParent().GetHash();
 			seq = root.GetSelfParent().GetIndex();
 		} else {
-			RetResult<Event> getEvent = GetEvent(last);
+			RetResult<Event> getEvent = getEvent(last);
 			Event lastEvent = getEvent.result;
 			err = getEvent.err;
 			if (err != null) {
@@ -165,7 +165,7 @@ public class Core {
 		return null;
 	}
 
-	public error Bootstrap() {
+	public error bootstrap() {
 		error err = poset.Bootstrap();
 		if  (err != null) {
 			return err;
@@ -210,16 +210,16 @@ public class Core {
 
 	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-	public error SignAndInsertSelfEvent( poset.Event event) {
+	public error signAndInsertSelfEvent( poset.Event event) {
 		error err = poset.SetWireInfoAndSign(event, key.getPrivate());
 		if (err != null){
 			return err;
 		}
 
-		return InsertEvent(event, true);
+		return insertEvent(event, true);
 	}
 
-	public error InsertEvent(poset.Event event, boolean setWireInfo ) {
+	public error insertEvent(poset.Event event, boolean setWireInfo ) {
 
 		logger.field("event", event).field("creator", event.creator())
 		.field("selfParent", event.selfParent()).field("index", event.index())
@@ -230,7 +230,7 @@ public class Core {
 			return err;
 		}
 
-		if (event.creator().equals(HexID())) {
+		if (event.creator().equals(hexID())) {
 			head = event.hex();
 			Seq = event.index();
 		}
@@ -246,7 +246,7 @@ public class Core {
 		return null;
 	}
 
-	public Map<Long,Long> KnownEvents() {
+	public Map<Long,Long> knownEvents() {
 		return poset.Store.KnownEvents();
 	}
 
@@ -268,9 +268,9 @@ public class Core {
 
 	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-	public boolean OverSyncLimit(Map<Long,Long> knownEvents, long syncLimit) {
+	public boolean overSyncLimit(Map<Long,Long> knownEvents, long syncLimit) {
 		int totUnknown = 0;
-		Map<Long, Long> myKnownEvents = KnownEvents();
+		Map<Long, Long> myKnownEvents = knownEvents();
 		for (long i : myKnownEvents.keySet()) {
 			long li = myKnownEvents.get(i);
 			if (li > knownEvents.get(i)) {
@@ -283,12 +283,12 @@ public class Core {
 		return false;
 	}
 
-	public RetResult3<poset.Block, poset.Frame> GetAnchorBlockWithFrame() {
+	public RetResult3<poset.Block, poset.Frame> getAnchorBlockWithFrame() {
 		return poset.GetAnchorBlockWithFrame();
 	}
 
 	// returns events that c knows about and are not in 'known'
-	public RetResult<poset.Event[]> EventDiff(Map<Long,Long> known) {
+	public RetResult<poset.Event[]> eventDiff(Map<Long,Long> known) {
 		poset.Event[] unknown = new poset.Event[0];
 		// known represents the index of the last event known for every participant
 		// compare this to our view of events and fill unknown with events that we know of
@@ -302,7 +302,7 @@ public class Core {
 				continue;
 			}
 			// get participant Events with index > ct
-			RetResult<String[]> ParticipantEventsCall = poset.Store.ParticipantEvents(peer.GetPubKeyHex(), ct);
+			RetResult<String[]> ParticipantEventsCall = poset.Store.ParticipantEvents(peer.getPubKeyHex(), ct);
 			String[] participantEvents = ParticipantEventsCall.result;
 			error err = ParticipantEventsCall.err;
 			if (err != null) {
@@ -339,7 +339,7 @@ public class Core {
 		.field("poset.PendingLoadedEvents", poset.getPendingLoadedEvents())
 		.debug("Sync(unknownEventBlocks []poset.EventBlock)");
 
-		Map<Long, Long> myKnownEvents = KnownEvents();
+		Map<Long, Long> myKnownEvents = knownEvents();
 		String otherHead = "";
 		// add unknown events
 		for (int k = 0; k < unknownEvents.length; ++k) {
@@ -359,7 +359,7 @@ public class Core {
 //				return error.Errorf("ev.CreatorID() not known");
 //			}
 			if (ev.index() > myKnownEvents.get(ev.creatorID())) {
-				err = InsertEvent(ev, false);
+				err = insertEvent(ev, false);
 				if (err != null) {
 					return err;
 				}
@@ -377,12 +377,12 @@ public class Core {
 			transactionPool.length > 0 ||
 			internalTransactionPool.length > 0 ||
 			blockSignaturePool.length > 0) {
-			return AddSelfEventBlock(otherHead);
+			return addSelfEventBlock(otherHead);
 		}
 		return null;
 	}
 
-	public error FastForward(String peer, poset.Block block, poset.Frame frame) {
+	public error fastForward(String peer, poset.Block block, poset.Frame frame) {
 
 		logger.field("peer", peer).debug("FastForward()");
 
@@ -417,12 +417,12 @@ public class Core {
 			return err;
 		}
 
-		err = SetHeadAndSeq();
+		err = setHeadAndSeq();
 		if (err != null) {
 			return err;
 		}
 
-		err = RunConsensus();
+		err = runConsensus();
 		if (err != null) {
 			return err;
 		}
@@ -430,15 +430,7 @@ public class Core {
 		return null;
 	}
 
-	// TBD: remove. Use Math.min
-//	public int min(int a, int b) {
-//		if (a < b) {
-//			return a;
-//		}
-//		return b;
-//	}
-
-	public error AddSelfEventBlock(String otherHead) {
+	public error addSelfEventBlock(String otherHead) {
 		RetResult<Event> getEvent = poset.Store.GetEvent(head);
 		// Get flag tables from parents
 		Event parentEvent = getEvent.result;
@@ -485,9 +477,9 @@ public class Core {
 		Event newHead = new poset.Event(batch,
 			internalTransactionPool,
 			blockSignaturePool,
-			new String[]{head, otherHead}, PubKey(), Seq+1, flagTable);
+			new String[]{head, otherHead}, pubKey(), Seq+1, flagTable);
 
-		err = SignAndInsertSelfEvent(newHead);
+		err = signAndInsertSelfEvent(newHead);
 		if ( err != null) {
 			return error.Errorf(String.format("newHead := poset.NewEventBlock: %s", err));
 		}
@@ -508,7 +500,7 @@ public class Core {
 		return null;
 	}
 
-	public RetResult<poset.Event[]> FromWire(poset.WireEvent[] wireEvents)  {
+	public RetResult<poset.Event[]> fromWire(poset.WireEvent[] wireEvents)  {
 		poset.Event[] events = new poset.Event[wireEvents.length];
 		for (int i = 0; i < wireEvents.length; ++i) {
 			RetResult<Event> readWireInfo = poset.ReadWireInfo(wireEvents[i]);
@@ -522,7 +514,7 @@ public class Core {
 		return new RetResult<poset.Event[]>(events, null);
 	}
 
-	public RetResult<poset.WireEvent[]> ToWire(poset.Event[] events) {
+	public RetResult<poset.WireEvent[]> toWire(poset.Event[] events) {
 		poset.WireEvent[] wireEvents = new poset.WireEvent[events.length];
 		for (int i = 0; i < events.length; ++i) {
 			wireEvents[i] = events[i].toWire();
@@ -530,7 +522,7 @@ public class Core {
 		return new RetResult<poset.WireEvent[]>(wireEvents, null);
 	}
 
-	public error RunConsensus()  {
+	public error runConsensus()  {
 
 		long start = System.nanoTime();
 		error err = poset.DivideRounds();
@@ -580,29 +572,29 @@ public class Core {
 		return null;
 	}
 
-	public void AddTransactions(byte[][] txs) {
+	public void addTransactions(byte[][] txs) {
 		transactionPool = Appender.append(transactionPool, txs);
 	}
 
-	public void AddInternalTransactions(poset.InternalTransaction[] txs) {
+	public void addInternalTransactions(poset.InternalTransaction[] txs) {
 		internalTransactionPool = Appender.append(internalTransactionPool, txs);
 	}
 
-	public void AddBlockSignature(poset.BlockSignature bs) {
+	public void addBlockSignature(poset.BlockSignature bs) {
 		blockSignaturePool = Appender.append(blockSignaturePool, bs);
 	}
 
-	public RetResult<poset.Event> GetHead() {
+	public RetResult<poset.Event> getHead() {
 		return poset.Store.GetEvent(head);
 	}
 
-	public RetResult<poset.Event> GetEvent(String hash) {
+	public RetResult<poset.Event> getEvent(String hash) {
 		return poset.Store.GetEvent(hash);
 	}
 
-	public RetResult<byte[][]> GetEventTransactions(String hash){
+	public RetResult<byte[][]> getEventTransactions(String hash){
 		byte[][] txs = null;
-		RetResult<Event> getEvent = GetEvent(hash);
+		RetResult<Event> getEvent = getEvent(hash);
 		Event ex = getEvent.result;
 		error err = getEvent.err;
 		if (err != null) {
@@ -612,26 +604,26 @@ public class Core {
 		return new RetResult<byte[][]>(txs, null);
 	}
 
-	public String[] GetConsensusEvents() {
+	public String[] getConsensusEvents() {
 		return poset.Store.ConsensusEvents();
 	}
 
-	public long GetConsensusEventsCount() {
+	public long getConsensusEventsCount() {
 		return poset.Store.ConsensusEventsCount();
 	}
 
-	public List<String> GetUndeterminedEvents() {
+	public List<String> getUndeterminedEvents() {
 		return poset.getUndeterminedEvents();
 	}
 
-	public int GetPendingLoadedEvents() {
+	public int getPendingLoadedEvents() {
 		return poset.getPendingLoadedEvents();
 	}
 
-	public RetResult<byte[][]> GetConsensusTransactions() {
+	public RetResult<byte[][]> getConsensusTransactions() {
 		byte[][] txs = null;
-		for (String e : GetConsensusEvents()) {
-			RetResult<byte[][]> getTrans = GetEventTransactions(e);
+		for (String e : getConsensusEvents()) {
+			RetResult<byte[][]> getTrans = getEventTransactions(e);
 			byte[][] eTxs = getTrans.result;
 			error err = getTrans.err;
 			if (err != null) {
@@ -643,19 +635,19 @@ public class Core {
 		return new RetResult<byte[][]>(txs, null);
 	}
 
-	public long GetLastConsensusRoundIndex() {
+	public long getLastConsensusRoundIndex() {
 		return poset.getLastConsensusRound();
 	}
 
-	public long GetConsensusTransactionsCount() {
+	public long getConsensusTransactionsCount() {
 		return poset.getConsensusTransactions();
 	}
 
-	public int GetLastCommittedRoundEventsCount() {
+	public int getLastCommittedRoundEventsCount() {
 		return poset.getLastCommitedRoundEvents();
 	}
 
-	public long GetLastBlockIndex() {
+	public long getLastBlockIndex() {
 		return poset.Store.LastBlockIndex();
 	}
 

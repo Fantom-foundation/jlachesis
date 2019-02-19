@@ -28,9 +28,10 @@ public class NodeState {
 		return state.get().getStateName();
 	}
 
-	// TBD: conversion is ok?
-
-	// Start a goroutine and add it to waitgroup
+	/**
+	 * Start a goroutine and add it to waitgroup
+	 * @param r
+	 */
 	public void goFunc(Runnable r) {
 		wg.add(1);
 		ExecService.go(() -> {
@@ -41,7 +42,7 @@ public class NodeState {
 
 	public void waitRoutines() {
 		try {
-			wg.wait();
+			wg.await();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}

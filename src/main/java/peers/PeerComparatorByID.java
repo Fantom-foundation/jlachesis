@@ -8,6 +8,6 @@ public class PeerComparatorByID implements Comparator<Peer> {
 	}
 
 	public int compare(Peer o1, Peer o2) {
-		return Long.compare(o1.ID, o2.ID);
+		return Long.compare(o1.id, o2.id);
 	}
 }

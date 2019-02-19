@@ -44,11 +44,7 @@ public class JSONPeers  implements PeerStore {
 			}
 
 			// Decode the peers
-			// TODO: is the transformation correct?
-	//		dec := json.NewDecoder(bytes.NewReader(buf));
-	//		err := dec.Decode(peerSet);
 			 Peer[] peerSet = JsonUtils.StringToObject(new String(buf), Peer[].class);
-
 			return new RetResult<Peers>(Peers.newPeersFromSlice(peerSet), null);
 		} catch (InterruptedException e) {
 			error err = new error(e.getMessage());
@@ -62,15 +58,11 @@ public class JSONPeers  implements PeerStore {
 		try
 		{
 			l.acquire();
-//			enc = NewEncoder(buf);
-//			error err = enc.Encode(peers);
-
 			String peersString = JsonUtils.ObjectToString(peers);
 			//System.out.println("peers string = " +  peersString);
 			//System.out.println("write to file path = " +  path);
 
 			byte[] encode = peersString.getBytes();
-//			byte[] encode = Base64.getEncoder().encode(peersString.getBytes());
 
 			// Write out as JSON
 			error err = FileUtils.writeToFile(path, encode, FileUtils.MOD_755);

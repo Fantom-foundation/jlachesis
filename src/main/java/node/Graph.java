@@ -60,23 +60,23 @@ public class Graph {
 		peers.Peers peers = Node.core.poset.Participants;
 
 		for (Peer p : peers.getByPubKey().values()) {
-			RetResult<Root> getRootCall = store.GetRoot(p.GetPubKeyHex());
+			RetResult<Root> getRootCall = store.GetRoot(p.getPubKeyHex());
 			Root root = getRootCall.result;
 			error err = getRootCall.err;
 
 			if (err != null) {
 				error.panic(err);
 			}
-			RetResult<String[]> pEventsCall = store.ParticipantEvents(p.GetPubKeyHex(), root.GetSelfParent().GetIndex());
+			RetResult<String[]> pEventsCall = store.ParticipantEvents(p.getPubKeyHex(), root.GetSelfParent().GetIndex());
 			String[] evs = pEventsCall.result;
 			err = pEventsCall.err;
 			if (err != null) {
 				error.panic(err);
 			}
 
-			res.put(p.GetPubKeyHex(), new HashMap<String,poset.Event>());
+			res.put(p.getPubKeyHex(), new HashMap<String,poset.Event>());
 
-			String selfParent = String.format("Root%d", p.GetID());
+			String selfParent = String.format("Root%d", p.getID());
 
 			HashMap<String, Long> flagTable = new HashMap<String,Long>();
 			flagTable.put(selfParent, (long) 1);
@@ -87,7 +87,7 @@ public class Graph {
 				new poset.BlockSignature[]{},
 				new String[]{}, new byte[]{}, 0, flagTable);
 
-			res.get(p.GetPubKeyHex()).put(root.GetSelfParent().GetHash(), initialEvent);
+			res.get(p.getPubKeyHex()).put(root.GetSelfParent().GetHash(), initialEvent);
 
 			for (String e : evs) {
 				 RetResult<Event> getEvent = store.GetEvent(e);
@@ -99,7 +99,7 @@ public class Graph {
 				}
 
 				String hash = event.hex();
-				res.get(p.GetPubKeyHex()).put(hash, event);
+				res.get(p.getPubKeyHex()).put(hash, event);
 			}
 		}
 
