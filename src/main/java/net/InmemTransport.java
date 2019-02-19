@@ -76,17 +76,17 @@ public class InmemTransport implements Transport {
 	}
 
 	// Consumer implements the Transport interface.
-	public One2OneChannel<RPC> Consumer() /* <-chan RPC */ {
+	public One2OneChannel<RPC> getConsumer() /* <-chan RPC */ {
 		return consumerCh;
 	}
 
 	// LocalAddr implements the Transport interface.
-	public String LocalAddr() {
+	public String localAddr() {
 		return localAddr;
 	}
 
 	// Sync implements the Transport interface.
-	public error Sync(String target, SyncRequest args, SyncResponse resp)  {
+	public error sync(String target, SyncRequest args, SyncResponse resp)  {
 		RetResult<RPCResponse> makeRPC = makeRPC(target, args, null, timeout);
 		RPCResponse rpcResp = makeRPC.result;
 		error err = makeRPC.err;
@@ -100,7 +100,7 @@ public class InmemTransport implements Transport {
 	}
 
 	// Sync implements the Transport interface.
-	public error EagerSync(String target, EagerSyncRequest args, EagerSyncResponse resp) {
+	public error eagerSync(String target, EagerSyncRequest args, EagerSyncResponse resp) {
 		RetResult<RPCResponse> makeRPC = makeRPC(target, args, null, timeout);
 		RPCResponse rpcResp = makeRPC.result;
 		error err = makeRPC.err;
@@ -115,7 +115,7 @@ public class InmemTransport implements Transport {
 	}
 
 	// FastForward implements the Transport interface.
-	public error FastForward(String target, FastForwardRequest args, FastForwardResponse res)  {
+	public error fastForward(String target, FastForwardRequest args, FastForwardResponse res)  {
 		RetResult<RPCResponse> makeRPC = makeRPC(target, args, null, timeout);
 		RPCResponse rpcResp = makeRPC.result;
 		error err = makeRPC.err;
@@ -176,7 +176,7 @@ public class InmemTransport implements Transport {
 	}
 
 	// Close is used to permanently disable the transport
-	public error Close() {
+	public error close() {
 		inmemMediumSync.writeLock().lock();
 		inmemMedium.remove(localAddr);
 		inmemMediumSync.writeLock().unlock();

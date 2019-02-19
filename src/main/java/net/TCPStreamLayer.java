@@ -12,7 +12,6 @@ import common.error;
 
 /**
  * TCPStreamLayer implements StreamLayer interface for plain TCP.
- *
  */
 class TCPStreamLayer implements StreamLayer {
 	InetAddress advertise;
@@ -25,10 +24,7 @@ class TCPStreamLayer implements StreamLayer {
 		this.listener = listener;
 	}
 
-	/**
-	 * Dial implements the StreamLayer interface.
-	 */
-	public RetResult<Socket> Dial(String address, Duration timeout) {
+	public RetResult<Socket> dial(String address, Duration timeout) {
 		logger.field("address", address).field("timeout", timeout.toMillis()).debug("Dial");
 
 		Socket socket;
@@ -36,8 +32,9 @@ class TCPStreamLayer implements StreamLayer {
 			logger.debug("Connecting to " + address + " on port " + listener.getLocalPort());
 			socket = new Socket(address, listener.getLocalPort());
 			logger.debug("Just connected to " + socket.getRemoteSocketAddress());
-			//socket.setSoTimeout((int) timeout.toMillis());
+			socket.setSoTimeout((int) timeout.toMillis());
 		} catch (IOException e) {
+			e.printStackTrace();
 			return new RetResult<Socket>(null, error.Errorf(e.getMessage()));
 		}
 
@@ -45,10 +42,7 @@ class TCPStreamLayer implements StreamLayer {
 		return new RetResult<Socket>(socket, null);
 	}
 
-	/**
-	 * Accept implements the net.Listener interface.
-	 */
-	public RetResult<Socket> Accept() {
+	public RetResult<Socket> accept() {
 		logger.debug("Accept()");
 		Socket accept;
 		try {
@@ -60,8 +54,7 @@ class TCPStreamLayer implements StreamLayer {
 		return new RetResult<Socket>(accept, null);
 	}
 
-	// Close implements the net.Listener interface.
-	public error Close()  {
+	public error close()  {
 		try {
 			listener.close();
 			return null;
@@ -70,10 +63,7 @@ class TCPStreamLayer implements StreamLayer {
 		}
 	}
 
-	/**
-	 * Addr implements the net.Listener interface.
-	 */
-	public InetAddress Addr() {
+	public InetAddress addr() {
 		// Use an advertise addr if provided
 		if (advertise != null) {
 			return advertise;

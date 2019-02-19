@@ -13,4 +13,10 @@ public class RPCResponse {
 		Response = response;
 		Error = error;
 	}
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("RPCResponse [Response=").append(Response).append(", Error=").append(Error).append("]");
+		return builder.toString();
+	}
 }

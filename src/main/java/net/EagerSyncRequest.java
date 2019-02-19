@@ -1,5 +1,7 @@
 package net;
 
+import java.util.Arrays;
+
 import autils.JsonUtils;
 import common.error;
 import poset.WireEvent;
@@ -46,5 +48,13 @@ public class EagerSyncRequest implements ParsableMessage {
 			err = error.Errorf(e.getMessage());
 		}
 		return err;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("EagerSyncRequest [FromID=").append(FromID).append(", Events=").append(Arrays.toString(Events))
+				.append("]");
+		return builder.toString();
 	}
 }

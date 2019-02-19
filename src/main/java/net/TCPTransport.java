@@ -54,7 +54,7 @@ public class TCPTransport {
 		TCPStreamLayer stream = new TCPStreamLayer(advertise, list);
 
 		// Verify that we have a usable advertise address
-		InetAddress addr = stream.Addr();
+		InetAddress addr = stream.addr();
 
 		boolean ok = addr != null;
 		try {

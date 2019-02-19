@@ -78,7 +78,7 @@ public class Node extends NodeState {
 		net.Transport trans,
 		proxy.AppProxy proxy) {
 
-		String localAddr = trans.LocalAddr();
+		String localAddr = trans.localAddr();
 
 		Peers pmap = store.Participants().result;
 
@@ -102,7 +102,7 @@ public class Node extends NodeState {
 		this.logger = conf.getLogger().field("this_id", id);
 		this.peerSelector = peerSelector;
 		this.trans = trans;
-		this.netCh = trans.Consumer();
+		this.netCh = trans.getConsumer();
 		this.proxy = proxy;
 		this.submitCh = proxy.SubmitCh();
 		this.submitInternalCh = proxy.SubmitInternalCh();
@@ -609,7 +609,7 @@ public class Node extends NodeState {
 		SyncRequest args = new SyncRequest(id, known);
 
 		net.SyncResponse out = new net.SyncResponse();
-		error err = trans.Sync(target, args, out);
+		error err = trans.sync(target, args, out);
 		//logger.field("out", out).debug("requestSync(target string, known map[int]int)")
 		return new RetResult<net.SyncResponse>(out, err);
 	}
@@ -620,7 +620,7 @@ public class Node extends NodeState {
 		net.EagerSyncResponse out = new net.EagerSyncResponse();
 		logger.field("target", target)
 			.debug("requestEagerSync(target string, events []poset.WireEvent)");
-		error err = trans.EagerSync(target, args, out);
+		error err = trans.eagerSync(target, args, out);
 
 		return new RetResult<net.EagerSyncResponse>(out, err);
 	}
@@ -632,7 +632,7 @@ public class Node extends NodeState {
 		FastForwardRequest args = new net.FastForwardRequest(id);
 
 		net.FastForwardResponse out = new net.FastForwardResponse();
-		error err = trans.FastForward(target, args, out);
+		error err = trans.fastForward(target, args, out);
 
 		return new RetResult<net.FastForwardResponse>(out, err);
 	}
@@ -741,7 +741,7 @@ public class Node extends NodeState {
 
 			// transport and store should only be closed once all concurrent operations
 			// are finished otherwise they will panic trying to use close objects
-			trans.Close();
+			trans.close();
 			core.poset.Store.Close();
 		}
 	}

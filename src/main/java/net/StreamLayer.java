@@ -12,12 +12,12 @@ import common.error;
  * the low level stream abstraction.
  */
 interface StreamLayer  {
-	// Dial is used to create a new outgoing connection
-	RetResult<Socket> Dial(String address, Duration timeout);
+	/** Dial is used to create a new outgoing connection. */
+	RetResult<Socket> dial(String address, Duration timeout);
 
-	RetResult<Socket> Accept();
+	RetResult<Socket> accept();
 
-	error Close();
+	error close();
 
-	InetAddress Addr();
+	InetAddress addr();
 }

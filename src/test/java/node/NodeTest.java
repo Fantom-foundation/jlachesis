@@ -144,7 +144,7 @@ public class NodeTest {
 		}
 
 		SyncResponse out = new SyncResponse();
-		err = peer0Trans.Sync(peer1Trans.LocalAddr(), args, out);
+		err = peer0Trans.sync(peer1Trans.localAddr(), args, out);
 		assertNull("No err", err);
 
 		// Verify the response
@@ -161,9 +161,9 @@ public class NodeTest {
 		assertEquals("SyncResponse.KnownEvents should match", expectedResp.getKnown(), out.getKnown());
 
 		node1.shutdown();
-		peer1Trans.Close();
+		peer1Trans.close();
 		node0.shutdown();
-		peer0Trans.Close();
+		peer0Trans.close();
 	}
 
 	//@Test
@@ -229,7 +229,7 @@ public class NodeTest {
 
 		// Make actual EagerSyncRequest and check EagerSyncResponse
 		EagerSyncResponse out = new EagerSyncResponse();
-		err = peer0Trans.EagerSync(peer1Trans.LocalAddr(), args, out);
+		err = peer0Trans.eagerSync(peer1Trans.localAddr(), args, out);
 		assertNull("No err", err);
 
 		// Verify the response
@@ -237,9 +237,9 @@ public class NodeTest {
 			expectedResp.isSuccess(), out.isSuccess());
 
 		node1.shutdown();
-		peer1Trans.Close();
+		peer1Trans.close();
 		node0.shutdown();
-		peer0Trans.Close();
+		peer0Trans.close();
 	}
 
 	//@Test
@@ -298,9 +298,9 @@ public class NodeTest {
 		Map<Long, Long> node0KnownEvents = node0.core.KnownEvents();
 		SyncRequest args = new SyncRequest(node0.id, node0KnownEvents);
 
-		peer1Trans.LocalAddr();
+		peer1Trans.localAddr();
 		SyncResponse out = new SyncResponse();
-		err = peer0Trans.Sync(peer1Trans.LocalAddr(), args, out);
+		err = peer0Trans.sync(peer1Trans.localAddr(), args, out);
 		assertNull("No error", err);
 
 		err = node0.sync(out.getEvents());
@@ -319,9 +319,9 @@ public class NodeTest {
 		assertEquals("Transaction message should match", message, m);
 
 		node1.shutdown();
-		peer1Trans.Close();
+		peer1Trans.close();
 		node0.shutdown();
-		peer0Trans.Close();
+		peer0Trans.close();
 	}
 
 	private void recreateTestDir() {
@@ -370,7 +370,7 @@ public class NodeTest {
 			error err = newTCPTransport.err;
 			assertNull(String.format("No error to create transport for peer %d", id), err);
 
-			peer.setNetAddr(trans.LocalAddr());
+			peer.setNetAddr(trans.localAddr());
 			poset.Store store = null;
 			switch (storeType) {
 			case "badger":
@@ -505,7 +505,7 @@ public class NodeTest {
 		SyncResponse expectedResp = new SyncResponse(nodes[1].id, true);
 
 		SyncResponse out = new SyncResponse();
-		err = nodes[0].trans.Sync(nodes[1].localAddr, args, out);
+		err = nodes[0].trans.sync(nodes[1].localAddr, args, out);
 		assertNull("No err:", err);
 
 		// Verify the response

@@ -8,20 +8,21 @@ import java.io.Reader;
 import java.net.Socket;
 import java.net.SocketException;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Stack;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.log4j.Level;
 import org.jcsp.lang.Alternative;
+import org.jcsp.lang.CSTimer;
 import org.jcsp.lang.Channel;
 import org.jcsp.lang.Guard;
 import org.jcsp.lang.One2OneChannel;
+import org.jcsp.lang.One2OneChannelInt;
 
-import autils.Appender;
 import autils.Logger;
+import autils.time;
 import channel.ChannelUtils;
 import channel.ExecService;
 import common.RetResult;
@@ -44,14 +45,13 @@ public class NetworkTransport implements Transport {
 
 	Logger logger;
 
-	Map<String, netConn[]> connPool; // map[string][]*netConn
-	Lock connPoolLock;
+	ConcurrentMap<String, Stack<netConn>> connPool; // map[string][]*netConn
 	int maxPool;
 
 	One2OneChannel<RPC> consumeCh; // chan RPC
 
 	boolean shutdown;
-	One2OneChannel<Object> shutdownCh; // chan struct{}
+	One2OneChannelInt shutdownCh; // chan struct{}
 	Lock shutdownLock;
 
 	StreamLayer stream;
@@ -72,30 +72,28 @@ public class NetworkTransport implements Transport {
 			logger = Logger.getLogger(this.getClass());
 			logger.setLevel(Level.DEBUG);
 		}
-		this.connPool = new HashMap<String, netConn[]>();
+		this.connPool = new ConcurrentHashMap<String, Stack<netConn>>();
 		this.consumeCh = Channel.one2one(); // make(chan RPC),
 		this.logger = logger;
 		this.maxPool = maxPool;
-		this.shutdownCh = Channel.one2one();
+		this.shutdownCh = Channel.one2oneInt();
 		this.stream = stream;
 		this.timeout = timeout;
 		this.logger = logger;
 
 		logger.debug("NetworkTransport()");
 
-		this.connPoolLock = new ReentrantLock();
-
 //		go listen();
 		ExecService.go(() -> listen());
 	}
 
 	// Close is used to stop the network transport.
-	public error Close() {
+	public error close() {
 		shutdownLock.lock();
 		try {
 			if (!shutdown) {
 				ChannelUtils.close(shutdownCh);
-				stream.Close();
+				stream.close();
 				shutdown = true;
 			}
 			return null;
@@ -105,16 +103,19 @@ public class NetworkTransport implements Transport {
 	}
 
 	// Consumer implements the Transport interface.
-	public One2OneChannel<RPC> Consumer() {
+	public One2OneChannel<RPC> getConsumer() {
 		return consumeCh;
 	}
 
 	// LocalAddr implements the Transport interface.
-	public String LocalAddr() {
-		return stream.Addr().getHostAddress();
+	public String localAddr() {
+		return stream.addr().getHostAddress();
 	}
 
-	// IsShutdown is used to check if the transport is shutdown.
+	/**
+	 * IsShutdown is used to check if the transport is shutdown.
+	 * @return
+	 */
 	public boolean IsShutdown() {
 //		select {
 //		case <-shutdownCh:
@@ -122,40 +123,48 @@ public class NetworkTransport implements Transport {
 //		default:
 //			return false;
 //		}
+		logger.debug("isShutdown() start");
 
-		final Alternative alt = new Alternative(new Guard[] { shutdownCh.in() });
-		final int SHUTDOWN = 0;
+		CSTimer tim = new CSTimer();
+		final Alternative alt = new Alternative (new Guard[] {shutdownCh.in(), tim});
+		final int SHUTDOWN = 0, TIM = 1;
 
 		switch (alt.priSelect()) {
 		case SHUTDOWN:
-			shutdownCh.in().read();
+			int read = shutdownCh.in().read();
+			logger.field("read", read).debug("isShutdown() ends");
 			return true;
+		case TIM:
 		default:
+			tim.setAlarm (tim.read() + 2 * time.Second);
+			logger.debug("isShutdown() ends timeout ");
 			return false;
 		}
 	}
 
-	// getPooledConn is used to grab a pooled connection.
+	/**
+	 * Grabs a pooled connection.
+	 * @param target
+	 * @return
+	 */
 	public netConn getPooledConn(String target) {
-		connPoolLock.lock();
-		try {
-			netConn[] conns = connPool.get(target);
-			boolean ok = conns != null;
-			if (!ok || conns.length == 0) {
-				return null;
-			}
-
-			int num = conns.length;
-			netConn conn = conns[num - 1];
-			conns[num - 1] = null;
-			connPool.put(target, Arrays.copyOf(conns, num - 1));
-			return conn;
-		} finally {
-			connPoolLock.unlock();
+		Stack<netConn> conns = connPool.get(target);
+		if (conns == null || conns.size() == 0) {
+			connPool.put(target, new Stack<>());
+			return null;
 		}
+
+		netConn conn = conns.pop();
+		connPool.put(target, conns);
+		return conn;
 	}
 
-	// getConn is used to get a connection from the pool.
+	/**
+	 * getConn is used to get a connection from the pool.
+	 * @param target
+	 * @param timeout
+	 * @return
+	 */
 	public RetResult<netConn> getConn(String target, Duration timeout) {
 		// Check for a pooled conn
 		netConn conn = getPooledConn(target);
@@ -167,7 +176,7 @@ public class NetworkTransport implements Transport {
 		logger.field("target", target)
 			.field("timeout", timeout.toMillis()).debug("Dialing");
 
-		RetResult<Socket> dialCall = stream.Dial(target, timeout);
+		RetResult<Socket> dialCall = stream.dial(target, timeout);
 		Socket conn2 = dialCall.result;
 		error err = dialCall.err;
 		if (err != null) {
@@ -177,54 +186,59 @@ public class NetworkTransport implements Transport {
 		// Wrap the conn
 		netConn netConn;
 		try {
-			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(conn2.getInputStream()));
-			PrintWriter printWriter = new PrintWriter(conn2.getOutputStream(), true);
-			netConn = new netConn(target, conn2, bufferedReader, printWriter);
+			BufferedReader r = new BufferedReader(new InputStreamReader(conn2.getInputStream()));
+			PrintWriter w = new PrintWriter(conn2.getOutputStream(), true);
+			netConn = new netConn(target, conn2, r, w);
+
+			// Setup encoder/decoders
+			netConn.dec = new jsonDecoder(r);
+			netConn.enc = new jsonEncoder(w);
 		} catch (IOException e) {
 			return new RetResult<netConn>(null, error.Errorf(e.getMessage()));
 		}
-
-		// Setup encoder/decoders
-		netConn.dec = new jsonDecoder(netConn.r);
-		netConn.enc = new jsonEncoder(netConn.w);
 
 		// Done
 		return new RetResult<netConn>(netConn, null);
 	}
 
-	// returnConn returns a connection back to the pool.
+	/**
+	 * Returns a connection back to the pool.
+	 * @param conn
+	 */
 	public void returnConn(netConn conn) {
-		connPoolLock.lock();
-		try {
-			String key = conn.target;
-			netConn[] conns = connPool.get(key);
+		String key = conn.target;
+		Stack<netConn> conns = connPool.get(key);
 
-			if (!IsShutdown() && conns.length < maxPool) {
-				connPool.put(key, Appender.append(conns, conn));
-			} else {
-				conn.Release();
-			}
-		} finally {
-			connPoolLock.unlock();
+		if (!IsShutdown() && conns != null && conns.size() < maxPool) {
+			conns.add(conn);
+		} else {
+			conn.Release();
 		}
 	}
 
 	// Sync implements the Transport interface.
-	public error Sync(String target, SyncRequest args, SyncResponse resp) {
+	public error sync(String target, SyncRequest args, SyncResponse resp) {
 		return genericRPC(target, NetworkTransportType.rpcSync.ordinal(), args, resp);
 	}
 
 	// EagerSync implements the Transport interface.
-	public error EagerSync(String target, EagerSyncRequest args, EagerSyncResponse resp) {
+	public error eagerSync(String target, EagerSyncRequest args, EagerSyncResponse resp) {
 		return genericRPC(target, NetworkTransportType.rpcEagerSync.ordinal(), args, resp);
 	}
 
 	// FastForward implements the Transport interface.
-	public error FastForward(String target, FastForwardRequest args, FastForwardResponse resp) {
+	public error fastForward(String target, FastForwardRequest args, FastForwardResponse resp) {
 		return genericRPC(target, NetworkTransportType.rpcFastForward.ordinal(), args, resp);
 	}
 
-	// genericRPC handles a simple request/response RPC.
+	/**
+	 * Handles a simple request/response RPC.
+	 * @param target
+	 * @param rpcType
+	 * @param args
+	 * @param resp
+	 * @return
+	 */
 	public error genericRPC(String target, int rpcType, ParsableMessage args, ParsableMessage resp) {
 		logger.field("target", target).field("rpcType", rpcType).debug("genericRPC");
 
@@ -243,6 +257,7 @@ public class NetworkTransport implements Transport {
 			try {
 				conn.conn.setSoTimeout((int) timeout.toMillis());
 			} catch (SocketException e) {
+				e.printStackTrace();
 				return error.Errorf(e.getMessage());
 			}
 		}
@@ -268,18 +283,32 @@ public class NetworkTransport implements Transport {
 		return err;
 	}
 
-	// sendRPC is used to encode and send the RPC.
+	/**
+	 * Encode and send the RPC.
+	 * @param conn
+	 * @param rpcType
+	 * @param args
+	 * @return
+	 */
 	public error sendRPC(netConn conn, int rpcType, ParsableMessage args) {
+		logger.field("conn", conn)
+			.field("rpcType", rpcType)
+			.field("args", args).debug("sendRPC()");
+
 		// Write the request type
 		try {
 			conn.w.write(rpcType);
 		} catch (IOException e) {
+			e.printStackTrace();
 			conn.Release();
+			logger.debug("sendRPC() writing request error =" + e.getMessage());
 			return error.Errorf(e.getMessage());
 		}
 
 		// Send the request
 		error err = conn.enc.Encode(args);
+		logger.field("err",  err).debug("sendRPC() Encoding finished");
+
 		if (err != null) {
 			conn.Release();
 			return err;
@@ -287,22 +316,33 @@ public class NetworkTransport implements Transport {
 
 		// Flush
 		try {
+			logger.field("err", err).debug("sendRPC() flushing");
 			conn.w.flush();
 		} catch (IOException e) {
+			logger.field("err", err).debug("sendRPC() flushing error");
+			e.printStackTrace();
 			conn.Release();
 			return error.Errorf(e.getMessage());
 		}
 		return null;
 	}
 
-	// decodeResponse is used to decode an RPC response and reports whether
-	// the connection can be reused.
+	/**
+	 * Decode an RPC response and reports whether the connection can be reused.
+	 * @param conn
+	 * @param resp
+	 * @return
+	 */
 	public RetResult<Boolean> decodeResponse(netConn conn, ParsableMessage resp) {
-		logger.field("resp", resp).debug("decodeResponse()");
+		logger.field("resp", resp).debug("decodeResponse() start");
 
 		// Decode the error if any
 		error rpcError = new error(null);
 		error err = conn.dec.Decode(rpcError);
+
+		logger.field("rpcError", rpcError)
+			.field("err", err).debug("decodeResponse() decoding error");
+
 		if (err != null) {
 			conn.Release();
 			return new RetResult<Boolean>(false, err);
@@ -310,6 +350,10 @@ public class NetworkTransport implements Transport {
 
 		// Decode the response
 		err = conn.dec.Decode(resp);
+		logger.field("resp", resp)
+			.field("rpcError", rpcError)
+			.field("err", err).debug("decodeResponse() here");
+
 		if (err != null) {
 			conn.Release();
 			return new RetResult<Boolean>(false, err);
@@ -319,16 +363,19 @@ public class NetworkTransport implements Transport {
 		if (rpcError.Error() != null) {
 			return new RetResult<Boolean>(true, rpcError);
 		}
+
 		return new RetResult<Boolean>(true, null);
 	}
 
-	// listen is used to handling incoming connections.
+	/**
+	 * Listening and handling incoming connections.
+	 */
 	public void listen() {
-		logger.field("addr", LocalAddr()).info("Listening");
+		logger.field("addr", localAddr()).info("Listening");
 
 		while (true) {
 			// Accept incoming connections
-			RetResult<Socket> accept = stream.Accept();
+			RetResult<Socket> accept = stream.accept();
 			Socket conn = accept.result;
 			error err = accept.err;
 			if (err != null) {
@@ -347,7 +394,10 @@ public class NetworkTransport implements Transport {
 		}
 	}
 
-	// handleConn is used to handle an inbound connection for its lifespan.
+	/**
+	 * Handle an inbound connection for its lifespan.
+	 * @param conn
+	 */
 	public void handleConn(Socket conn) {
 		try {
 			BufferedReader r = new BufferedReader(new InputStreamReader(conn.getInputStream()));
@@ -357,6 +407,8 @@ public class NetworkTransport implements Transport {
 
 			while (true) {
 				error err = handleCommand(r, dec, enc);
+				logger.field("err", err).error("handleConn() handleCommand finished");
+
 				if (err != null) {
 					// FIXIT: should we check for ErrTransportShutdown here as well?
 					// TODO how to convert go's EOF
@@ -387,7 +439,13 @@ public class NetworkTransport implements Transport {
 		}
 	}
 
-	// handleCommand is used to decode and dispatch a single command.
+	/**
+	 * Handles a command by decoding and dispatching a single command.
+	 * @param r
+	 * @param dec
+	 * @param enc
+	 * @return
+	 */
 	public error handleCommand(Reader r, jsonDecoder dec, jsonEncoder enc) {
 		// Get the rpc type
 		RetResult<Integer> readRpc = dec.readRpc();
@@ -407,9 +465,9 @@ public class NetworkTransport implements Transport {
 		case rpcSync:
 			SyncRequest sreq = new SyncRequest();
 			err = dec.Decode(sreq);
-			if (err != null) {
-				return err;
-			}
+//			if (err != null) {
+//				return err;
+//			}
 			rpc.setCommand(sreq);
 			break;
 		case rpcEagerSync:
@@ -440,15 +498,19 @@ public class NetworkTransport implements Transport {
 //			return ErrTransportShutdown;
 //		}
 
-		final Alternative alt = new Alternative(new Guard[] { shutdownCh.in() });
+		logger.debug("handleCommand() dispatching the RPC");
+
+		final Alternative alt = new Alternative(new Guard[] { consumeCh.in(), shutdownCh.in() });
 		final int CONSUME = 0, SHUTDOWN = 1;
 
 		switch (alt.priSelect()) {
-		default:
+		case CONSUME:
+			logger.debug("handleCommand() consuming");
 			consumeCh.out().write(rpc);
 			break;
 		// fall through
 		case SHUTDOWN:
+			logger.debug("handleCommand() shutdown case");
 			shutdownCh.in().read();
 			return ErrTransportShutdown;
 		}
@@ -475,13 +537,15 @@ public class NetworkTransport implements Transport {
 //				return ErrTransportShutdown;
 //		}
 
+		logger.debug("Wait for a response");
+
 		final Alternative alt2 = new Alternative(new Guard[] { respCh.in(), shutdownCh.in() });
-		final int RESPONSE2 = 0, SHUTDOWN2 = 1;
+		final int RESPONSE = 0, SHUTDOWN2 = 1;
 
 		RPCResponse resp;
 		error respErr;
 		switch (alt2.priSelect()) {
-		case RESPONSE2:
+		case RESPONSE:
 			resp = respCh.in().read();
 			// Send the error first
 			respErr = error.Errorf("");

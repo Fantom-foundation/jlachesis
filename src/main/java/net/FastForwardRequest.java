@@ -35,4 +35,11 @@ public class FastForwardRequest implements ParsableMessage {
 		}
 		return err;
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("FastForwardRequest [FromID=").append(FromID).append("]");
+		return builder.toString();
+	}
 }

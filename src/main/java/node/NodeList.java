@@ -38,7 +38,7 @@ public class NodeList extends LinkedHashMap<PrivateKey, Node> {
 
 		for (int i = 0; i < count; i++) {
 			InmemTransport transp = new net.InmemTransport("");
-			String addr = transp.LocalAddr();
+			String addr = transp.localAddr();
 			KeyPair key = crypto.Utils.GenerateECDSAKeyPair().result;
 //			String pubKey = String.format("0x%X", crypto.Utils.FromECDSAPub(key.getPublic()));
 			String pubKey = crypto.Utils.keyToHexString(key.getPublic());

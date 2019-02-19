@@ -59,7 +59,7 @@ public class TcpTransportTest {
 		error err = newTCPTransport.err;
 
 		assertNull("No error when create new tcp transport", err);
-		assertEquals("Bind address should match", "127.0.0.1", trans.LocalAddr());
+		assertEquals("Bind address should match", "127.0.0.1", trans.localAddr());
 
 		int actualPort = ((TCPStreamLayer) trans.stream).listener.getLocalPort();
 		assertEquals("Bind port should match", expectedPort, actualPort);

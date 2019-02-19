@@ -18,7 +18,7 @@ public class InmemTransportTest extends NetTransportTest {
 		// Transport 1 is consumer
 		InmemTransport trans1 = new InmemTransport("");
 
-		One2OneChannel<RPC> rpcCh = trans1.Consumer();
+		One2OneChannel<RPC> rpcCh = trans1.getConsumer();
 
 		// Transport 2 makes outbound request
 		InmemTransport trans2 = new InmemTransport("");
@@ -35,7 +35,7 @@ public class InmemTransportTest extends NetTransportTest {
 		// "FastForward"
 		testFastForward(rpcCh, trans1, trans2);
 
-		trans2.Close();
-		trans1.Close();
+		trans2.close();
+		trans1.close();
 	}
 }

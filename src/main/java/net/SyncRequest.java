@@ -41,4 +41,11 @@ public class SyncRequest implements ParsableMessage {
 		}
 		return err;
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("SyncRequest [FromID=").append(FromID).append(", Known=").append(Known).append("]");
+		return builder.toString();
+	}
 }

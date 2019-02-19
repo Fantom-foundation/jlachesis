@@ -79,7 +79,7 @@ public class NetTransportTest {
 		});
 
 		SyncResponse resp = new SyncResponse();
-		error err = trans2.Sync(trans1.LocalAddr(), expectedReq, resp);
+		error err = trans2.sync(trans1.localAddr(), expectedReq, resp);
 		assertNull("No error when Sync", err);
 		assertEquals("Sync response should match", expectedResp, resp);
 	}
@@ -102,7 +102,7 @@ public class NetTransportTest {
 		});
 
 		EagerSyncResponse resp = new EagerSyncResponse();
-		error err = trans2.EagerSync(trans1.LocalAddr(), expectedReq, resp);
+		error err = trans2.eagerSync(trans1.localAddr(), expectedReq, resp);
 		assertNull("No error when Sync", err);
 		assertEquals("EagerSync response should match", expectedResp, resp);
 	}
@@ -130,7 +130,7 @@ public class NetTransportTest {
 		});
 
 		FastForwardResponse resp = new FastForwardResponse();
-		err = trans2.FastForward(trans1.LocalAddr(), expectedReq, resp);
+		err = trans2.fastForward(trans1.localAddr(), expectedReq, resp);
 		assertNull("No error when creating block from frame", err);
 
 		assertEquals("response snapshot should match" , expectedResp.Snapshot, resp.Snapshot);
@@ -165,7 +165,7 @@ public class NetTransportTest {
 		for (int i = 0; i < count; i++) {
 			ExecService.go(() -> {
 				SyncResponse resp = new SyncResponse();
-				error err = trans2.Sync(trans1.LocalAddr(), expectedReq, resp);
+				error err = trans2.sync(trans1.localAddr(), expectedReq, resp);
 				assertNull("No error when Sync", err);
 				assertEquals("Response should match", expectedResp, resp);
 				wg.done();
@@ -178,20 +178,19 @@ public class NetTransportTest {
 		}
 
 		// Check the conn pool size
-		String addr = trans1.LocalAddr();
-		assertEquals("Length should match", maxPool, trans2.connPool.get(addr).length);
+		String addr = trans1.localAddr();
+		assertEquals("Length should match", maxPool, trans2.connPool.get(addr).size());
 	}
 
-//	@Test
+	//@Test
 	public void TestNetworkTransport() {
-
 		// Transport 1 is consumer
 		RetResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport("127.0.0.1:0", null, 2 , Duration.ofSeconds(time.Second), logger);
 		NetworkTransport trans1 = newTCPTransport.result;
 		error err = newTCPTransport.err;
 		assertNull("No error", err);
 
-		One2OneChannel<RPC> rpcCh = trans1.Consumer();
+		One2OneChannel<RPC> rpcCh = trans1.getConsumer();
 
 		// Transport 2 makes outbound request
 		RetResult<NetworkTransport> newTCPTransport2 = TCPTransport.NewTCPTransport("127.0.0.1:0", null, maxPool, Duration.ofSeconds(1), logger);
@@ -211,8 +210,8 @@ public class NetTransportTest {
 		// "PooledConn"
 		testPooledConn(rpcCh, trans1, trans2);
 
-		trans2.Close();
-		trans1.Close();
+		trans2.close();
+		trans1.close();
 	}
 
 }

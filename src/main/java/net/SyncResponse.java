@@ -1,5 +1,6 @@
 package net;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import autils.JsonUtils;
@@ -48,10 +49,12 @@ public class SyncResponse implements ParsableMessage {
 	}
 
 	public void copy(SyncResponse r) {
-		FromID = r.FromID;
-		SyncLimit = r.SyncLimit;
-		Events = r.Events;
-		Known = r.Known;
+		if (r != null) {
+			FromID = r.FromID;
+			SyncLimit = r.SyncLimit;
+			Events = r.Events;
+			Known = r.Known;
+		}
 	}
 
 	public boolean isSyncLimit() {
@@ -92,5 +95,13 @@ public class SyncResponse implements ParsableMessage {
 			err = error.Errorf(e.getMessage());
 		}
 		return err;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("SyncResponse [FromID=").append(FromID).append(", SyncLimit=").append(SyncLimit)
+				.append(", Events=").append(Arrays.toString(Events)).append(", Known=").append(Known).append("]");
+		return builder.toString();
 	}
 }

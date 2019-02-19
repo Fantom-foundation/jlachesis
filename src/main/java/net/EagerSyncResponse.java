@@ -46,4 +46,11 @@ public class EagerSyncResponse implements ParsableMessage {
 		}
 		return err;
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("EagerSyncResponse [FromID=").append(FromID).append(", Success=").append(Success).append("]");
+		return builder.toString();
+	}
 }

@@ -1,5 +1,7 @@
 package net;
 
+import java.util.Arrays;
+
 import autils.JsonUtils;
 import common.error;
 
@@ -80,5 +82,13 @@ public class FastForwardResponse implements ParsableMessage {
 			err = error.Errorf(e.getMessage());
 		}
 		return err;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("FastForwardResponse [FromID=").append(FromID).append(", Block=").append(Block)
+				.append(", Frame=").append(Frame).append(", Snapshot=").append(Arrays.toString(Snapshot)).append("]");
+		return builder.toString();
 	}
 }

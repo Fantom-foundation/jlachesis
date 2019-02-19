@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Arrays;
 
 import autils.JsonUtils;
 import autils.Logger;
@@ -54,6 +55,7 @@ public class jsonDecoder {
 		RetResult<String> readString = read();
 	    String s = readString.result;
 	    error err = readString.err;
+	    logger.field("s", s).debug("Decode()");
 	    resp.parseFrom(s);
 
 	    new Exception().getStackTrace();
