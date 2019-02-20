@@ -2,7 +2,7 @@ package proxy;
 
 import org.jcsp.lang.One2OneChannel;
 
-import common.RetResult;
+import common.RResult;
 import common.error;
 
 /**
@@ -14,9 +14,9 @@ public interface AppProxy {
 
 	One2OneChannel<poset.InternalTransaction> SubmitInternalCh(); // chan poset.InternalTransaction
 
-	RetResult<byte[]> CommitBlock(poset.Block block);
+	RResult<byte[]> CommitBlock(poset.Block block);
 
-	RetResult<byte[]> GetSnapshot(long blockIndex);
+	RResult<byte[]> GetSnapshot(long blockIndex);
 
 	error Restore(byte[] snapshot);
 }

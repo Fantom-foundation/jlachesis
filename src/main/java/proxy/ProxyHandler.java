@@ -1,6 +1,6 @@
 package proxy;
 
-import common.RetResult;
+import common.RResult;
 
 /**
  * ProxyHandler provides an interface for the application to set handlers for
@@ -15,7 +15,7 @@ public interface ProxyHandler {
 	 * @param block
 	 * @return
 	 */
-	RetResult<byte[]> CommitHandler(poset.Block block); // return (stateHash []byte, err error)
+	RResult<byte[]> CommitHandler(poset.Block block); // return (stateHash []byte, err error)
 
 	/**
 	 * SnapshotHandler is called by Lachesis to retrieve a snapshot corresponding to
@@ -24,7 +24,7 @@ public interface ProxyHandler {
 	 * @param blockIndex
 	 * @return
 	 */
-	RetResult<byte[]> SnapshotHandler(long blockIndex); // return (snapshot []byte, err error)
+	RResult<byte[]> SnapshotHandler(long blockIndex); // return (snapshot []byte, err error)
 
 	/**
 	 * RestoreHandler is called by Lachesis to restore the application to a specific
@@ -32,5 +32,5 @@ public interface ProxyHandler {
 	 * @param snapshot
 	 * @return
 	 */
-	RetResult<byte[]> RestoreHandler(byte[] snapshot); // return (stateHash []byte, err error)
+	RResult<byte[]> RestoreHandler(byte[] snapshot); // return (stateHash []byte, err error)
 }

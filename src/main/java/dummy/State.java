@@ -6,7 +6,7 @@ import java.util.Map;
 
 import autils.Appender;
 import autils.Logger;
-import common.RetResult;
+import common.RResult;
 import common.error;
 import proxy.ProxyHandler;
 
@@ -36,33 +36,33 @@ public class State implements ProxyHandler {
 		logger.info("Init Dummy State");
 	}
 
-	public RetResult<byte[]> CommitHandler(poset.Block block ) {
+	public RResult<byte[]> CommitHandler(poset.Block block ) {
 		logger.field("block", block).debug("CommitBlock");
 
 		error err = commit(block);
 		if (err != null) {
-			return new RetResult<byte[]>(null, err);
+			return new RResult<byte[]>(null, err);
 		}
 		logger.field("stateHash", stateHash).debug("CommitBlock Answer");
-		return new RetResult<byte[]>(stateHash, null);
+		return new RResult<byte[]>(stateHash, null);
 	}
 
-	public RetResult<byte[]> SnapshotHandler(long blockIndex) {
+	public RResult<byte[]> SnapshotHandler(long blockIndex) {
 		logger.field("block", blockIndex).debug("GetSnapshot");
 
 		byte[] snapshot = snapshots.get(blockIndex);;
 		boolean ok = snapshot != null;
 		if (!ok){
-			return new RetResult<byte[]>(null, error.Errorf(String.format("snapshot %d not found", blockIndex)));
+			return new RResult<byte[]>(null, error.Errorf(String.format("snapshot %d not found", blockIndex)));
 		}
 
-		return new RetResult<byte[]>(snapshot, null);
+		return new RResult<byte[]>(snapshot, null);
 	}
 
-	public RetResult<byte[]> RestoreHandler(byte[] snapshot) {
+	public RResult<byte[]> RestoreHandler(byte[] snapshot) {
 		//TODO do something smart here
 		stateHash = snapshot;
-		return new RetResult<byte[]>(stateHash, null);
+		return new RResult<byte[]>(stateHash, null);
 	}
 
 	public byte[][] GetCommittedTransactions() {

@@ -1,6 +1,6 @@
 package peers;
 
-import common.RetResult;
+import common.RResult;
 import common.error;
 
 /**
@@ -9,7 +9,7 @@ import common.error;
  */
 public interface PeerStore {
 	/** Peers returns the list of known peers. */
-	RetResult<Peers> peers();
+	RResult<Peers> peers();
 
 	/**
 	 * SetPeers sets the list of known peers. This is invoked when a peer is

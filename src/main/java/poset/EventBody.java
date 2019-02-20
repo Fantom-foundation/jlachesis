@@ -6,7 +6,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Parser;
 
 import common.IProto;
-import common.RetResult;
+import common.RResult;
 import common.error;
 import crypto.hash;
 
@@ -186,13 +186,13 @@ public class EventBody {
 		return true;
 	}
 
-	public RetResult<byte[]> Hash() {
-		RetResult<byte[]> protoMarshal = marshaller().protoMarshal();
+	public RResult<byte[]> Hash() {
+		RResult<byte[]> protoMarshal = marshaller().protoMarshal();
 		byte[] hashBytes = protoMarshal.result;
 		error err = protoMarshal.err;
 		if (err != null) {
-			return new RetResult<byte[]>(null, err);
+			return new RResult<byte[]>(null, err);
 		}
-		return new RetResult<byte[]>(hash.SHA256(hashBytes), null);
+		return new RResult<byte[]>(hash.SHA256(hashBytes), null);
 	}
 }

@@ -26,10 +26,10 @@ import autils.Logger;
 import autils.time;
 import channel.ChannelUtils;
 import channel.ExecService;
-import channel.SingSelectors;
 import common.NetUtils;
 import common.RResult2;
-import common.RetResult;
+import common.RResult;
+import common.SingSelectors;
 import common.TestUtils;
 import common.error;
 import dummy.DummyClient;
@@ -89,8 +89,8 @@ public class NodeTest {
 		// Start two nodes
 		Peer[] ps = p.toPeerSlice();
 
-		String address = NetUtils.GetUnusedNetAddr();
-		RetResult<NetworkTransport> NewTCPTransportCall = TCPTransport.NewTCPTransport(address, null, 2,
+		String address = NetUtils.getUnusedNetAddr();
+		RResult<NetworkTransport> NewTCPTransportCall = TCPTransport.NewTCPTransport(address, null, 2,
 				Duration.ofSeconds(1), testLogger);
 		NetworkTransport peer0Trans = NewTCPTransportCall.result;
 		error err = NewTCPTransportCall.err;
@@ -104,7 +104,7 @@ public class NodeTest {
 
 		node0.runAsync(false);
 
-		NewTCPTransportCall = TCPTransport.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
+		NewTCPTransportCall = TCPTransport.NewTCPTransport(NetUtils.getUnusedNetAddr(), null, 2,
 				Duration.ofSeconds(1), testLogger);
 		NetworkTransport peer1Trans = NewTCPTransportCall.result;
 		err = NewTCPTransportCall.err;
@@ -122,12 +122,12 @@ public class NodeTest {
 		Map<Long, Long> node0KnownEvents = node0.core.knownEvents();
 		Map<Long, Long> node1KnownEvents = node1.core.knownEvents();
 
-		RetResult<Event[]> eventDiff = node1.core.eventDiff(node0KnownEvents);
+		RResult<Event[]> eventDiff = node1.core.eventDiff(node0KnownEvents);
 		Event[] unknownEvents = eventDiff.result;
 		err = eventDiff.err;
 		assertNull("No err", err);
 
-		RetResult<WireEvent[]> toWire = node1.core.toWire(unknownEvents);
+		RResult<WireEvent[]> toWire = node1.core.toWire(unknownEvents);
 		WireEvent[] unknownWireEvents = toWire.result;
 		err = toWire.err;
 		assertNull("No err", err);
@@ -176,7 +176,7 @@ public class NodeTest {
 		// Start two nodes
 		Peer[] ps = p.toPeerSlice();
 
-		RetResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
+		RResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.getUnusedNetAddr(), null, 2,
 				Duration.ofSeconds(1), testLogger);
 		NetworkTransport peer0Trans = newTCPTransport.result;
 		error err = newTCPTransport.err;
@@ -190,7 +190,7 @@ public class NodeTest {
 
 		node0.runAsync(false);
 
-		newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
+		newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.getUnusedNetAddr(), null, 2,
 				Duration.ofSeconds(1), testLogger);
 		NetworkTransport peer1Trans = newTCPTransport.result;
 		err = newTCPTransport.err;
@@ -208,12 +208,12 @@ public class NodeTest {
 
 		Map<Long, Long> node1KnownEvents = node1.core.knownEvents();
 
-		RetResult<Event[]> eventDiff = node0.core.eventDiff(node1KnownEvents);
+		RResult<Event[]> eventDiff = node0.core.eventDiff(node1KnownEvents);
 		Event[] unknownEvents = eventDiff.result;
 		err = eventDiff.err;
 		assertNull("No error", err);
 
-		RetResult<WireEvent[]> toWire = node0.core.toWire(unknownEvents);
+		RResult<WireEvent[]> toWire = node0.core.toWire(unknownEvents);
 		WireEvent[] unknownWireEvents = toWire.result;
 		err = toWire.err;
 		assertNull("No error", err);
@@ -253,7 +253,7 @@ public class NodeTest {
 
 		Peer[] ps = p.toPeerSlice();
 
-		RetResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
+		RResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.getUnusedNetAddr(), null, 2,
 				Duration.ofSeconds(1), testLogger);
 		NetworkTransport peer0Trans = newTCPTransport.result;
 		error err = newTCPTransport.err;
@@ -269,7 +269,7 @@ public class NodeTest {
 
 		node0.runAsync(false);
 
-		newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.GetUnusedNetAddr(), null, 2,
+		newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.getUnusedNetAddr(), null, 2,
 				Duration.ofSeconds(1), testLogger);
 		NetworkTransport peer1Trans = newTCPTransport.result;
 		err = newTCPTransport.err;
@@ -334,7 +334,7 @@ public class NodeTest {
 	}
 
 	private void removeBadgerStore(BadgerStore store) {
-		error err = store.Close();
+		error err = store.close();
 		assertNull("No error", err);
 
 		err = FileUtils.delete(testDir);
@@ -364,7 +364,7 @@ public class NodeTest {
 				logger
 			);
 
-			RetResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.GetUnusedNetAddr(),
+			RResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(NetUtils.getUnusedNetAddr(),
 					null, 2, Duration.ofSeconds(1), logger);
 			NetworkTransport trans = newTCPTransport.result;
 			error err = newTCPTransport.err;
@@ -376,7 +376,7 @@ public class NodeTest {
 			case "badger":
 				recreateTestDir();
 
-				RetResult<BadgerStore> newBadgerStore = BadgerStore.NewBadgerStore(peers, conf.CacheSize, dbPath);
+				RResult<BadgerStore> newBadgerStore = BadgerStore.NewBadgerStore(peers, conf.CacheSize, dbPath);
 				store = newBadgerStore.result;
 				err = newBadgerStore.err;
 				assertNull("No error creating badger store", err);
@@ -421,8 +421,8 @@ public class NodeTest {
 		Store store;
 		error err;
 		if (oldNode.core.poset.Store instanceof poset.BadgerStore) {
-			RetResult<BadgerStore> loadBadgerStore = BadgerStore.LoadBadgerStore(
-					conf.CacheSize, oldNode.core.poset.Store.StorePath());
+			RResult<BadgerStore> loadBadgerStore = BadgerStore.LoadBadgerStore(
+					conf.CacheSize, oldNode.core.poset.Store.storePath());
 			store = loadBadgerStore.result;
 			err = loadBadgerStore.err;
 			assertNull("No err", err);
@@ -430,7 +430,7 @@ public class NodeTest {
 			store = new InmemStore(oldNode.core.participants, conf.CacheSize);
 		}
 
-		RetResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(oldNode.localAddr,
+		RResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(oldNode.localAddr,
 				null, 2, Duration.ofSeconds(1), logger);
 		NetworkTransport trans = newTCPTransport.result;
 		err = newTCPTransport.err;
@@ -533,7 +533,7 @@ public class NodeTest {
 
 		long lbi = nodes[0].core.getLastBlockIndex();
 		assertTrue(String.format("LastBlockIndex is too low: %d", lbi), lbi <= 0);
-		RetResult<Block> getBlock = nodes[0].getBlock(lbi);
+		RResult<Block> getBlock = nodes[0].getBlock(lbi);
 		Block sBlock = getBlock.result;
 		err = getBlock.err;
 		assertEquals("No Error retrieving latest Block"+
@@ -750,7 +750,7 @@ public class NodeTest {
 				} else {
 					// wait until the target block has retrieved a state hash from
 					// the app
-					Block targetBlock = n.core.poset.Store.GetBlock(target).result;
+					Block targetBlock = n.core.poset.Store.getBlock(target).result;
 					if (targetBlock.getStateHash().length == 0) {
 						done = false;
 						break;
@@ -771,8 +771,8 @@ public class NodeTest {
 		Map<Long,Block[]> nodeBlocks = new HashMap<Long,Block[]>();
 		for (Node n : nodes) {
 			poset.Block[] blocks = null;
-			for (int i = (int) fromBlock; i < n.core.poset.Store.LastBlockIndex(); i++) {
-				RetResult<Block> getBlock = n.core.poset.Store.GetBlock(i);
+			for (int i = (int) fromBlock; i < n.core.poset.Store.lastBlockIndex(); i++) {
+				RResult<Block> getBlock = n.core.poset.Store.getBlock(i);
 				Block block = getBlock.result;
 				error err = getBlock.err;
 				assertNull("No error checkGossip", err);

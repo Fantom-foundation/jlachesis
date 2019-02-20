@@ -14,7 +14,7 @@ import org.jcsp.lang.Channel;
 import org.jcsp.lang.Guard;
 import org.jcsp.lang.One2OneChannel;
 
-import common.RetResult;
+import common.RResult;
 import common.error;
 
 /**
@@ -87,7 +87,7 @@ public class InmemTransport implements Transport {
 
 	// Sync implements the Transport interface.
 	public error sync(String target, SyncRequest args, SyncResponse resp)  {
-		RetResult<RPCResponse> makeRPC = makeRPC(target, args, null, timeout);
+		RResult<RPCResponse> makeRPC = makeRPC(target, args, null, timeout);
 		RPCResponse rpcResp = makeRPC.result;
 		error err = makeRPC.err;
 		if (err != null) {
@@ -101,7 +101,7 @@ public class InmemTransport implements Transport {
 
 	// Sync implements the Transport interface.
 	public error eagerSync(String target, EagerSyncRequest args, EagerSyncResponse resp) {
-		RetResult<RPCResponse> makeRPC = makeRPC(target, args, null, timeout);
+		RResult<RPCResponse> makeRPC = makeRPC(target, args, null, timeout);
 		RPCResponse rpcResp = makeRPC.result;
 		error err = makeRPC.err;
 
@@ -116,7 +116,7 @@ public class InmemTransport implements Transport {
 
 	// FastForward implements the Transport interface.
 	public error fastForward(String target, FastForwardRequest args, FastForwardResponse res)  {
-		RetResult<RPCResponse> makeRPC = makeRPC(target, args, null, timeout);
+		RResult<RPCResponse> makeRPC = makeRPC(target, args, null, timeout);
 		RPCResponse rpcResp = makeRPC.result;
 		error err = makeRPC.err;
 
@@ -129,7 +129,7 @@ public class InmemTransport implements Transport {
 		return null;
 	}
 
-	public <T> RetResult<RPCResponse> makeRPC(String target, T args, Reader r, Duration timeout ) {
+	public <T> RResult<RPCResponse> makeRPC(String target, T args, Reader r, Duration timeout ) {
 		inmemMediumSync.readLock().lock();
 		InmemTransport peer= inmemMedium.get(target);
 		boolean ok = peer != null;
@@ -137,7 +137,7 @@ public class InmemTransport implements Transport {
 		error err = null;
 		if (!ok) {
 			err = error.Errorf(String.format("failed to connect to peer: %v", target));
-			return new RetResult<RPCResponse>(null, err);
+			return new RResult<RPCResponse>(null, err);
 		}
 
 		// Send the RPC over
@@ -171,7 +171,7 @@ public class InmemTransport implements Transport {
 				break;
 		}
 
-		return new RetResult<RPCResponse>(rpcResp, err);
+		return new RResult<RPCResponse>(rpcResp, err);
 	}
 
 	// Close is used to permanently disable the transport

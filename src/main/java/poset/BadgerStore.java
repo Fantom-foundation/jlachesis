@@ -13,8 +13,8 @@ import org.mapdb.Serializer;
 import autils.Appender;
 import autils.FileUtils;
 import autils.Logger;
-import common.RetResult;
-import common.RetResult3;
+import common.RResult;
+import common.RResult3;
 import common.StoreErr;
 import common.StoreErrType;
 import common.error;
@@ -78,7 +78,7 @@ public class BadgerStore implements Store {
 	 * @param path
 	 * @return
 	 */
-	public static RetResult<BadgerStore> NewBadgerStore(peers.Peers participants, int cacheSize, String path) {
+	public static RResult<BadgerStore> NewBadgerStore(peers.Peers participants, int cacheSize, String path) {
 		InmemStore inmemStore = new InmemStore(participants, cacheSize);
 	    DB db = DBMaker.fileDB(new File(path))
 	            .transactionEnable().closeOnJvmShutdown().fileChannelEnable()
@@ -87,14 +87,14 @@ public class BadgerStore implements Store {
 
 		error err = store.dbSetParticipants(participants);
 		if  (err != null) {
-			return new RetResult<BadgerStore>(null, err);
+			return new RResult<BadgerStore>(null, err);
 		}
 
 		err = store.dbSetRoots(inmemStore.rootsByParticipant);
 		if (err != null) {
-			return new RetResult<BadgerStore>(null, err);
+			return new RResult<BadgerStore>(null, err);
 		}
-		return new RetResult<>(store, null);
+		return new RResult<>(store, null);
 	}
 
 	/**
@@ -103,10 +103,10 @@ public class BadgerStore implements Store {
 	 * @param path
 	 * @return
 	 */
-	public static RetResult<BadgerStore> LoadBadgerStore(int cacheSize, String path) {
+	public static RResult<BadgerStore> LoadBadgerStore(int cacheSize, String path) {
 		error err = null;
 		if (! FileUtils.fileExist(path)) {
-			return new RetResult<BadgerStore>(null, error.Errorf("file path not exist"));
+			return new RResult<BadgerStore>(null, error.Errorf("file path not exist"));
 		}
 
 		DB db = DBMaker.fileDB(new File(path))
@@ -114,11 +114,11 @@ public class BadgerStore implements Store {
 	            .make();
 		BadgerStore store = new BadgerStore(db, path, true);
 
-		RetResult<peers.Peers> dbGetParticipantsCall = store.dbGetParticipants();
+		RResult<peers.Peers> dbGetParticipantsCall = store.dbGetParticipants();
 		peers.Peers participants = dbGetParticipantsCall.result;
 		err = dbGetParticipantsCall.err;
 		if (err != null) {
-			return new RetResult<BadgerStore>(null, err);
+			return new RResult<BadgerStore>(null, err);
 		}
 
 		InmemStore inmemStore = new InmemStore(participants, cacheSize);
@@ -126,43 +126,43 @@ public class BadgerStore implements Store {
 		//read roots from db and put them in InmemStore
 		Map<String, Root> roots = new HashMap<String,Root>();
 		for (String p : participants.getByPubKey().keySet()) {
-			RetResult<Root> dbGetRoot = store.dbGetRoot(p);
+			RResult<Root> dbGetRoot = store.dbGetRoot(p);
 			Root root = dbGetRoot.result;
 			err = dbGetRoot.err;
 			if (err != null) {
-				return new RetResult<BadgerStore>(null, err);
+				return new RResult<BadgerStore>(null, err);
 			}
 			roots.put(p, root);
 		}
-		err = inmemStore.Reset(roots);
+		err = inmemStore.reset(roots);
 		if (err != null) {
-			return new RetResult<BadgerStore>(null, err);
+			return new RResult<BadgerStore>(null, err);
 		}
 
 		store.participants = participants;
 		store.inmemStore = inmemStore;
 
-		return new RetResult<BadgerStore>(store, null);
+		return new RResult<BadgerStore>(store, null);
 	}
 
-	public static RetResult<BadgerStore> LoadOrCreateBadgerStore(peers.Peers participants, int cacheSize, String path) {
-		RetResult<BadgerStore> loadBadgerStore = LoadBadgerStore(cacheSize, path);
+	public static RResult<BadgerStore> LoadOrCreateBadgerStore(peers.Peers participants, int cacheSize, String path) {
+		RResult<BadgerStore> loadBadgerStore = LoadBadgerStore(cacheSize, path);
 
 		BadgerStore store = loadBadgerStore.result;
 		error err = loadBadgerStore.err;
 
 		if (err != null) {
 			System.err.println("Could not load store - creating new");
-			RetResult<BadgerStore> newBadgerStore = NewBadgerStore(participants, cacheSize, path);
+			RResult<BadgerStore> newBadgerStore = NewBadgerStore(participants, cacheSize, path);
 			store = newBadgerStore.result;
 			err = newBadgerStore.err;
 
 			if (err != null) {
-				return new RetResult<BadgerStore>(null, err);
+				return new RResult<BadgerStore>(null, err);
 			}
 		}
 
-		return new RetResult<BadgerStore>(store, null);
+		return new RResult<BadgerStore>(store, null);
 	}
 
 	//==============================================================================
@@ -199,35 +199,35 @@ public class BadgerStore implements Store {
 	//==============================================================================
 	//Implement the Store interface
 
-	public int CacheSize() {
-		return inmemStore.CacheSize();
+	public int cacheSize() {
+		return inmemStore.cacheSize();
 	}
 
-	public RetResult<peers.Peers> Participants() {
-		return new RetResult<peers.Peers>(participants, null);
+	public RResult<peers.Peers> participants() {
+		return new RResult<peers.Peers>(participants, null);
 	}
 
-	public RetResult<Map<String,Root>> RootsBySelfParent() {
-		return inmemStore.RootsBySelfParent();
+	public RResult<Map<String,Root>> rootsBySelfParent() {
+		return inmemStore.rootsBySelfParent();
 	}
 
-	public RetResult<Event> GetEvent(String key) {
+	public RResult<Event> getEvent(String key) {
 		//try to get it from cache
-		RetResult<Event> getEvent = inmemStore.GetEvent(key);
+		RResult<Event> getEvent = inmemStore.getEvent(key);
 		Event event = getEvent.result;
 		error err = getEvent.err;
 		//if not in cache, try to get it from db
 		if (err != null) {
-			RetResult<Event> dbGetEventCall = dbGetEvent(key);
+			RResult<Event> dbGetEventCall = dbGetEvent(key);
 			event = dbGetEventCall.result;
 			err = dbGetEventCall.err;
 		}
-		return new RetResult<Event>(event, mapError(err, "Event", key));
+		return new RResult<Event>(event, mapError(err, "Event", key));
 	}
 
-	public error SetEvent( Event event) {
+	public error setEvent( Event event) {
 		//try to add it to the cache
-		error err = inmemStore.SetEvent(event);
+		error err = inmemStore.setEvent(event);
 		if (err != null) {
 			return err;
 		}
@@ -235,50 +235,50 @@ public class BadgerStore implements Store {
 		return dbSetEvents(new Event[]{event});
 	}
 
-	public RetResult<String[]> ParticipantEvents(String participant, long skip) {
-		RetResult<String[]> participantEventsCall = inmemStore.ParticipantEvents(participant, skip);
+	public RResult<String[]> participantEvents(String participant, long skip) {
+		RResult<String[]> participantEventsCall = inmemStore.participantEvents(participant, skip);
 		String[] res = participantEventsCall.result;
 		error err = participantEventsCall.err;
 		if (err != null) {
-			RetResult<String[]> dbParticipantEventsCall = dbParticipantEvents(participant, skip);
+			RResult<String[]> dbParticipantEventsCall = dbParticipantEvents(participant, skip);
 			res = dbParticipantEventsCall.result;
 			err = dbParticipantEventsCall.err;
 		}
-		return new RetResult<String[]>(res, err);
+		return new RResult<String[]>(res, err);
 	}
 
-	public RetResult<String> ParticipantEvent(String participant, long index) {
-		RetResult<String> participantEventCall = inmemStore.ParticipantEvent(participant, index);
+	public RResult<String> participantEvent(String participant, long index) {
+		RResult<String> participantEventCall = inmemStore.participantEvent(participant, index);
 		String result = participantEventCall.result;
 		error err = participantEventCall.err;
 		if (err != null) {
-			RetResult<String> dbParticipantEventCall = dbParticipantEvent(participant, index);
+			RResult<String> dbParticipantEventCall = dbParticipantEvent(participant, index);
 			result = dbParticipantEventCall.result;
 			err = dbParticipantEventCall.err;
 		}
-		return new RetResult<String>(result, mapError(err, "ParticipantEvent", Arrays.toString(participantEventKey(participant, index))));
+		return new RResult<String>(result, mapError(err, "ParticipantEvent", Arrays.toString(participantEventKey(participant, index))));
 	}
 
-	public RetResult3<String,Boolean> LastEventFrom(String participant ) {
-		return inmemStore.LastEventFrom(participant);
+	public RResult3<String,Boolean> lastEventFrom(String participant ) {
+		return inmemStore.lastEventFrom(participant);
 	}
 
-	public RetResult3<String,Boolean> LastConsensusEventFrom(String participant ) {
-		return inmemStore.LastConsensusEventFrom(participant);
+	public RResult3<String,Boolean> lastConsensusEventFrom(String participant ) {
+		return inmemStore.lastConsensusEventFrom(participant);
 	}
 
-	public Map<Long,Long> KnownEvents() {
+	public Map<Long,Long> knownEvents() {
 		Map<Long,Long> known = new HashMap<Long,Long>();
 		for (String p : participants.getByPubKey().keySet()) {
 			Peer pid = participants.getByPubKey().get(p);
 			long index = (long) -1;
-			RetResult3<String, Boolean> lastEventFromCall = LastEventFrom(p);
+			RResult3<String, Boolean> lastEventFromCall = lastEventFrom(p);
 			String last = lastEventFromCall.result1;
 			Boolean isRoot = lastEventFromCall.result2;
 			error err = lastEventFromCall.err;
 			if (err == null) {
 				if (isRoot) {
-					RetResult<Root> getRoot = GetRoot(p);
+					RResult<Root> getRoot = getRoot(p);
 					Root root = getRoot.result;
 					err = getRoot.err;
 					if (err != null) {
@@ -286,7 +286,7 @@ public class BadgerStore implements Store {
 						index = root.SelfParent.Index;
 					}
 				} else {
-					RetResult<Event> getEventCall = GetEvent(last);
+					RResult<Event> getEventCall = getEvent(last);
 					Event lastEvent = getEventCall.result;
 					err = getEventCall.err;
 					if (err == null) {
@@ -300,44 +300,44 @@ public class BadgerStore implements Store {
 		return known;
 	}
 
-	public String[] ConsensusEvents() {
-		return inmemStore.ConsensusEvents();
+	public String[] consensusEvents() {
+		return inmemStore.consensusEvents();
 	}
 
-	public long ConsensusEventsCount() {
-		return inmemStore.ConsensusEventsCount();
+	public long consensusEventsCount() {
+		return inmemStore.consensusEventsCount();
 	}
 
-	public error AddConsensusEvent(Event event ) {
-		return inmemStore.AddConsensusEvent(event);
+	public error addConsensusEvent(Event event ) {
+		return inmemStore.addConsensusEvent(event);
 	}
 
-	public RetResult<RoundInfo> GetRound(long r) {
-		RetResult<RoundInfo> getRound = inmemStore.GetRound(r);
+	public RResult<RoundInfo> getRound(long r) {
+		RResult<RoundInfo> getRound = inmemStore.getRound(r);
 		RoundInfo res = getRound.result;
 		error err = getRound.err;
 		if (err != null) {
-			RetResult<RoundInfo> dbGetRoundCall = dbGetRound(r);
+			RResult<RoundInfo> dbGetRoundCall = dbGetRound(r);
 			res = dbGetRoundCall.result;
 			err = dbGetRoundCall.err;
 		}
-		return new RetResult<RoundInfo>(res, mapError(err, "Round", Arrays.toString(roundKey(r))));
+		return new RResult<RoundInfo>(res, mapError(err, "Round", Arrays.toString(roundKey(r))));
 	}
 
-	public error SetRound(long r , RoundInfo round ) {
-		error err = inmemStore.SetRound(r, round);
+	public error setRound(long r , RoundInfo round ) {
+		error err = inmemStore.setRound(r, round);
 		if (err != null) {
 			return err;
 		}
 		return dbSetRound(r, round);
 	}
 
-	public long LastRound() {
-		return inmemStore.LastRound();
+	public long lastRound() {
+		return inmemStore.lastRound();
 	}
 
-	public String[] RoundWitnesses(long r) {
-		RetResult<RoundInfo> getRound = GetRound(r);
+	public String[] roundWitnesses(long r) {
+		RResult<RoundInfo> getRound = getRound(r);
 		RoundInfo round = getRound.result;
 		error err = getRound.err;
 		if (err != null) {
@@ -346,8 +346,8 @@ public class BadgerStore implements Store {
 		return round.Witnesses();
 	}
 
-	public int RoundEvents(long r) {
-		RetResult<RoundInfo> getRound = GetRound(r);
+	public int roundEvents(long r) {
+		RResult<RoundInfo> getRound = getRound(r);
 		RoundInfo round = getRound.result;
 		error err = getRound.err;
 		if (err != null) {
@@ -356,68 +356,68 @@ public class BadgerStore implements Store {
 		return round.Message.Events.size();
 	}
 
-	public RetResult<Root> GetRoot(String participant ) {
-		RetResult<Root> getRoot = inmemStore.GetRoot(participant);
+	public RResult<Root> getRoot(String participant ) {
+		RResult<Root> getRoot = inmemStore.getRoot(participant);
 		Root root = getRoot.result;
 		error err = getRoot.err;
 		if (err != null) {
-			RetResult<Root> dbGetRoot = dbGetRoot(participant);
+			RResult<Root> dbGetRoot = dbGetRoot(participant);
 			root = dbGetRoot.result;
 			err = dbGetRoot.err;
 		}
-		return new  RetResult<Root>(root, mapError(err, "Root", Arrays.toString(participantRootKey(participant))));
+		return new  RResult<Root>(root, mapError(err, "Root", Arrays.toString(participantRootKey(participant))));
 	}
 
-	public RetResult<Block> GetBlock(long rr) {
-		RetResult<Block> getBlock = inmemStore.GetBlock(rr);
+	public RResult<Block> getBlock(long rr) {
+		RResult<Block> getBlock = inmemStore.getBlock(rr);
 		Block res = getBlock.result;
 		error err = getBlock.err;
 		if (err != null) {
-			RetResult<Block> dbGetBlock = dbGetBlock(rr);
+			RResult<Block> dbGetBlock = dbGetBlock(rr);
 			res = dbGetBlock.result;
 			err = dbGetBlock.err;
 		}
-		return new RetResult<Block>(res, mapError(err, "Block", Arrays.toString(blockKey(rr))));
+		return new RResult<Block>(res, mapError(err, "Block", Arrays.toString(blockKey(rr))));
 	}
 
-	public error SetBlock(Block block ) {
-		error err = inmemStore.SetBlock(block);
+	public error setBlock(Block block ) {
+		error err = inmemStore.setBlock(block);
 		if  (err != null) {
 			return err;
 		}
 		return dbSetBlock(block);
 	}
 
-	public long LastBlockIndex() {
-		return inmemStore.LastBlockIndex();
+	public long lastBlockIndex() {
+		return inmemStore.lastBlockIndex();
 	}
 
-	public RetResult<Frame> GetFrame(long rr ) {
-		RetResult<Frame> getFrame = inmemStore.GetFrame(rr);
+	public RResult<Frame> getFrame(long rr ) {
+		RResult<Frame> getFrame = inmemStore.getFrame(rr);
 		Frame res = getFrame.result;
 		error err = getFrame.err;
 		if (err != null) {
-			RetResult<Frame> dbGetFrame = dbGetFrame(rr);
+			RResult<Frame> dbGetFrame = dbGetFrame(rr);
 			res = dbGetFrame.result;
 			err = dbGetFrame.err;
 		}
-		return new RetResult<Frame>(res, mapError(err, "Frame", Arrays.toString(frameKey(rr))));
+		return new RResult<Frame>(res, mapError(err, "Frame", Arrays.toString(frameKey(rr))));
 	}
 
-	public error SetFrame(Frame frame) {
-		error err = inmemStore.SetFrame(frame);
+	public error setFrame(Frame frame) {
+		error err = inmemStore.setFrame(frame);
 		if ( err != null) {
 			return err;
 		}
 		return dbSetFrame(frame);
 	}
 
-	public error Reset(Map<String,Root> roots) {
-		return inmemStore.Reset(roots);
+	public error reset(Map<String,Root> roots) {
+		return inmemStore.reset(roots);
 	}
 
-	public error Close() {
-		error err = inmemStore.Close();
+	public error close() {
+		error err = inmemStore.close();
 		if (err != null){
 			return err;
 		}
@@ -425,11 +425,11 @@ public class BadgerStore implements Store {
 		return null;
 	}
 
-	public boolean NeedBoostrap() {
+	public boolean needBoostrap() {
 		return needBoostrap;
 	}
 
-	public String StorePath() {
+	public String storePath() {
 		return path;
 	}
 
@@ -454,32 +454,32 @@ public class BadgerStore implements Store {
 		frameMap = db.treeMap("frames_map", Serializer.BYTE_ARRAY, Serializer.BYTE_ARRAY).createOrOpen();
 	}
 
-	private RetResult<byte[]> getEvent(String eventKey) {
+	private RResult<byte[]> lookupEvent(String eventKey) {
 		byte[] v= eventMap.get(eventKey.getBytes());
 		//logger.field("eventKey", eventKey).field("v.length", v.length).debug("getEvent()");
 		if (v == null) {
-			return new RetResult<>(null, error.Errorf(String.format("Not found key : %s", eventKey)));
+			return new RResult<>(null, error.Errorf(String.format("Not found key : %s", eventKey)));
 		}
-		return new RetResult<>(v, null);
+		return new RResult<>(v, null);
 	}
 
-	public RetResult<Event> dbGetEvent(String key) {
-		RetResult<byte[]> getEvent = getEvent(key);
+	public RResult<Event> dbGetEvent(String key) {
+		RResult<byte[]> getEvent = lookupEvent(key);
 		error err = getEvent.err;
 		byte[] eventBytes = getEvent.result;
 		//logger.field("key", key).field("v", new String(eventBytes)).debug("dbGetEvent()");
 
 		if (err != null) {
-			return new RetResult<Event>(null, err);
+			return new RResult<Event>(null, err);
 		}
 
 		Event event = new Event();
 		err = event.marshaller().protoUnmarshal(eventBytes);
 		if  (err != null) {
-			return new RetResult<Event>(null, err);
+			return new RResult<Event>(null, err);
 		}
 
-		return new RetResult<Event>(event, null);
+		return new RResult<Event>(event, null);
 	}
 
 	public error dbSetEvents(Event[] events) {
@@ -491,7 +491,7 @@ public class BadgerStore implements Store {
 			//logger.field("eventHex", eventHex).debug("dbSetEvents()");
 			byte[] eventBytes = eventHex.getBytes();
 
-			RetResult<byte[]> eventProto = event.marshaller().protoMarshal();
+			RResult<byte[]> eventProto = event.marshaller().protoMarshal();
 			byte[] val = eventProto.result;
 			error err = eventProto.err;
 			if (err != null) {
@@ -514,7 +514,7 @@ public class BadgerStore implements Store {
 		return null;
 	}
 
-	public RetResult<Event[]> dbTopologicalEvents() {
+	public RResult<Event[]> dbTopologicalEvents() {
 		Event[] res = null;
 		long t = 0;
 
@@ -549,14 +549,14 @@ public class BadgerStore implements Store {
 
 		if (isDBKeyNotFound(err)) {
 			//logger.field("err", err).debug("DBKeyNotFound");
-			return new RetResult<Event[]>(res, null);
+			return new RResult<Event[]>(res, null);
 		}
 
 		//logger.field("res", res).field("err", err).debug("dbTopologicalEvents()");
-		return new RetResult<Event[]>(res, err);
+		return new RResult<Event[]>(res, err);
 	}
 
-	public  RetResult<String[]> dbParticipantEvents(String participant, long skip) {
+	public  RResult<String[]> dbParticipantEvents(String participant, long skip) {
 		String[] res = null;
 
 		long i = skip + 1;
@@ -578,13 +578,13 @@ public class BadgerStore implements Store {
 		}
 
 		if (!isDBKeyNotFound(err)) {
-			return new RetResult<String[]>(res, err);
+			return new RResult<String[]>(res, err);
 		}
 
-		return new RetResult<String[]>(res, null);
+		return new RResult<String[]>(res, null);
 	}
 
-	public RetResult<String> dbParticipantEvent(String participant, long index) {
+	public RResult<String> dbParticipantEvent(String participant, long index) {
 		//logger.field("participant", participant).field("index", index).debug("dbParticipantEvent()");
 		byte[] key = participantEventKey(participant, index);
 		byte[] data = participantMap.get(key);
@@ -593,16 +593,16 @@ public class BadgerStore implements Store {
 		error err = null;
 		if (data == null) {
 			err = StoreErr.newStoreErr("Participant", StoreErrType.KeyNotFound, Arrays.toString(key));
-			return new RetResult<>("", err);
+			return new RResult<>("", err);
 		}
 
-		return new RetResult<>( new String(data), null);
+		return new RResult<>( new String(data), null);
 	}
 
 	public error dbSetRoots(Map<String,Root> roots) {
 		for (String participant : roots.keySet()) {
 			Root root = roots.get(participant);
-			RetResult<byte[]> rootMarshal = root.marshaller().protoMarshal();
+			RResult<byte[]> rootMarshal = root.marshaller().protoMarshal();
 			byte[] val = rootMarshal.result;
 			error err = rootMarshal.err;
 			if (err != null) {
@@ -618,7 +618,7 @@ public class BadgerStore implements Store {
 		return null;
 	}
 
-	public RetResult<Root> dbGetRoot(String participant) {
+	public RResult<Root> dbGetRoot(String participant) {
 		//logger.field("participant", participant).debug("dbGetRoot()");
 		byte[] key = participantRootKey(participant);
 		byte[] rootBytes = participantRootMap.get(key);
@@ -628,19 +628,19 @@ public class BadgerStore implements Store {
 		error err = null;
 		if (rootBytes == null) {
 			err = StoreErr.newStoreErr("Participant", StoreErrType.KeyNotFound, Arrays.toString(key));
-			return new RetResult<>(new Root(), err);
+			return new RResult<>(new Root(), err);
 		}
 
 		Root root = new Root();
 		err = root.marshaller().protoUnmarshal(rootBytes);
 		if (err != null) {
-			return new RetResult<>(new Root(), err);
+			return new RResult<>(new Root(), err);
 		}
 
-		return new RetResult<>(root, null);
+		return new RResult<>(root, null);
 	}
 
-	public RetResult<RoundInfo> dbGetRound(long index ) {
+	public RResult<RoundInfo> dbGetRound(long index ) {
 		byte[] key = roundKey(index);
 
 		error err = null;
@@ -650,21 +650,21 @@ public class BadgerStore implements Store {
 		}
 
 		if (err != null) {
-			return new RetResult<>(new RoundInfo(), err);
+			return new RResult<>(new RoundInfo(), err);
 		}
 
 		RoundInfo roundInfo = new RoundInfo ();
 		err = roundInfo.marshaller().protoUnmarshal(roundBytes);
 		if (err != null) {
-			return new RetResult<>(new RoundInfo(), err);
+			return new RResult<>(new RoundInfo(), err);
 		}
 
-		return new RetResult<>(roundInfo, null);
+		return new RResult<>(roundInfo, null);
 	}
 
 	public error dbSetRound(long index , RoundInfo round ) {
 		byte[] key = roundKey(index);
-		RetResult<byte[]> protoMarshal = round.marshaller().protoMarshal();
+		RResult<byte[]> protoMarshal = round.marshaller().protoMarshal();
 		byte[] val = protoMarshal.result;
 		error err = protoMarshal.err;
 		if (err != null) {
@@ -677,7 +677,7 @@ public class BadgerStore implements Store {
 		return null;
 	}
 
-	public RetResult<peers.Peers> dbGetParticipants() {
+	public RResult<peers.Peers> dbGetParticipants() {
 		peers.Peers res = new peers.Peers();
 		error err = null;
 
@@ -695,7 +695,7 @@ public class BadgerStore implements Store {
 			res.addPeer(new Peer(new String(pubKey), ""));
 		}
 
-		return new  RetResult<>(res, err);
+		return new  RResult<>(res, err);
 	}
 
 	public error dbSetParticipants(peers.Peers participants)  {
@@ -713,28 +713,28 @@ public class BadgerStore implements Store {
 		return null;
 	}
 
-	public RetResult<Block> dbGetBlock(long index) {
+	public RResult<Block> dbGetBlock(long index) {
 		byte[] key = blockKey(index);
 
 		byte[] blockBytes = blockMap.get(key);
 		error  err = null;
 		if (blockBytes == null) {
 			err = StoreErr.newStoreErr("Block", StoreErrType.KeyNotFound, Arrays.toString(key));
-			return new RetResult<Block>(null, err);
+			return new RResult<Block>(null, err);
 		}
 
 		Block block = new Block();
 		err = block.marshaller().protoUnmarshal(blockBytes);
 		if (err != null) {
-			return new RetResult<>(null, err);
+			return new RResult<>(null, err);
 		}
 
-		return new RetResult<>(block, null);
+		return new RResult<>(block, null);
 	}
 
 	public error dbSetBlock(Block block)  {
 		byte[] key = blockKey(block.Index());
-		RetResult<byte[]> protoMarshal = block.marshaller().protoMarshal();
+		RResult<byte[]> protoMarshal = block.marshaller().protoMarshal();
 		byte[] val = protoMarshal.result;
 		error err = protoMarshal.err;
 		if (err != null) {
@@ -748,28 +748,28 @@ public class BadgerStore implements Store {
 		return null;
 	}
 
-	public RetResult<Frame> dbGetFrame(long index) {
+	public RResult<Frame> dbGetFrame(long index) {
 		byte[] key = frameKey(index);
 
 		byte[] frameBytes = frameMap.get(key);
 		error  err = null;
 		if (frameBytes == null) {
 			err = StoreErr.newStoreErr("Frame", StoreErrType.KeyNotFound, Arrays.toString(key));
-			return new RetResult<>(new Frame(), err);
+			return new RResult<>(new Frame(), err);
 		}
 
 		Frame frame = new Frame();
 		err = frame.marshaller().protoUnmarshal(frameBytes);
 		if (err != null) {
-			return new RetResult<Frame>(new Frame(), err);
+			return new RResult<Frame>(new Frame(), err);
 		}
 
-		return new RetResult<Frame>(frame, null);
+		return new RResult<Frame>(frame, null);
 	}
 
 	public error dbSetFrame(Frame frame)  {
 		byte[] key = frameKey(frame.Round);
-		RetResult<byte[]> protoMarshal = frame.marshaller().protoMarshal();
+		RResult<byte[]> protoMarshal = frame.marshaller().protoMarshal();
 		byte[] val = protoMarshal.result;
 		error err = protoMarshal.err;
 		if (err != null) {
@@ -797,7 +797,7 @@ public class BadgerStore implements Store {
 		return err;
 	}
 
-	public RetResult<Event[]> TopologicalEvents() {
+	public RResult<Event[]> topologicalEvents() {
 		return dbTopologicalEvents();
 	}
 }

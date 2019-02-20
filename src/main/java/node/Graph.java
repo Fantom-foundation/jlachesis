@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import common.RetResult;
+import common.RResult;
 import common.error;
 import peers.Peer;
 import poset.Block;
@@ -39,8 +39,8 @@ public class Graph {
 
 		Store store = Node.core.poset.Store;
 
-	 	for (long blockIdx = 0; blockIdx <= store.LastBlockIndex(); blockIdx++) {
-	 		RetResult<Block> getBlock = store.GetBlock(blockIdx);
+	 	for (long blockIdx = 0; blockIdx <= store.lastBlockIndex(); blockIdx++) {
+	 		RResult<Block> getBlock = store.getBlock(blockIdx);
 			Block r = getBlock.result;
 			error err = getBlock.err;
 	 		if (err != null) {
@@ -60,14 +60,14 @@ public class Graph {
 		peers.Peers peers = Node.core.poset.Participants;
 
 		for (Peer p : peers.getByPubKey().values()) {
-			RetResult<Root> getRootCall = store.GetRoot(p.getPubKeyHex());
+			RResult<Root> getRootCall = store.getRoot(p.getPubKeyHex());
 			Root root = getRootCall.result;
 			error err = getRootCall.err;
 
 			if (err != null) {
 				error.panic(err);
 			}
-			RetResult<String[]> pEventsCall = store.ParticipantEvents(p.getPubKeyHex(), root.GetSelfParent().GetIndex());
+			RResult<String[]> pEventsCall = store.participantEvents(p.getPubKeyHex(), root.GetSelfParent().GetIndex());
 			String[] evs = pEventsCall.result;
 			err = pEventsCall.err;
 			if (err != null) {
@@ -90,7 +90,7 @@ public class Graph {
 			res.get(p.getPubKeyHex()).put(root.GetSelfParent().GetHash(), initialEvent);
 
 			for (String e : evs) {
-				 RetResult<Event> getEvent = store.GetEvent(e);
+				 RResult<Event> getEvent = store.getEvent(e);
 				Event event = getEvent.result;
 				err = getEvent.err;
 
@@ -110,8 +110,8 @@ public class Graph {
 		ArrayList<RoundInfo> roundList = new ArrayList<RoundInfo>();
 		Store store = Node.core.poset.Store;
 
-		for (long round = 0; round <= store.LastRound(); round++){
-			RetResult<RoundInfo> getRound = store.GetRound(round);
+		for (long round = 0; round <= store.lastRound(); round++){
+			RResult<RoundInfo> getRound = store.getRound(round);
 			RoundInfo r = getRound.result;
 			error err = getRound.err;
 

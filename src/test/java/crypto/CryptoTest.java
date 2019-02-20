@@ -29,8 +29,8 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.junit.Test;
 
 import autils.FileUtils;
-import common.RetResult;
-import common.RetResult3;
+import common.RResult;
+import common.RResult3;
 import common.error;
 
 /**
@@ -73,7 +73,7 @@ public class CryptoTest {
 		FileUtils.createFile(pemKey.path, FileUtils.MOD_700);
 
 		// Try a read, should get nothing
-		RetResult<KeyPair> readKey = pemKey.ReadKeyPair();
+		RResult<KeyPair> readKey = pemKey.ReadKeyPair();
 		KeyPair keyPair = readKey.result;
 		error err = readKey.err;
 		assertNotNull("ReadKey should generate an error", err);
@@ -110,7 +110,7 @@ public class CryptoTest {
 		PemKey pemKey = new PemKey(filePath);
 
 		// Try a read
-		RetResult<KeyPair> readKey = pemKey.ReadKeyPair();
+		RResult<KeyPair> readKey = pemKey.ReadKeyPair();
 		KeyPair key = readKey.result;
 		error err = readKey.err;
 		assertNull("ReadKey should have no error", err);
@@ -130,7 +130,7 @@ public class CryptoTest {
 		assertEquals("public key should be equal to the expected on", expectedPub, pub);
 
 		String msg = "time for beer";
-		RetResult3<BigInteger, BigInteger> sign = Utils.Sign(key.getPrivate(), msg.getBytes());
+		RResult3<BigInteger, BigInteger> sign = Utils.Sign(key.getPrivate(), msg.getBytes());
 
 		BigInteger r = sign.result1;
 		BigInteger s = sign.result2;
@@ -157,7 +157,7 @@ public class CryptoTest {
 		assertTrue("(r2, s2) should also be a valid signature", verifySig2);
 
 
-		RetResult3<BigInteger, BigInteger> decodeSignature = Utils.DecodeSignature(sigEncoded);
+		RResult3<BigInteger, BigInteger> decodeSignature = Utils.DecodeSignature(sigEncoded);
 		BigInteger dr = decodeSignature.result1;
 		BigInteger ds = decodeSignature.result2;
 		assertEquals("Signature Rs should be the same", r, dr);
@@ -180,12 +180,12 @@ public class CryptoTest {
 		byte[] msgBytes = msg.getBytes();
 		byte[] msgHashBytes = crypto.hash.SHA256(msgBytes);
 
-		RetResult3<BigInteger, BigInteger> sign = Utils.Sign(privKey, msgHashBytes);
+		RResult3<BigInteger, BigInteger> sign = Utils.Sign(privKey, msgHashBytes);
 		BigInteger r = sign.result1;
 		BigInteger s = sign.result2;
 
 		String encodedSig = Utils.encodeSignature(r, s);
-		RetResult3<BigInteger, BigInteger> decodeSignature = Utils.DecodeSignature(encodedSig);
+		RResult3<BigInteger, BigInteger> decodeSignature = Utils.DecodeSignature(encodedSig);
 
 		BigInteger dr = decodeSignature.result1;
 		BigInteger ds = decodeSignature.result2;

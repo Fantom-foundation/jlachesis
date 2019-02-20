@@ -1,6 +1,6 @@
 package proxy.internal;
 
-import common.RetResult;
+import common.RResult;
 import common.error;
 import proxy.proto.ToClient;
 import proxy.proto.ToServer;
@@ -8,9 +8,9 @@ import proxy.proto.ToServer;
 public interface LachesisNode_ConnectClient {
 	error Send(ToServer s);
 
-	RetResult<ToClient> Recv();
+	RResult<ToClient> Recv();
 
-	RetResult<LachesisNode_ConnectClient> Connect();
+	RResult<LachesisNode_ConnectClient> Connect();
 
 	void CloseSend();
 }

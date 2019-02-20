@@ -5,7 +5,7 @@ import java.util.Arrays;
 import com.google.protobuf.ByteString;
 
 import common.IProto;
-import common.RetResult;
+import common.RResult;
 import common.error;
 import crypto.hash;
 
@@ -40,15 +40,15 @@ public class BlockBody {
 		return this.transactions;
 	}
 
-	public RetResult<byte[]> hash() {
-		RetResult<byte[]> marshal = marshaller().protoMarshal();
+	public RResult<byte[]> hash() {
+		RResult<byte[]> marshal = marshaller().protoMarshal();
 
 		byte[] hashBytes = marshal.result;
 		error err = marshal.err;
 		if (err != null) {
-			return new RetResult<byte[]>(null, err);
+			return new RResult<byte[]>(null, err);
 		}
-		return new RetResult<byte[]>(hash.SHA256(hashBytes), null);
+		return new RResult<byte[]>(hash.SHA256(hashBytes), null);
 	}
 
 	public IProto<BlockBody, poset.proto.BlockBody> marshaller() {

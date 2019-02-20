@@ -17,7 +17,7 @@ import com.google.protobuf.ByteString;
 import autils.Logger;
 import channel.ChannelUtils;
 import channel.ExecService;
-import common.RetResult;
+import common.RResult;
 import common.UuidUtils;
 import common.error;
 import proxy.internal.LachesisNodeClient;
@@ -173,19 +173,19 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 		}
 	}
 
-	public RetResult<ToClient> recvFromServer() {
+	public RResult<ToClient> recvFromServer() {
 		while (true) {
-			RetResult<ToClient> streamRecv = streamRecv();
+			RResult<ToClient> streamRecv = streamRecv();
 			ToClient data = streamRecv.result;
 			error err = streamRecv.err;
 			if (err == null) {
-				return new RetResult<ToClient>(data, err);
+				return new RResult<ToClient>(data, err);
 			}
 			logger.warnf("recv from server err: %s", err);
 
 			err = reConnect();
 			if (err == ErrConnShutdown) {
-				return new RetResult<ToClient>(data, err);
+				return new RResult<ToClient>(data, err);
 			}
 		}
 	}
@@ -246,7 +246,7 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 			.debug("reConnect() setting stream again");
 		this.stream = new AtomicReference<LachesisNode_ConnectClient>();
 
-		RetResult<LachesisNode_ConnectClient> connect = client.Connect();
+		RResult<LachesisNode_ConnectClient> connect = client.Connect();
 		LachesisNode_ConnectClient stream = connect.result;
 		error err = connect.err;
 		if (err != null) {
@@ -267,7 +267,7 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 		error err;
 		UUID uuid;
 		while (true) {
-			RetResult<ToClient> recvFromServer = recvFromServer();
+			RResult<ToClient> recvFromServer = recvFromServer();
 			event = recvFromServer.result;
 			err = recvFromServer.err;
 			if (err != null) {
@@ -376,11 +376,11 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 		return v.Send(data);
 	}
 
-	public RetResult<ToClient> streamRecv() {
+	public RResult<ToClient> streamRecv() {
 		logger.field("stream", stream).debug("streamRecv()");
 		LachesisNode_ConnectClient v = stream.get();
 		if (v == null) {
-			return new RetResult<ToClient>(null, ErrNeedReconnect);
+			return new RResult<ToClient>(null, ErrNeedReconnect);
 		}
 		return v.Recv();
 	}

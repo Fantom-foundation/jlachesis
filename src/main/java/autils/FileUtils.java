@@ -12,7 +12,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Set;
 
-import common.RetResult;
+import common.RResult;
 import common.error;
 
 public class FileUtils {
@@ -21,7 +21,7 @@ public class FileUtils {
 	public static final String MOD_700 = "rwx------";
 	public static final String MOD_755 = "rwxr-xr-x";
 
-	public static RetResult<byte[]> readFile(String filePath) {
+	public static RResult<byte[]> readFile(String filePath) {
 		File file = new File(filePath);
 
 		error err = null;
@@ -41,10 +41,10 @@ public class FileUtils {
 			e1.printStackTrace();
 		}
 
-		return new RetResult<byte[]>(b, err);
+		return new RResult<byte[]>(b, err);
 	}
 
-	public static RetResult<byte[]> readFileToByteArray(String filePath) {
+	public static RResult<byte[]> readFileToByteArray(String filePath) {
 		error err = null;
 		byte[] b = null;
 		try {
@@ -53,7 +53,7 @@ public class FileUtils {
 			err = new error("Error Reading The File: " + filePath);
 //			e.printStackTrace();
 		}
-		return new RetResult<byte[]>(b, err);
+		return new RResult<byte[]>(b, err);
 	}
 
 	public static boolean fileExist(String filePath) {
@@ -67,11 +67,11 @@ public class FileUtils {
 	 * @param mod is the mod in the forms of "rwxrwxrwx" or "rw-r--r--"
 	 * @return
 	 */
-	public static RetResult<Path> mkdirs(String filePath, String mod) {
+	public static RResult<Path> mkdirs(String filePath, String mod) {
 		return mkdir(Paths.get(filePath).getParent(), mod);
 	}
 
-	public static RetResult<Path> mkdir(Path dirPath, String mod) {
+	public static RResult<Path> mkdir(Path dirPath, String mod) {
 		error err = null;
 
 		if (!Files.exists(dirPath)) {
@@ -82,7 +82,7 @@ public class FileUtils {
 				err = error.Errorf("error mkdir " + dirPath + ", returned msg= " + e.getMessage());
 			}
 		}
-		return new RetResult<>(dirPath, err);
+		return new RResult<>(dirPath, err);
 	}
 
 	/**
@@ -91,7 +91,7 @@ public class FileUtils {
 	 * @param mod is the mod in the forms of "rwxrwxrwx" or "rw-r--r--"
 	 * @return
 	 */
-	public static RetResult<Path> createFile(String filePath, String mod) {
+	public static RResult<Path> createFile(String filePath, String mod) {
 		Path newFilePath = Paths.get(filePath);
 		error err = null;
 
@@ -104,7 +104,7 @@ public class FileUtils {
 			}
 		}
 
-		return new RetResult<>(newFilePath, err);
+		return new RResult<>(newFilePath, err);
 	}
 
 	public static error delete(String path) {
@@ -131,7 +131,7 @@ public class FileUtils {
 
 
 	public static error writeToFile(String file, byte[] bytes, String mod) {
-		RetResult<Path> createFile = createFile(file, mod);
+		RResult<Path> createFile = createFile(file, mod);
 		if (createFile.err != null) {
 			return createFile.err;
 		}

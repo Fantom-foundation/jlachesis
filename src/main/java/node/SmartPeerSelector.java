@@ -3,7 +3,7 @@ package node;
 import java.util.Map;
 import java.util.Random;
 
-import common.RetResult;
+import common.RResult;
 import peers.Peer;
 
 /**
@@ -45,7 +45,7 @@ public class SmartPeerSelector implements PeerSelector {
 			if (selectablePeers.length > 1) {
 				selectablePeers = peers.excludePeer(selectablePeers, last).peers;
 				if (selectablePeers.length > 1) {
-					RetResult<Map<String, Long>> ftRes = flagTable.getFlagTable();
+					RResult<Map<String, Long>> ftRes = flagTable.getFlagTable();
 
 					if (ftRes.err == null) {
 						Map<String, Long> ft = ftRes.result;

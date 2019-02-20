@@ -12,7 +12,7 @@ import autils.Logger;
 import autils.time;
 import channel.ExecService;
 import channel.Selectors;
-import common.RetResult;
+import common.RResult;
 import common.TestUtils;
 import common.error;
 import crypto.hash;
@@ -90,7 +90,7 @@ public class ClientTest {
 		tim.setAlarm(tim.read() + timeout / 4);
 
 		//commit first block and check that the client's statehash is correct
-		RetResult<byte[]> commitBlock = appProxy.CommitBlock(blocks[0]);
+		RResult<byte[]> commitBlock = appProxy.CommitBlock(blocks[0]);
 		byte[] stateHash = commitBlock.result;
 		error err = commitBlock.err;
 		assertNull("No error when commit block", err);
@@ -103,7 +103,7 @@ public class ClientTest {
 		}
 
 		assertEquals("state hash should match", expectedStateHash, stateHash);
-		RetResult<byte[]> getSnapshot = appProxy.GetSnapshot(blocks[0].Index());
+		RResult<byte[]> getSnapshot = appProxy.GetSnapshot(blocks[0].Index());
 		byte[] snapshot = getSnapshot.result;
 		err = getSnapshot.err;
 		assertNull("No error when getSnapshot", err);
@@ -111,7 +111,7 @@ public class ClientTest {
 
 		//commit a few more blocks, then attempt to restore back to block 0 state
 		for (int i = 1; i < 5; i++) {
-			RetResult<byte[]> commitBlock2 = appProxy.CommitBlock(blocks[i]);
+			RResult<byte[]> commitBlock2 = appProxy.CommitBlock(blocks[i]);
 			err = commitBlock2.err;
 			assertNull("No error when CommitBlock", err);
 		}

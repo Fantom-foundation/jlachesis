@@ -4,7 +4,7 @@ import java.util.Map;
 
 import autils.Logger;
 import common.StoreErrType;
-import common.RetResult;
+import common.RResult;
 import common.RollingIndexMap;
 import common.StoreErr;
 import common.error;
@@ -30,52 +30,52 @@ public class ParticipantEventsCache {
 		this.rim = new RollingIndexMap("ParticipantEvents", size, participants.toIDSlice());
 	}
 
-	public RetResult<Long> participantID(String participant) {
+	public RResult<Long> participantID(String participant) {
 		Peer peer = participants.getByPubKey().get(participant);
 
 		if (peer == null) {
-			return new RetResult<Long>(-1L,
+			return new RResult<Long>(-1L,
 			StoreErr.newStoreErr("ParticipantEvents", StoreErrType.SkippedIndex, participant));
 
 		}
 
-		return new RetResult<Long>(peer.getID(), null);
+		return new RResult<Long>(peer.getID(), null);
 	}
 
 	//return participant events with index > skip
-	public RetResult<String[]> Get(String participant, long skipIndex) {
-		RetResult<Long> participantID = participantID(participant);
+	public RResult<String[]> Get(String participant, long skipIndex) {
+		RResult<Long> participantID = participantID(participant);
 		long id = participantID.result;
 		error err= participantID.err;
 		if (err != null) {
-			return new RetResult<String[]>(null, err);
+			return new RResult<String[]>(null, err);
 		}
 
-		RetResult<Object[]> get = rim.Get(id, skipIndex);
+		RResult<Object[]> get = rim.get(id, skipIndex);
 		Object[] pe = get.result;
 		err = get.err;
 		if (err != null) {
-			return new RetResult<String[]>(null, err);
+			return new RResult<String[]>(null, err);
 		}
 
 		String[] res = new String[pe.length];
 		for (int k = 0; k < pe.length; k++) {
 			res[k] = pe[k].toString();
 		}
-		return new RetResult<String[]>(res, null);
+		return new RResult<String[]>(res, null);
 	}
 
-	public RetResult<String> GetItem(String participant, long index) {
+	public RResult<String> GetItem(String participant, long index) {
 		logger.field("participant", participant).field("index", index).debug("GetItem()");
 
-		RetResult<Long> participantID = participantID(participant);
+		RResult<Long> participantID = participantID(participant);
 		long id = participantID.result;
 		error err = participantID.err;
 		if (err != null) {
-			return new  RetResult<String>("", err);
+			return new  RResult<String>("", err);
 		}
 
-		RetResult<Object> getItem = rim.GetItem(id, index);
+		RResult<Object> getItem = rim.getItem(id, index);
 		Object item = getItem.result;
 		err = getItem.err;
 		logger.field("id", id)
@@ -83,65 +83,65 @@ public class ParticipantEventsCache {
 			.field("err", err).debug("GetItem()");
 
 		if (err != null) {
-			return new  RetResult<String>("", err);
+			return new  RResult<String>("", err);
 		}
-		return new  RetResult<String>(item.toString(), null);
+		return new  RResult<String>(item.toString(), null);
 	}
 
-	public RetResult<String> GetLast(String participant) {
-		RetResult<Long> participantID = participantID(participant);
+	public RResult<String> GetLast(String participant) {
+		RResult<Long> participantID = participantID(participant);
 		long id = participantID.result;
 		error err = participantID.err;
 		if (err != null) {
-			return new RetResult<String>("", err);
+			return new RResult<String>("", err);
 		}
 
-		RetResult<Object> getLast = rim.GetLast(id);
+		RResult<Object> getLast = rim.getLast(id);
 		Object last = getLast.result;
 		err = getLast.err;
 		if (err != null) {
-			return new RetResult<String>("", err);
+			return new RResult<String>("", err);
 		}
-		return new RetResult<String>(last.toString(), null);
+		return new RResult<String>(last.toString(), null);
 	}
 
-	public RetResult<String> GetLastConsensus(String participant) {
-		RetResult<Long> participantID = participantID(participant);
+	public RResult<String> GetLastConsensus(String participant) {
+		RResult<Long> participantID = participantID(participant);
 		long id = participantID.result;
 		error err = participantID.err;
 		if (err != null) {
-			return new RetResult<String>("", err);
+			return new RResult<String>("", err);
 		}
 
-		RetResult<Object> getLast = rim.GetLast(id);
+		RResult<Object> getLast = rim.getLast(id);
 		Object last = getLast.result;
 		err = getLast.err;
 		if (err != null) {
-			return new RetResult<String>("", err);
+			return new RResult<String>("", err);
 		}
-		return new RetResult<String>(last.toString(), null);
+		return new RResult<String>(last.toString(), null);
 	}
 
 	public error Set(String participant, String hash, long index) {
-		RetResult<Long> participantID = participantID(participant);
+		RResult<Long> participantID = participantID(participant);
 		long id = participantID.result;
 		error err = participantID.err;
 		if (err != null) {
 			return err;
 		}
-		return rim.Set(id, hash, index);
+		return rim.set(id, hash, index);
 	}
 
 	//returns [participant id] => lastKnownIndex
 	public Map<Long,Long> Known() {
-		return rim.Known();
+		return rim.known();
 	}
 
 	public error Reset() {
-		return rim.Reset();
+		return rim.reset();
 	}
 
 	public void Import(ParticipantEventsCache other) {
-		rim.Import(other.rim);
+		rim.copy(other.rim);
 	}
 }

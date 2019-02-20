@@ -16,8 +16,8 @@ import org.junit.Test;
 import autils.Appender;
 import autils.FileUtils;
 import common.RResult2;
-import common.RetResult;
-import common.RetResult3;
+import common.RResult;
+import common.RResult3;
 import common.error;
 import peers.Peer;
 import peers.Peers;
@@ -50,7 +50,7 @@ public class BadgerStoreTest {
 
 		recreateTestDir();
 
-		RetResult<BadgerStore> newBadgerStore = BadgerStore.NewBadgerStore(participants, cacheSize, dbPath);
+		RResult<BadgerStore> newBadgerStore = BadgerStore.NewBadgerStore(participants, cacheSize, dbPath);
 		BadgerStore store = newBadgerStore.result;
 		error err = newBadgerStore.err;
 		assertNull("No error creating badger store", err);
@@ -68,7 +68,7 @@ public class BadgerStoreTest {
 	}
 
 	private void removeBadgerStore(BadgerStore store) {
-		error err = store.Close();
+		error err = store.close();
 		assertNull("No error", err);
 
 		err = FileUtils.delete(testDir);
@@ -83,7 +83,7 @@ public class BadgerStoreTest {
 		});
 
 		int cacheSize = 1;
-		RetResult<BadgerStore> newStore = BadgerStore.NewBadgerStore(participants, cacheSize, dbPath);
+		RResult<BadgerStore> newStore = BadgerStore.NewBadgerStore(participants, cacheSize, dbPath);
 		BadgerStore store = newStore.result;
 		error err = newStore.err;
 		assertNull("No error", err);
@@ -105,7 +105,7 @@ public class BadgerStoreTest {
 		error err;
 		for (String participant : inmemRoots.keySet()) {
 			Root root = inmemRoots.get(participant);
-			RetResult<Root> dbGetRoot = store.dbGetRoot(participant);
+			RResult<Root> dbGetRoot = store.dbGetRoot(participant);
 			Root dbRoot = dbGetRoot.result;
 			err = dbGetRoot.err;
 			assertNull(String.format("No error when retrieving DB root for participant %s", participant), err);
@@ -119,14 +119,14 @@ public class BadgerStoreTest {
 	public void TestLoadBadgerStore() {
 		recreateTestDir();
 		BadgerStore store = createTestDB(dbPath);
-		store.Close();
+		store.close();
 		int cacheSize = 100;
-		RetResult<BadgerStore> loadBadgerStore = BadgerStore.LoadBadgerStore(cacheSize, store.path);
+		RResult<BadgerStore> loadBadgerStore = BadgerStore.LoadBadgerStore(cacheSize, store.path);
 		store = loadBadgerStore.result;
 		error err = loadBadgerStore.err;
 		assertNull("No error", err);
 
-		RetResult<Peers> dbGetParticipants = store.dbGetParticipants();
+		RResult<Peers> dbGetParticipants = store.dbGetParticipants();
 		Peers dbParticipants = dbGetParticipants.result;
 		err = dbGetParticipants.err;
 		assertNull("No error", err);
@@ -189,7 +189,7 @@ public class BadgerStoreTest {
 			Event[] evs = events.get(p);
 			for (int k  = 0; k< evs.length; ++k) {
 				Event ev = evs[k];
-				RetResult<Event> dbGetEvent = store.dbGetEvent(ev.hex());
+				RResult<Event> dbGetEvent = store.dbGetEvent(ev.hex());
 				Event rev = dbGetEvent.result;
 				err = dbGetEvent.err;
 				assertNull("No error", err);
@@ -197,7 +197,7 @@ public class BadgerStoreTest {
 				assertEquals(String.format("events[%s][%d].Body should match", p, k), ev.message.Body, rev.message.Body);
 				assertEquals(String.format("events[%s][%d].Signature should match", p, k), ev.message.Signature, rev.message.Signature);
 
-				RetResult<Boolean> verify = rev.verify();
+				RResult<Boolean> verify = rev.verify();
 				boolean ver = verify.result;
 				err = verify.err;
 				assertNull("No error", err);
@@ -206,7 +206,7 @@ public class BadgerStoreTest {
 		}
 
 		//check topological order of events was correctly created
-		RetResult<Event[]> dbTopologicalEventsCall = store.dbTopologicalEvents();
+		RResult<Event[]> dbTopologicalEventsCall = store.dbTopologicalEvents();
 		Event[] dbTopologicalEvents = dbTopologicalEventsCall.result;
 		err = dbTopologicalEventsCall.err;
 		assertNull("No error", err);
@@ -220,7 +220,7 @@ public class BadgerStoreTest {
 			assertEquals(String.format("dbTopologicalEvents[%d].Signature should match", i),
 						te.message.Signature, dte.message.Signature);
 
-			RetResult<Boolean> verify = dte.verify();
+			RResult<Boolean> verify = dte.verify();
 			boolean ver = verify.result;
 			err = verify.err;
 			assertNull("No error", err);
@@ -230,7 +230,7 @@ public class BadgerStoreTest {
 		//check that participant events where correctly added
 		int skipIndex = -1; //do not skip any indexes
 		for (pub p : participants) {
-			RetResult<String[]> dbParticipantEventsCall= store.dbParticipantEvents(p.hex, skipIndex);
+			RResult<String[]> dbParticipantEventsCall= store.dbParticipantEvents(p.hex, skipIndex);
 			String[] pEvents = dbParticipantEventsCall.result;
 			err = dbParticipantEventsCall.err;
 			assertNull("No error", err);
@@ -270,14 +270,14 @@ public class BadgerStoreTest {
 		error err = store.dbSetRound(0, round);
 		assertNull("No error", err);
 
-		RetResult<RoundInfo> dbGetRound = store.dbGetRound(0);
+		RResult<RoundInfo> dbGetRound = store.dbGetRound(0);
 		RoundInfo storedRound = dbGetRound.result;
 		err = dbGetRound.err;
 		assertNull("No error", err);
 
 		assertEquals("Round and StoredRound do not match", round, storedRound);
 
-		String[] witnesses = store.RoundWitnesses(0);
+		String[] witnesses = store.roundWitnesses(0);
 		String[] expectedWitnesses = round.Witnesses();
 		assertEquals("There should be match length of witnesses", expectedWitnesses.length, witnesses.length);
 
@@ -296,7 +296,7 @@ public class BadgerStoreTest {
 		error err = store.dbSetParticipants(store.participants);
 		assertNull("No error", err);
 
-		RetResult<Peers> dbGetParticipants = store.dbGetParticipants();
+		RResult<Peers> dbGetParticipants = store.dbGetParticipants();
 		Peers participantsFromDB = dbGetParticipants.result;
 		err = dbGetParticipants.err;
 		assertNull("No error", err);
@@ -332,7 +332,7 @@ public class BadgerStoreTest {
 
 		Block block = new Block(index, roundReceived, frameHash, transactions);
 
-		RetResult<BlockSignature> signCall = block.sign(participants[0].privKey);
+		RResult<BlockSignature> signCall = block.sign(participants[0].privKey);
 		BlockSignature sig1 = signCall.result;
 		error err = signCall.err;
 		assertNull("No error", err);
@@ -349,7 +349,7 @@ public class BadgerStoreTest {
 		err = store.dbSetBlock(block);
 		assertNull("No error", err);
 
-		RetResult<Block> dbGetBlock = store.dbGetBlock(index);
+		RResult<Block> dbGetBlock = store.dbGetBlock(index);
 		Block storedBlock = dbGetBlock.result;
 		err = dbGetBlock.err;
 		assertNull("No error", err);
@@ -400,7 +400,7 @@ public class BadgerStoreTest {
 		error err = store.dbSetFrame(frame);
 		assertNull("No error", err);
 
-		RetResult<Frame> dbGetFrame = store.dbGetFrame(frame.Round);
+		RResult<Frame> dbGetFrame = store.dbGetFrame(frame.Round);
 		Frame storedFrame = dbGetFrame.result;
 		err = dbGetFrame.err;
 		assertNull("No error", err);
@@ -434,7 +434,7 @@ public class BadgerStoreTest {
 						p.pubKey,
 						k, null);
 				items = Appender.append(items, event);
-				error err = store.SetEvent(event);
+				error err = store.setEvent(event);
 				assertNull("No error", err);
 			}
 			events.put(p.hex, items);
@@ -446,7 +446,7 @@ public class BadgerStoreTest {
 
 			for (int k = 0; k < evs.length; ++k) {
 				Event ev = evs[k];
-				RetResult<Event> getEvent = store.GetEvent(ev.hex());
+				RResult<Event> getEvent = store.getEvent(ev.hex());
 				Event rev = getEvent.result;
 				error err = getEvent.err;
 				assertNull("No error", err);
@@ -459,7 +459,7 @@ public class BadgerStoreTest {
 		//check retrieving events per participant
 		int skipIndex = -1; //do not skip any indexes
 		for (pub p : participants) {
-			RetResult<String[]> pEventsCall = store.ParticipantEvents(p.hex, skipIndex);
+			RResult<String[]> pEventsCall = store.participantEvents(p.hex, skipIndex);
 			String[] pEvents = pEventsCall.result;
 			error err = pEventsCall.err;
 			assertNull("No error", err);
@@ -475,7 +475,7 @@ public class BadgerStoreTest {
 
 		//check retrieving participant last
 		for (pub p : participants) {
-			RetResult3<String, Boolean> lastEventFrom = store.LastEventFrom(p.hex);
+			RResult3<String, Boolean> lastEventFrom = store.lastEventFrom(p.hex);
 			String last = lastEventFrom.result1;
 			error err = lastEventFrom.err;
 			assertNull("No error", err);
@@ -489,13 +489,13 @@ public class BadgerStoreTest {
 		for (pub p : participants) {
 			expectedKnown.put((long) p.id, (long) testSize - 1);
 		}
-		Map<Long, Long> known = store.KnownEvents();
+		Map<Long, Long> known = store.knownEvents();
 		assertEquals("Known should match", known, expectedKnown);
 
 		for (pub p : participants) {
 			Event[] evs = events.get(p.hex);
 			for (Event ev : evs) {
-				error err = store.AddConsensusEvent(ev);
+				error err = store.addConsensusEvent(ev);
 				assertNull("No error", err);
 			}
 		}
@@ -523,20 +523,20 @@ public class BadgerStoreTest {
 			round.AddEvent(event.hex(), true);
 		}
 
-		error err = store.SetRound(0, round);
+		error err = store.setRound(0, round);
 		assertNull("No error", err);
 
-		long c = store.LastRound();
+		long c = store.lastRound();
 		assertEquals("Store LastRound should be 0", 0, c);
 
-		RetResult<RoundInfo> getRound = store.GetRound(0);
+		RResult<RoundInfo> getRound = store.getRound(0);
 		RoundInfo storedRound = getRound.result;
 		err = getRound.err;
 		assertNull("No error", err);
 
 		assertEquals("Round and StoredRound do not match", round, storedRound);
 
-		String[] witnesses = store.RoundWitnesses(0);
+		String[] witnesses = store.roundWitnesses(0);
 		String[] expectedWitnesses = round.Witnesses();
 		assertEquals("There should be %d witnesses, not %d", expectedWitnesses.length, witnesses.length);
 		for (String w : expectedWitnesses) {
@@ -564,7 +564,7 @@ public class BadgerStoreTest {
 		};
 		byte[] frameHash = "this is the frame hash".getBytes();
 		Block block = new Block(index, roundReceived, frameHash, transactions);
-		RetResult<BlockSignature> signCall = block.sign(participants[0].privKey);
+		RResult<BlockSignature> signCall = block.sign(participants[0].privKey);
 		BlockSignature sig1 = signCall.result;
 		error err = signCall.err;
 		assertNull("No error", err);
@@ -578,17 +578,17 @@ public class BadgerStoreTest {
 		block.setSignature(sig2);
 
 		//"Store Block"
-		err = store.SetBlock(block);
+		err = store.setBlock(block);
 		assertNull("No error", err);
 
-		RetResult<Block> getBlock = store.GetBlock(index);
+		RResult<Block> getBlock = store.getBlock(index);
 		Block storedBlock = getBlock.result;
 		err = getBlock.err;
 		assertNull("No error", err);
 		assertEquals("Block and StoredBlock do not match", storedBlock, block);
 
 		// "Check signatures in stored Block"
-		RetResult<Block> getBlock2 = store.GetBlock(index);
+		RResult<Block> getBlock2 = store.getBlock(index);
 		storedBlock = getBlock2.result;
 		err = getBlock2.err;
 		assertNull("No error", err);
@@ -630,9 +630,9 @@ public class BadgerStoreTest {
 		Frame frame = new Frame(1L, roots, events);
 
 		// "Store Frame"
-		error err = store.SetFrame(frame);
+		error err = store.setFrame(frame);
 		assertNull("No error", err);
-		RetResult<Frame> getFrame = store.GetFrame(frame.Round);
+		RResult<Frame> getFrame = store.getFrame(frame.Round);
 		Frame storedFrame = getFrame.result;
 		err = getFrame.err;
 		assertNull("No error", err);

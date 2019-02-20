@@ -25,7 +25,7 @@ import org.jcsp.lang.One2OneChannelInt;
 import autils.Logger;
 import channel.ChannelUtils;
 import channel.ExecService;
-import common.RetResult;
+import common.RResult;
 import common.error;
 
 /**
@@ -126,7 +126,7 @@ public class NetworkTransport implements Transport {
 //		default:
 //			return false;
 //		}
-		logger.debug("isShutdown() start");
+		//logger.debug("isShutdown() start");
 
 		CSTimer tim = new CSTimer();
 		final Alternative alt = new Alternative (new Guard[] {shutdownCh.in(), tim});
@@ -169,22 +169,22 @@ public class NetworkTransport implements Transport {
 	 * @param timeout
 	 * @return
 	 */
-	public RetResult<netConn> getConn(String target, Duration timeout) {
+	public RResult<netConn> getConn(String target, Duration timeout) {
 		// Check for a pooled conn
 		netConn conn = getPooledConn(target);
 		if (conn != null) {
-			return new RetResult<netConn>(conn, null);
+			return new RResult<netConn>(conn, null);
 		}
 
 		// Dial a new connection
 		logger.field("target", target)
 			.field("timeout", timeout.toMillis()).debug("Dialing");
 
-		RetResult<Socket> dialCall = stream.dial(target, timeout);
+		RResult<Socket> dialCall = stream.dial(target, timeout);
 		Socket conn2 = dialCall.result;
 		error err = dialCall.err;
 		if (err != null) {
-			return new RetResult<netConn>(null, err);
+			return new RResult<netConn>(null, err);
 		}
 
 		// Wrap the conn
@@ -198,11 +198,11 @@ public class NetworkTransport implements Transport {
 			netConn.dec = new jsonDecoder(r);
 			netConn.enc = new jsonEncoder(w);
 		} catch (IOException e) {
-			return new RetResult<netConn>(null, error.Errorf(e.getMessage()));
+			return new RResult<netConn>(null, error.Errorf(e.getMessage()));
 		}
 
 		// Done
-		return new RetResult<netConn>(netConn, null);
+		return new RResult<netConn>(netConn, null);
 	}
 
 	/**
@@ -247,7 +247,7 @@ public class NetworkTransport implements Transport {
 		logger.field("target", target).field("rpcType", rpcType).debug("genericRPC");
 
 		// Get a conn
-		RetResult<netConn> connCall = getConn(target, timeout);
+		RResult<netConn> connCall = getConn(target, timeout);
 		netConn conn = connCall.result;
 		error err = connCall.err;
 		if (err != null) {
@@ -274,7 +274,7 @@ public class NetworkTransport implements Transport {
 		}
 
 		// Decode the response
-		RetResult<Boolean> decodeResponse = decodeResponse(conn, resp);
+		RResult<Boolean> decodeResponse = decodeResponse(conn, resp);
 		boolean canReturn = decodeResponse.result;
 		err = decodeResponse.err;
 		logger.field("err", err).field("canReturn", canReturn).debug("decodeResponse finished");
@@ -336,7 +336,7 @@ public class NetworkTransport implements Transport {
 	 * @param resp
 	 * @return
 	 */
-	public RetResult<Boolean> decodeResponse(netConn conn, ParsableMessage resp) {
+	public RResult<Boolean> decodeResponse(netConn conn, ParsableMessage resp) {
 		logger.field("resp", resp).debug("decodeResponse() start");
 
 		// Decode the error if any
@@ -348,7 +348,7 @@ public class NetworkTransport implements Transport {
 
 		if (err != null) {
 			conn.Release();
-			return new RetResult<Boolean>(false, err);
+			return new RResult<Boolean>(false, err);
 		}
 
 		// Decode the response
@@ -359,15 +359,15 @@ public class NetworkTransport implements Transport {
 
 		if (err != null) {
 			conn.Release();
-			return new RetResult<Boolean>(false, err);
+			return new RResult<Boolean>(false, err);
 		}
 
 		// Format an error if any
 		if (rpcError.Error() != null) {
-			return new RetResult<Boolean>(true, rpcError);
+			return new RResult<Boolean>(true, rpcError);
 		}
 
-		return new RetResult<Boolean>(true, null);
+		return new RResult<Boolean>(true, null);
 	}
 
 	/**
@@ -378,7 +378,7 @@ public class NetworkTransport implements Transport {
 
 		while (true) {
 			// Accept incoming connections
-			RetResult<Socket> accept = stream.accept();
+			RResult<Socket> accept = stream.accept();
 			Socket conn = accept.result;
 			error err = accept.err;
 			if (err != null) {
@@ -450,7 +450,7 @@ public class NetworkTransport implements Transport {
 	 */
 	public error handleCommand(Reader r, jsonDecoder dec, jsonEncoder enc) {
 		// Get the rpc type
-		RetResult<Integer> readRpc = dec.readRpc();
+		RResult<Integer> readRpc = dec.readRpc();
 		int rpcType = readRpc.result;
 		error err = readRpc.err;
 		if (err != null) {

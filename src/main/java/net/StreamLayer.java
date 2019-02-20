@@ -4,7 +4,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.time.Duration;
 
-import common.RetResult;
+import common.RResult;
 import common.error;
 
 /**
@@ -13,9 +13,9 @@ import common.error;
  */
 interface StreamLayer  {
 	/** Dial is used to create a new outgoing connection. */
-	RetResult<Socket> dial(String address, Duration timeout);
+	RResult<Socket> dial(String address, Duration timeout);
 
-	RetResult<Socket> accept();
+	RResult<Socket> accept();
 
 	error close();
 

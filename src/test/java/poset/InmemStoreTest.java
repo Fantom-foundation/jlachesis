@@ -12,7 +12,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import autils.Appender;
-import common.RetResult;
+import common.RResult;
 import common.error;
 import peers.Peer;
 import peers.Peers;
@@ -68,7 +68,7 @@ public class InmemStoreTest {
 					k, null);
 				event.hex(); //just to set private variables
 				items = Appender.append(items, event);
-				error err = store.SetEvent(event);
+				error err = store.setEvent(event);
 				assertNull("No error when setEvent", err);
 			}
 			events.put(p.hex, items);
@@ -80,7 +80,7 @@ public class InmemStoreTest {
 			Event[] evs = events.get(p);
 			for (int k = 0; k< evs.length; ++k) {
 				ev = evs[k];
-				RetResult<Event> getEvent = store.GetEvent(ev.hex());
+				RResult<Event> getEvent = store.getEvent(ev.hex());
 				Event rev = getEvent.result;
 				err = getEvent.err;
 				assertNull("No error when GetEvent", err);
@@ -92,7 +92,7 @@ public class InmemStoreTest {
 		// "Check ParticipantEventsCache"
 		long skipIndex = -1L; //do not skip any indexes
 		for (pub p : participants) {
-			RetResult<String[]> pEventsCall = store.ParticipantEvents(p.hex, skipIndex);
+			RResult<String[]> pEventsCall = store.participantEvents(p.hex, skipIndex);
 			String[] pEvents = pEventsCall.result;
 			err = pEventsCall.err;
 			assertNull("No error when ParticipantEvents", err);
@@ -113,14 +113,14 @@ public class InmemStoreTest {
 		for (pub p : participants) {
 			expectedKnown.put(p.id, (long) (testSize - 1));
 		}
-		Map<Long, Long> known = store.KnownEvents();
+		Map<Long, Long> known = store.knownEvents();
 		assertEquals("Known events should match", expectedKnown, known);
 
 		//"Add ConsensusEvents"
 		for (pub p : participants) {
 			Event[] evs = events.get(p.hex);
 			for (Event ev1 : evs) {
-				err = store.AddConsensusEvent(ev1);
+				err = store.addConsensusEvent(ev1);
 				assertNull("No error when AddConsensusEvent", err);
 			}
 		}
@@ -144,21 +144,21 @@ public class InmemStoreTest {
 		}
 
 		//"Store Round"
-		error err = store.SetRound(0, round);
+		error err = store.setRound(0, round);
 		assertNull("No error when SetRound", err);
 
-		RetResult<RoundInfo> getRound = store.GetRound(0);
+		RResult<RoundInfo> getRound = store.getRound(0);
 		RoundInfo storedRound = getRound.result;
 		err = getRound.err;
 		assertNull("No error when GetRound", err);
 		assertEquals("Round and StoredRound should match", round, storedRound);
 
 		//"Check LastRound"
-		long c = store.LastRound();
+		long c = store.lastRound();
 		assertEquals("Store LastRound should be 0", 0, c);
 
 		// "Check witnesses"
-		String[] witnesses = store.RoundWitnesses(0);
+		String[] witnesses = store.roundWitnesses(0);
 		String[] expectedWitnesses = round.Witnesses();
 		assertEquals("There should be matching witnesses", expectedWitnesses.length, witnesses.length);
 
@@ -184,12 +184,12 @@ public class InmemStoreTest {
 		byte[] frameHash = "this is the frame hash".getBytes();
 		Block block = new Block(index, roundReceived, frameHash, transactions);
 
-		RetResult<BlockSignature> signCall = block.sign(participants[0].privKey);
+		RResult<BlockSignature> signCall = block.sign(participants[0].privKey);
 		BlockSignature sig1 = signCall.result;
 		error err = signCall.err;
 		assertNull("No error when sign", err);
 
-		RetResult<BlockSignature> signCall2 = block.sign(participants[1].privKey);
+		RResult<BlockSignature> signCall2 = block.sign(participants[1].privKey);
 		BlockSignature sig2 = signCall2.result;
 		err = signCall2.err;
 		assertNull("No error when sign", err);
@@ -198,17 +198,17 @@ public class InmemStoreTest {
 		block.setSignature(sig2);
 
 		//"Store Block"
-		err = store.SetBlock(block);
+		err = store.setBlock(block);
 		assertNull("No error when SetBlock", err);
 
-		RetResult<Block> getBlockCall = store.GetBlock(index);
+		RResult<Block> getBlockCall = store.getBlock(index);
 		Block storedBlock = getBlockCall.result;
 		err = getBlockCall.err;
 		assertNull("No error when GetBlock", err);
 		assertEquals("Block and StoredBlock should match", storedBlock, block);
 
 		// "Check signatures in stored Block"
-		RetResult<Block> getBlock = store.GetBlock(index);
+		RResult<Block> getBlock = store.getBlock(index);
 		storedBlock = getBlock.result;
 		err = getBlock.err;
 		assertNull("No error when GetBlock", err);

@@ -2,7 +2,7 @@ package peers;
 
 import common.Hash32;
 import common.IProto;
-import common.RetResult;
+import common.RResult;
 import common.error;
 
 /**
@@ -100,13 +100,13 @@ public class Peer {
 	}
 
 	@SuppressWarnings("finally")
-	public RetResult<byte[]> PubKeyBytes() {
+	public RResult<byte[]> PubKeyBytes() {
 		//PubKeyHex[2:]
 		try {
 			byte[] decode = crypto.Utils.decodeString(pubKeyHex.substring(2, pubKeyHex.length())).result;
-			return new RetResult<byte[]>(decode, null);
+			return new RResult<byte[]>(decode, null);
 		} catch (Exception e){
-			return new RetResult<byte[]>(null, error.Errorf(e.getMessage()));
+			return new RResult<byte[]>(null, error.Errorf(e.getMessage()));
 		}
 	}
 
@@ -136,7 +136,7 @@ public class Peer {
 
 	public error computeID() {
 		// TODO: Use the decoded bytes from hex
-		RetResult<byte[]> pubKey = PubKeyBytes();
+		RResult<byte[]> pubKey = PubKeyBytes();
 		error err = pubKey.err;
 		if (err != null) {
 			return err;

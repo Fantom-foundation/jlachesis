@@ -5,7 +5,7 @@ import java.security.KeyPair;
 
 import autils.FileUtils;
 import common.Cmd;
-import common.RetResult;
+import common.RResult;
 import common.error;
 import crypto.PemKey;
 import crypto.Utils;
@@ -58,7 +58,7 @@ public class KeygenCmd extends Cmd {
 	}
 
 	public error keygen(Cmd cmd, String[] args) {
-		RetResult<KeyPair> generateKey = crypto.Utils.GenerateECDSAKeyPair();
+		RResult<KeyPair> generateKey = crypto.Utils.GenerateECDSAKeyPair();
 		KeyPair keyPair = generateKey.result;
 		error err = generateKey.err;
 		if (err != null) {

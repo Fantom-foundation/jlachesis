@@ -9,7 +9,7 @@ public class TestLoggerAdapter {
 	Class<?> clazz;
 	String prefix;
 
-	public RetResult<Integer> Write(byte[] d) {
+	public RResult<Integer> Write(byte[] d) {
 		if (d[d.length - 1] == '\n') {
 			d = Arrays.copyOfRange(d, 0, d.length - 1);
 		}
@@ -18,10 +18,10 @@ public class TestLoggerAdapter {
 			String l = prefix + ": " + Arrays.toString(d);
 			// TBD
 //			t.Log(l);
-			return new RetResult<Integer>(l.length(), null);
+			return new RResult<Integer>(l.length(), null);
 		}
 
 //		t.Log(Arrays.toString(d));
-		return new RetResult<Integer>(d.length, null);
+		return new RResult<Integer>(d.length, null);
 	}
 }

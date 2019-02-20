@@ -9,7 +9,7 @@ import java.time.Duration;
 
 import org.junit.Test;
 
-import common.RetResult;
+import common.RResult;
 import common.TestUtils;
 import common.error;
 
@@ -53,7 +53,7 @@ public class TcpTransportTest {
 		InetSocketAddress addr = new InetSocketAddress("127.0.0.1", expectedPort);
 		assertEquals("Bind port should match", expectedPort, addr.getPort());
 
-		RetResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(
+		RResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(
 				":12345", addr.getAddress(), 1, Duration.ZERO, TestUtils.NewTestLogger(this.getClass()));
 		NetworkTransport trans = newTCPTransport.result;
 		error err = newTCPTransport.err;

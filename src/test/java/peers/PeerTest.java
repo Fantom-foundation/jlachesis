@@ -12,7 +12,7 @@ import java.util.HashMap;
 import org.junit.Test;
 
 import autils.FileUtils;
-import common.RetResult;
+import common.RResult;
 import common.error;
 
 /**
@@ -40,7 +40,7 @@ public class PeerTest {
 		//System.out.println("store.path =" +  store.path);
 
 		// Try a read, should get nothing
-		RetResult<Peers> peersCall = store.peers();
+		RResult<Peers> peersCall = store.peers();
 		Peers peers = peersCall.result;
 		error err = peersCall.err;
 
@@ -81,7 +81,7 @@ public class PeerTest {
 			assertEquals(String.format("peers[%d] PubKeyHex should match", i),
 				newPeersSlice[i].pubKeyHex, peersSlice[i].pubKeyHex);
 
-			RetResult<byte[]> pubKeyBytesCall = peersSlice[i].PubKeyBytes();
+			RResult<byte[]> pubKeyBytesCall = peersSlice[i].PubKeyBytes();
 			byte[] pubKeyBytes = pubKeyBytesCall.result;
 			err = pubKeyBytesCall.err;
 

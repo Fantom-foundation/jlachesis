@@ -8,7 +8,7 @@ import java.util.Arrays;
 
 import autils.JsonUtils;
 import autils.Logger;
-import common.RetResult;
+import common.RResult;
 import common.error;
 
 public class jsonDecoder {
@@ -21,7 +21,7 @@ public class jsonDecoder {
 		this.r = r;
 	}
 
-	public RetResult<Integer> readRpc() {
+	public RResult<Integer> readRpc() {
 		int rpcType = 0;
 		error err = null;
 		try {
@@ -29,13 +29,13 @@ public class jsonDecoder {
 		} catch (IOException e) {
 			err = error.Errorf(e.getMessage());
 		}
-		return new RetResult<>(rpcType, err);
+		return new RResult<>(rpcType, err);
 	}
 
 	public error Decode(error rpcError) {
 		logger.field("rpcError", rpcError).debug("Decode()");
 
-		RetResult<String> readString = read();
+		RResult<String> readString = read();
 	    String s = readString.result;
 	    error err = readString.err;
 
@@ -52,7 +52,7 @@ public class jsonDecoder {
 	public <T extends ParsableMessage> error Decode(T resp) {
 		logger.field("resp", resp).debug("Decode()");
 
-		RetResult<String> readString = read();
+		RResult<String> readString = read();
 	    String s = readString.result;
 	    error err = readString.err;
 	    logger.field("s", s).debug("Decode()");
@@ -70,7 +70,7 @@ public class jsonDecoder {
 		return err;
 	}
 
-	private RetResult<String> read() {
+	private RResult<String> read() {
 		Writer writer = new StringWriter();
 		error err = null;
 		int nrBytes;
@@ -90,6 +90,6 @@ public class jsonDecoder {
         }
 
 	    String s = writer.toString();
-	    return new RetResult<>(s, err);
+	    return new RResult<>(s, err);
 	}
 }

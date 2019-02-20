@@ -21,7 +21,7 @@ import autils.Logger;
 import channel.ChannelUtils;
 import channel.ExecService;
 import common.NetUtils;
-import common.RetResult;
+import common.RResult;
 import common.UuidUtils;
 import common.error;
 import io.grpc.ServerBuilder;
@@ -167,7 +167,7 @@ public class GrpcAppProxy implements AppProxy, LachesisNodeServer {
 		logger.debug("client connected");
 		// read from stream
 		while (true) {
-			RetResult<ToServer> recv = stream.Recv();
+			RResult<ToServer> recv = stream.Recv();
 			ToServer req = recv.result;
 			error err = recv.err;
 			if (err != null) {
@@ -247,40 +247,40 @@ public class GrpcAppProxy implements AppProxy, LachesisNodeServer {
 	}
 
 	// CommitBlock implements AppProxy interface method
-	public RetResult<byte[]> CommitBlock(poset.Block block) {
-		RetResult<byte[]> protoMarshal = block.marshaller().protoMarshal();
+	public RResult<byte[]> CommitBlock(poset.Block block) {
+		RResult<byte[]> protoMarshal = block.marshaller().protoMarshal();
 		byte[] data = protoMarshal.result;
 		error err = protoMarshal.err;
 		if (err != null) {
-			return new RetResult<byte[]>(null, err);
+			return new RResult<byte[]>(null, err);
 		}
 
 		One2OneChannel<Answer> answerCh = push_block(data);
 		Answer answer = answerCh.in().read();
 		boolean ok = answer != null;
 		if (!ok) {
-			return new RetResult<byte[]>(null, ErrNoAnswers);
+			return new RResult<byte[]>(null, ErrNoAnswers);
 		}
 		String err_msg = answer.getError();
 		if (!err_msg.isEmpty()) {
-			return new RetResult<byte[]>(null, error.Errorf(err_msg));
+			return new RResult<byte[]>(null, error.Errorf(err_msg));
 		}
-		return new RetResult<byte[]>(answer.getData().toByteArray(), null);
+		return new RResult<byte[]>(answer.getData().toByteArray(), null);
 	}
 
 	// GetSnapshot implements AppProxy interface method
-	public RetResult<byte[]> GetSnapshot(long blockIndex) {
+	public RResult<byte[]> GetSnapshot(long blockIndex) {
 		One2OneChannel<Answer> push_query = push_query(blockIndex);
 		Answer answer = push_query.in().read();
 		boolean ok = answer != null;
 		if (!ok) {
-			return new RetResult<byte[]>(null, ErrNoAnswers);
+			return new RResult<byte[]>(null, ErrNoAnswers);
 		}
 		String err_msg = answer.getError();
 		if (!err_msg.isEmpty()) {
-			return new RetResult<byte[]>(null, error.Errorf(err_msg));
+			return new RResult<byte[]>(null, error.Errorf(err_msg));
 		}
-		return new RetResult<byte[]>(answer.getData().toByteArray(), null);
+		return new RResult<byte[]>(answer.getData().toByteArray(), null);
 	}
 
 	/**

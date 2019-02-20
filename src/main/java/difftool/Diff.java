@@ -5,7 +5,7 @@ import java.util.Comparator;
 
 import com.google.gson.Gson;
 
-import common.RetResult;
+import common.RResult;
 import common.error;
 import node.Node;
 import poset.Block;
@@ -125,14 +125,14 @@ public class Diff {
 		poset.Block b0, b1;
 		long i;
 		for (i = 0; i <= minH; i++) {
-			RetResult<Block> getBlock = n0.getBlock(i);
+			RResult<Block> getBlock = n0.getBlock(i);
 			b0 = getBlock.result;
 			diff.Err = getBlock.err;
 			if (diff.Err != null) {
 				return false;
 			}
 
-			RetResult<Block> getBlock2 = n1.getBlock(i);
+			RResult<Block> getBlock2 = n1.getBlock(i);
 			b1 = getBlock2.result;
 			diff.Err = getBlock2.err;
 			if (diff.Err != null) {
@@ -167,13 +167,13 @@ public class Diff {
 		poset.RoundInfo r0, r1;
 		long i;
 		for (i = 0; i <= diff.FirstRoundIndex; i++) {
-			RetResult<RoundInfo> getRound = n0.getRound(i);
+			RResult<RoundInfo> getRound = n0.getRound(i);
 			r0 = getRound.result;
 			diff.Err = getRound.err;
 			if (diff.Err != null) {
 				return false;
 			}
-			RetResult<RoundInfo> getRound2 = n1.getRound(i);
+			RResult<RoundInfo> getRound2 = n1.getRound(i);
 			r1 = getRound2.result;
 			diff.Err = getRound2.err;
 			if (diff.Err != null) {
@@ -212,7 +212,7 @@ public class Diff {
 		Node n1 = diff.node[1];
 
 		poset.Frame f0, f1 ;
-		RetResult<Frame> getFrame = n0.getFrame(diff.FirstRoundIndex);
+		RResult<Frame> getFrame = n0.getFrame(diff.FirstRoundIndex);
 		f0 = getFrame.result;
 		diff.Err = getFrame.err;
 		if (diff.Err != null) {

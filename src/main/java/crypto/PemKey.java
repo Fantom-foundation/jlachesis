@@ -28,7 +28,7 @@ import org.bouncycastle.util.io.pem.PemObjectGenerator;
 import org.bouncycastle.util.io.pem.PemWriter;
 
 import autils.FileUtils;
-import common.RetResult;
+import common.RResult;
 import common.error;
 
 /**
@@ -44,14 +44,14 @@ public class PemKey {
 		path = Paths.get(base, pemKeyPath).toString();
 	}
 
-	public synchronized RetResult<KeyPair> ReadKeyPair() {
+	public synchronized RResult<KeyPair> ReadKeyPair() {
 		try {
 			KeyPair keyPairFromPEM = keyPairFromPEM(path);
-			return new RetResult<>(keyPairFromPEM, null);
+			return new RResult<>(keyPairFromPEM, null);
 		} catch (IllegalArgumentException | IOException | NullPointerException e) {
-			return new RetResult<>(null, error.Errorf(e.getMessage()));
+			return new RResult<>(null, error.Errorf(e.getMessage()));
 		} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-			return new RetResult<>(null, error.Errorf(e.getMessage()));
+			return new RResult<>(null, error.Errorf(e.getMessage()));
 		}
 	}
 
@@ -74,12 +74,12 @@ public class PemKey {
 		return new KeyPair(ecPublicKey, key);
 	}
 
-	public synchronized RetResult<PrivateKey> ReadKey() {
+	public synchronized RResult<PrivateKey> ReadKey() {
 		try {
 			RSAPrivateKey privateKey = RSA.getPrivateKey(path);
-			return new RetResult<>(privateKey, null);
+			return new RResult<>(privateKey, null);
 		} catch (IOException | GeneralSecurityException e) {
-			return new RetResult<>(null, error.Errorf(e.getMessage()));
+			return new RResult<>(null, error.Errorf(e.getMessage()));
 		}
 	}
 
@@ -128,17 +128,17 @@ public class PemKey {
         return stringWriter.toString();
 	}
 
-	public static RetResult<PemDump> GeneratePemKey() {
-		RetResult<KeyPair> ecdsa = Utils.GenerateECDSAKeyPair();
+	public static RResult<PemDump> GeneratePemKey() {
+		RResult<KeyPair> ecdsa = Utils.GenerateECDSAKeyPair();
 		KeyPair keyPair = ecdsa.result;
 		error err = ecdsa.err;
 		if (err != null) {
-			return new RetResult<PemDump>(null, err);
+			return new RResult<PemDump>(null, err);
 		}
 		return ToPemKey(keyPair);
 	}
 
-	public static RetResult<PemDump> ToPemKey(KeyPair keyPair) {
+	public static RResult<PemDump> ToPemKey(KeyPair keyPair) {
 		// TODO
 //		String pub = String.format("0x%X", Utils.FromECDSAPub(priv.PublicKey));;
 //		b, err := x509.MarshalECPrivateKey(priv);
@@ -156,6 +156,6 @@ public class PemKey {
 		//System.out.println("PemDump privateKey = " + privateKey);
 
 		error err = null;
-		return new RetResult<PemDump>(new PemDump(publicKey, privateKey), err);
+		return new RResult<PemDump>(new PemDump(publicKey, privateKey), err);
 	}
 }

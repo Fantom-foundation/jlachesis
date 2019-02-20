@@ -21,8 +21,8 @@ public interface IProto<T, P extends AbstractMessage> {
 
 	public abstract Parser<P> parser();
 
-	default public RetResult<byte[]> protoMarshal() {
-		return new RetResult<>(toProto().toByteArray(), null);
+	default public RResult<byte[]> protoMarshal() {
+		return new RResult<>(toProto().toByteArray(), null);
 	}
 
 	default public error protoUnmarshal(byte[] data) {

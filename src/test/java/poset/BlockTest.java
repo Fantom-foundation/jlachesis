@@ -10,7 +10,7 @@ import java.security.NoSuchProviderException;
 
 import org.junit.Test;
 
-import common.RetResult;
+import common.RResult;
 import common.error;
 import crypto.Utils;
 
@@ -38,12 +38,12 @@ public class BlockTest {
 				"ghi".getBytes(),
 			});
 
-		RetResult<BlockSignature> signCall = block.sign(privateKey);
+		RResult<BlockSignature> signCall = block.sign(privateKey);
 		BlockSignature sig = signCall.result;
 		error err = signCall.err;
 		assertNull("No error when signing", err);
 
-		RetResult<Boolean> verifyCall = block.verify(sig);
+		RResult<Boolean> verifyCall = block.verify(sig);
 		boolean res = verifyCall.result;
 		err = verifyCall.err;
 		assertNull("No error when verifying", err);
@@ -71,7 +71,7 @@ public class BlockTest {
 					"ghi".getBytes(),
 				});
 
-		RetResult<BlockSignature> signCall = block.sign(key);
+		RResult<BlockSignature> signCall = block.sign(key);
 		BlockSignature sig = signCall.result;
 		error err = signCall.err;
 		assertNull("No error when signing", err);
@@ -83,12 +83,12 @@ public class BlockTest {
 		String pub = Utils.toHexString(pubKeyBytes);
 //		System.out.println(" pub toHexString = " + pub);
 //
-		RetResult<BlockSignature> getSignature = block.getSignature(pub);
+		RResult<BlockSignature> getSignature = block.getSignature(pub);
 		BlockSignature blockSignature = getSignature.result;
 		err = getSignature.err;
 		assertNull("No error when GetSignature", err);
 
-		RetResult<Boolean> verifyCall = block.verify(blockSignature);
+		RResult<Boolean> verifyCall = block.verify(blockSignature);
 		boolean res = verifyCall.result;
 		err = verifyCall.err;
 		assertNull("No error when verifying signature", err);

@@ -2,8 +2,8 @@ package node;
 
 import java.util.Map;
 
-import common.RetResult;
+import common.RResult;
 
 public interface FlagtableContainer {
-	RetResult<Map<String,Long>> getFlagTable();
+	RResult<Map<String,Long>> getFlagTable();
 }

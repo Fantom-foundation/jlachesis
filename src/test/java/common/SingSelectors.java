@@ -1,9 +1,8 @@
-package channel;
+package common;
 
 import org.jcsp.lang.Alternative;
 import org.jcsp.lang.CSTimer;
 import org.jcsp.lang.Guard;
-import org.jcsp.lang.One2OneChannel;
 
 /**
  *

@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import common.LRUCache;
-import common.RetResult;
-import common.RetResult3;
+import common.RResult;
+import common.RResult3;
 import common.RollingIndex;
 import common.StoreErr;
 import common.StoreErrType;
@@ -38,7 +38,7 @@ public class InmemStore implements Store {
 			rootsByParticipant.put(pk,  root);
 		}
 
-		RetResult<LRUCache<String,Event>> eventCacheCre = LRUCache.New(cacheSize);
+		RResult<LRUCache<String,Event>> eventCacheCre = LRUCache.New(cacheSize);
 		LRUCache<String,Event> eventCache = eventCacheCre.result;
 		error err = eventCacheCre.err;
 		if (err != null) {
@@ -46,7 +46,7 @@ public class InmemStore implements Store {
 			System.exit(31);
 		}
 
-		RetResult<LRUCache<Long,RoundInfo>> roundCacheCre = LRUCache.New(cacheSize);
+		RResult<LRUCache<Long,RoundInfo>> roundCacheCre = LRUCache.New(cacheSize);
 		LRUCache<Long,RoundInfo> roundCache = roundCacheCre.result;
 		err = roundCacheCre.err;
 		if (err != null) {
@@ -54,7 +54,7 @@ public class InmemStore implements Store {
 			System.exit(32);
 		}
 
-		RetResult<LRUCache<Long,Block>> blockCacheCre = LRUCache.New(cacheSize);
+		RResult<LRUCache<Long,Block>> blockCacheCre = LRUCache.New(cacheSize);
 		LRUCache<Long,Block> blockCache = blockCacheCre.result;
 		err = blockCacheCre.err;
 		if (err != null) {
@@ -62,7 +62,7 @@ public class InmemStore implements Store {
 			System.exit(33);
 		}
 
-		RetResult<LRUCache<Long,Frame>> frameCacheCre = LRUCache.New(cacheSize);
+		RResult<LRUCache<Long,Frame>> frameCacheCre = LRUCache.New(cacheSize);
 		LRUCache<Long,Frame> frameCache = frameCacheCre.result;
 		err = frameCacheCre.err;
 		if (err != null) {
@@ -90,7 +90,7 @@ public class InmemStore implements Store {
 					Root root = new Root(peer.getID());
 					rootsByParticipant.put(peer.getPubKeyHex(), root);
 					rootsBySelfParent = null;
-					RootsBySelfParent();
+					rootsBySelfParent();
 			 		ParticipantEventsCache old = participantEventsCache;
 					participantEventsCache = new ParticipantEventsCache(cacheSize, participants);
 					participantEventsCache.Import(old);
@@ -98,36 +98,36 @@ public class InmemStore implements Store {
 		;
 	}
 
-	public int CacheSize() {
+	public int cacheSize() {
 		return cacheSize;
 	}
 
-	public RetResult<peers.Peers> Participants() {
-		return new RetResult<peers.Peers>(participants, null);
+	public RResult<peers.Peers> participants() {
+		return new RResult<peers.Peers>(participants, null);
 	}
 
-	public RetResult<Map<String,Root>> RootsBySelfParent() {
+	public RResult<Map<String,Root>> rootsBySelfParent() {
 		if (rootsBySelfParent == null) {
 			rootsBySelfParent = new HashMap<String,Root>();
 			for (Root root : rootsByParticipant.values()) {
 				rootsBySelfParent.put(root.SelfParent.Hash, root);
 			}
 		}
-		return new RetResult<Map<String,Root>>(rootsBySelfParent, null);
+		return new RResult<Map<String,Root>>(rootsBySelfParent, null);
 	}
 
-	public RetResult<Event> GetEvent(String key) {
+	public RResult<Event> getEvent(String key) {
 		Event res = eventCache.get(key);
 		if (res == null) {
-			return new RetResult<Event>(new Event(), StoreErr.newStoreErr("EventCache", StoreErrType.KeyNotFound, key));
+			return new RResult<Event>(new Event(), StoreErr.newStoreErr("EventCache", StoreErrType.KeyNotFound, key));
 		}
 
-		return new RetResult<Event>( res, null);
+		return new RResult<Event>( res, null);
 	}
 
-	public error SetEvent(Event event) {
+	public error setEvent(Event event) {
 		String key = event.hex();
-		error err = GetEvent(key).err;
+		error err = getEvent(key).err;
 		if (err != null && !StoreErr.Is(err, StoreErrType.KeyNotFound)) {
 			return err;
 		}
@@ -148,30 +148,30 @@ public class InmemStore implements Store {
 		return participantEventsCache.Set(participant, hash, index);
 	}
 
-	public RetResult<String[]> ParticipantEvents(String participant, long skip) {
+	public RResult<String[]> participantEvents(String participant, long skip) {
 		return participantEventsCache.Get(participant, skip);
 	}
 
-	public RetResult<String> ParticipantEvent(String participant, long index) {
-		RetResult<String> getItem = participantEventsCache.GetItem(participant, index);
+	public RResult<String> participantEvent(String participant, long index) {
+		RResult<String> getItem = participantEventsCache.GetItem(participant, index);
 		String ev = getItem.result;
 		error err = getItem.err;
 		if (err != null) {
 			Root root = rootsByParticipant.get(participant);
 			if (root == null) {
-				return new RetResult<String>("", StoreErr.newStoreErr("InmemStore.Roots", StoreErrType.NoRoot, participant));
+				return new RResult<String>("", StoreErr.newStoreErr("InmemStore.Roots", StoreErrType.NoRoot, participant));
 			}
 			if (root.SelfParent.Index == index) {
 				ev = root.SelfParent.Hash;
 				err = null;
 			}
 		}
-		return new RetResult<String>(ev, err);
+		return new RResult<String>(ev, err);
 	}
 
-	public RetResult3<String,Boolean> LastEventFrom(String participant ) {
+	public RResult3<String,Boolean> lastEventFrom(String participant ) {
 		//try to get the last event from this participant
-		RetResult<String> getLast = participantEventsCache.GetLast(participant);
+		RResult<String> getLast = participantEventsCache.GetLast(participant);
 		String last = getLast.result;
 		error err = getLast.err;
 		boolean isRoot = false;
@@ -186,10 +186,10 @@ public class InmemStore implements Store {
 				err = StoreErr.newStoreErr("InmemStore.Roots", StoreErrType.NoRoot, participant);
 			}
 		}
-		return new RetResult3<String,Boolean>(last, isRoot, err);
+		return new RResult3<String,Boolean>(last, isRoot, err);
 	}
 
-	public RetResult3<String,Boolean> LastConsensusEventFrom(String participant){
+	public RResult3<String,Boolean> lastConsensusEventFrom(String participant){
 		//try to get the last consensus event from this participant
 		String last = lastConsensusEvents.get(participant);
 		boolean isRoot = false;
@@ -204,10 +204,10 @@ public class InmemStore implements Store {
 				err = StoreErr.newStoreErr("InmemStore.Roots", StoreErrType.NoRoot, participant);
 			}
 		}
-		return new RetResult3<String,Boolean>(last, isRoot, err);
+		return new RResult3<String,Boolean>(last, isRoot, err);
 	}
 
-	public Map<Long,Long> KnownEvents() {
+	public Map<Long,Long> knownEvents() {
 		Map<Long, Long> known = participantEventsCache.Known();
 		for (String p : participants.getByPubKey().keySet()) {
 			Peer pid = participants.getByPubKey().get(p);
@@ -221,8 +221,8 @@ public class InmemStore implements Store {
 		return known;
 	}
 
-	public String[] ConsensusEvents() {
-		Object[] lastWindow = consensusCache.GetLastWindow().result1;
+	public String[] consensusEvents() {
+		Object[] lastWindow = consensusCache.getLastWindow().result1;
 		String[] res = new String[lastWindow.length];
 		for (int i =0 ; i< lastWindow.length; ++i) {
 			res[i] = lastWindow[i].toString();
@@ -230,26 +230,26 @@ public class InmemStore implements Store {
 		return res;
 	}
 
-	public long ConsensusEventsCount() {
+	public long consensusEventsCount() {
 		return totConsensusEvents;
 	}
 
-	public error AddConsensusEvent(Event event ) {
-		consensusCache.Set(event.hex(), totConsensusEvents);
+	public error addConsensusEvent(Event event ) {
+		consensusCache.set(event.hex(), totConsensusEvents);
 		totConsensusEvents++;
 		lastConsensusEvents.put(event.creator(), event.hex());
 		return null;
 	}
 
-	public RetResult<RoundInfo> GetRound(long r) {
+	public RResult<RoundInfo> getRound(long r) {
 		RoundInfo res = roundCache.get(r);
 		if (res == null) {
-			return new RetResult<RoundInfo>(new RoundInfo(), StoreErr.newStoreErr("RoundCache", StoreErrType.KeyNotFound, Long.toString(r, 10)));
+			return new RResult<RoundInfo>(new RoundInfo(), StoreErr.newStoreErr("RoundCache", StoreErrType.KeyNotFound, Long.toString(r, 10)));
 		}
-		return new RetResult<RoundInfo>(res, null);
+		return new RResult<RoundInfo>(res, null);
 	}
 
-	public error SetRound(long r , RoundInfo round )  {
+	public error setRound(long r , RoundInfo round )  {
 		roundCache.put(r, round);
 		if (r > lastRound) {
 			lastRound = r;
@@ -257,12 +257,12 @@ public class InmemStore implements Store {
 		return null;
 	}
 
-	public long LastRound() {
+	public long lastRound() {
 		return lastRound;
 	}
 
-	public String[] RoundWitnesses(long r) {
-		RetResult<RoundInfo> getRound = GetRound(r);
+	public String[] roundWitnesses(long r) {
+		RResult<RoundInfo> getRound = getRound(r);
 		RoundInfo round = getRound.result;
 		error err = getRound.err;
 		if (err != null) {
@@ -271,8 +271,8 @@ public class InmemStore implements Store {
 		return round.Witnesses();
 	}
 
-	public int RoundEvents(long r) {
-		RetResult<RoundInfo> getRound = GetRound(r);
+	public int roundEvents(long r) {
+		RResult<RoundInfo> getRound = getRound(r);
 		RoundInfo round = getRound.result;
 		error err = getRound.err;
 		if (err != null) {
@@ -281,25 +281,25 @@ public class InmemStore implements Store {
 		return round.Message.Events.size();
 	}
 
-	public RetResult<Root> GetRoot(String participant)  {
+	public RResult<Root> getRoot(String participant)  {
 		Root res = rootsByParticipant.get(participant);
 		if (res == null) {
-			return new RetResult<Root>(null, StoreErr.newStoreErr("RootCache", StoreErrType.KeyNotFound, participant));
+			return new RResult<Root>(null, StoreErr.newStoreErr("RootCache", StoreErrType.KeyNotFound, participant));
 		}
-		return new RetResult<Root>(res, null);
+		return new RResult<Root>(res, null);
 	}
 
-	public RetResult<Block> GetBlock(long index) {
+	public RResult<Block> getBlock(long index) {
 		Block res = blockCache.get(index);
 		if ( res == null) {
-			return new RetResult<Block>( null, StoreErr.newStoreErr("BlockCache", StoreErrType.KeyNotFound, Long.toString(index, 10)));
+			return new RResult<Block>( null, StoreErr.newStoreErr("BlockCache", StoreErrType.KeyNotFound, Long.toString(index, 10)));
 		}
-		return new RetResult<Block>( res, null);
+		return new RResult<Block>( res, null);
 	}
 
-	public error SetBlock(Block block) {
+	public error setBlock(Block block) {
 		long index = block.Index();
-		RetResult<Block> getBlock = GetBlock(index);
+		RResult<Block> getBlock = getBlock(index);
 		error err = getBlock.err;
 		if (err != null && !StoreErr.Is(err, StoreErrType.KeyNotFound)) {
 			return err;
@@ -311,21 +311,21 @@ public class InmemStore implements Store {
 		return null;
 	}
 
-	public long LastBlockIndex()  {
+	public long lastBlockIndex()  {
 		return lastBlock;
 	}
 
-	public RetResult<Frame> GetFrame(long index) {
+	public RResult<Frame> getFrame(long index) {
 		Frame res = frameCache.get(index);
 		if (res == null) {
-			return new RetResult<Frame>( new Frame(), StoreErr.newStoreErr("FrameCache", StoreErrType.KeyNotFound, Long.toString(index, 10)));
+			return new RResult<Frame>( new Frame(), StoreErr.newStoreErr("FrameCache", StoreErrType.KeyNotFound, Long.toString(index, 10)));
 		}
-		return new RetResult<Frame>(res , null);
+		return new RResult<Frame>(res , null);
 	}
 
-	public error SetFrame(Frame frame)  {
+	public error setFrame(Frame frame)  {
 		long index = frame.Round;
-		RetResult<Frame> getFrame = GetFrame(index);
+		RResult<Frame> getFrame = getFrame(index);
 		error err = getFrame.err;
 		if (err != null && !StoreErr.Is(err, StoreErrType.KeyNotFound)) {
 			return err;
@@ -334,8 +334,8 @@ public class InmemStore implements Store {
 		return null;
 	}
 
-	public error Reset(Map<String,Root> roots)  {
-		RetResult<LRUCache<String,Event>> newCache = LRUCache.New(cacheSize);
+	public error reset(Map<String,Root> roots)  {
+		RResult<LRUCache<String,Event>> newCache = LRUCache.New(cacheSize);
 		LRUCache<String,Event> eventCache = newCache.result;
 		error err = newCache.err;
 		if (err != null) {
@@ -343,7 +343,7 @@ public class InmemStore implements Store {
 			System.exit(41);
 		}
 
-		RetResult<LRUCache<Long,RoundInfo>> newCache1 = LRUCache.New(cacheSize);
+		RResult<LRUCache<Long,RoundInfo>> newCache1 = LRUCache.New(cacheSize);
 		LRUCache<Long,RoundInfo> roundCache = newCache1.result;
 		err = newCache1.err;
 		if (err != null) {
@@ -361,24 +361,24 @@ public class InmemStore implements Store {
 		this.lastRound = -1;
 		this.lastBlock = -1;
 
-		RootsBySelfParent();
+		rootsBySelfParent();
 		return err;
 	}
 
-	public error Close()  {
+	public error close()  {
 		return null;
 	}
 
-	public boolean NeedBoostrap() {
+	public boolean needBoostrap() {
 		return false;
 	}
 
-	public String StorePath() {
+	public String storePath() {
 		return "";
 	}
 
 	// This is just a stub
-	public RetResult<Event[]> TopologicalEvents() {
-		return new RetResult<Event[]>(new Event[] {}, null);
+	public RResult<Event[]> topologicalEvents() {
+		return new RResult<Event[]>(new Event[] {}, null);
 	}
 }

@@ -7,7 +7,7 @@ import org.jcsp.lang.Channel;
 import org.jcsp.lang.One2OneChannel;
 
 import autils.Logger;
-import common.RetResult;
+import common.RResult;
 import common.error;
 import poset.InternalTransaction;
 
@@ -85,8 +85,8 @@ public class InmemAppProxy implements AppProxy {
 	}
 
 	// CommitBlock implements AppProxy interface method, calls handler
-	public RetResult<byte[]> CommitBlock(poset.Block block) {
-		RetResult<byte[]> commitHandler = handler.CommitHandler(block);
+	public RResult<byte[]> CommitBlock(poset.Block block) {
+		RResult<byte[]> commitHandler = handler.CommitHandler(block);
 		byte[] stateHash = commitHandler.result;
 		error err = commitHandler.err;
 
@@ -95,26 +95,26 @@ public class InmemAppProxy implements AppProxy {
 			.field("state_hash",     stateHash)
 			.field("err",            err)
 			.debug("InmemAppProxy.CommitBlock");
-		return new RetResult<byte[]>(stateHash, err);
+		return new RResult<byte[]>(stateHash, err);
 	}
 
 	// GetSnapshot implements AppProxy interface method, calls handler
-	public RetResult<byte[]> GetSnapshot(long blockIndex) {
-		RetResult<byte[]> snapshotHandler = handler.SnapshotHandler(blockIndex);
+	public RResult<byte[]> GetSnapshot(long blockIndex) {
+		RResult<byte[]> snapshotHandler = handler.SnapshotHandler(blockIndex);
 		byte[] snapshot = snapshotHandler.result;
 		error err = snapshotHandler.err;
 		logger.field("block",    blockIndex)
 			.field("snapshot", snapshot)
 			.field("err",      err)
 			.debug("InmemAppProxy.GetSnapshot");
-		return new RetResult<byte[]>(snapshot, err);
+		return new RResult<byte[]>(snapshot, err);
 	}
 
 	/**
 	 * Restore implements AppProxy interface method, calls handler
 	 */
 	public error Restore(byte[] snapshot) {
-		RetResult<byte[]> restoreHandler = handler.RestoreHandler(snapshot);
+		RResult<byte[]> restoreHandler = handler.RestoreHandler(snapshot);
 		byte[] stateHash = restoreHandler.result;
 		error err = restoreHandler.err;
 		logger.field("state_hash", stateHash)

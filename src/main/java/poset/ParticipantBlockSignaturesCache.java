@@ -2,7 +2,7 @@ package poset;
 
 import java.util.Map;
 
-import common.RetResult;
+import common.RResult;
 import common.RollingIndexMap;
 import common.StoreErr;
 import common.StoreErrType;
@@ -18,86 +18,86 @@ public class ParticipantBlockSignaturesCache {
 		this.rim = new RollingIndexMap("ParticipantBlockSignatures", size, participants.toIDSlice());
 	}
 
-	public RetResult<Long> participantID(String participant) {
+	public RResult<Long> participantID(String participant) {
 		Peer peer = participants.getByPubKey().get(participant);
 
 		if (peer == null) {
-			return new RetResult<>(-1L, StoreErr.newStoreErr("ParticipantBlockSignatures", StoreErrType.UnknownParticipant, participant));
+			return new RResult<>(-1L, StoreErr.newStoreErr("ParticipantBlockSignatures", StoreErrType.UnknownParticipant, participant));
 		}
 
-		return new RetResult<>(peer.getID(), null);
+		return new RResult<>(peer.getID(), null);
 	}
 
 	//return participant BlockSignatures where index > skip
-	public RetResult<BlockSignature[]> Get(String participant, long skipIndex) {
-		RetResult<Long> participantID = participantID(participant);
+	public RResult<BlockSignature[]> Get(String participant, long skipIndex) {
+		RResult<Long> participantID = participantID(participant);
 		long id = participantID.result;
 		error err = participantID.err;
 		if (err != null) {
-			return new RetResult<>( new BlockSignature[]{}, err);
+			return new RResult<>( new BlockSignature[]{}, err);
 		}
 
-		RetResult<Object[]> getId = rim.Get(id, skipIndex);
+		RResult<Object[]> getId = rim.get(id, skipIndex);
 		Object[] ps = getId.result;
 		err = getId.err;
 		if (err != null) {
-			return new RetResult<>( new BlockSignature[]{}, err);
+			return new RResult<>( new BlockSignature[]{}, err);
 		}
 
 		BlockSignature[] res = new BlockSignature[ps.length];
 		for (int k = 0; k < ps.length; ++k) {
 			res[k] = (BlockSignature) ps[k];
 		}
-		return new RetResult<>(res, null);
+		return new RResult<>(res, null);
 	}
 
-	public RetResult<BlockSignature> GetItem(String participant, long index) {
-		RetResult<Long> participantID = participantID(participant);
+	public RResult<BlockSignature> GetItem(String participant, long index) {
+		RResult<Long> participantID = participantID(participant);
 		Long id = participantID.result;
 		error err = participantID.err;
 		if (err != null) {
-			return new RetResult<>(new BlockSignature(), err);
+			return new RResult<>(new BlockSignature(), err);
 		}
 
-		RetResult<Object> getItem = rim.GetItem(id, index);
+		RResult<Object> getItem = rim.getItem(id, index);
 		Object item = getItem.result;
 		err = getItem.err;
 		if (err != null) {
-			return new RetResult<>(new BlockSignature(), err);
+			return new RResult<>(new BlockSignature(), err);
 		}
-		return new RetResult<>( (BlockSignature)item, null);
+		return new RResult<>( (BlockSignature)item, null);
 	}
 
-	public RetResult<BlockSignature> GetLast(String participant) {
+	public RResult<BlockSignature> GetLast(String participant) {
 
-		RetResult<Object> getLast = rim.GetLast(participants.getByPubKey().get(participant).getID());
+		RResult<Object> getLast = rim.getLast(participants.getByPubKey().get(participant).getID());
 		Object last = getLast.result;
 		error err = getLast.err;
 
 		if (err != null) {
-			return new RetResult<>(new BlockSignature(), err);
+			return new RResult<>(new BlockSignature(), err);
 		}
 
-		return new RetResult<>( (BlockSignature) last, null);
+		return new RResult<>( (BlockSignature) last, null);
 	}
 
 	public error Set(String participant , BlockSignature sig ) {
-		RetResult<Long> participantID = participantID(participant);
+		RResult<Long> participantID = participantID(participant);
 		long id = participantID.result;
 		error err = participantID.err;
 		if (err != null) {
 			return err;
 		}
 
-		return rim.Set(id, sig, sig.index);
+		return rim.set(id, sig, sig.index);
 	}
 
 	//returns [participant id] => last BlockSignature Index
 	public Map<Long,Long> Known() {
-		return rim.Known();
+		return rim.known();
 	}
 
 	public error Reset() {
-		return rim.Reset();
+		return rim.reset();
 	}
 }

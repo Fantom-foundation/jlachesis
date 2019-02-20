@@ -3,7 +3,7 @@ package proxy.internal;
 import java.util.concurrent.TimeUnit;
 
 import autils.Logger;
-import common.RetResult;
+import common.RResult;
 import common.error;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -48,17 +48,17 @@ public class LachesisNodeClient implements LachesisNode_ConnectClient {
 	}
 
 	public error Send(ToServer msg) {
-		logger.debug("Send toServer = " + msg);
+		logger.field("msg", msg).debug("Send() Send toServer");
 		StreamObserver<ToServer> collect = nodeStub.connect(new StreamObserver<ToClient>() {
 			@Override
 			public void onNext(ToClient m) {
-				logger.debug("ToClient onNext() m: " + m.toString());
-
+				logger.field("m", m).debug("ToClient onNext()");
+				msg.getTx().getData();
 			}
 
 			@Override
 			public void onError(Throwable t) {
-				logger.debug("ToClient onError()");
+				logger.field("t", t).debug("ToClient onError()");
 			}
 
 			@Override
@@ -70,19 +70,19 @@ public class LachesisNodeClient implements LachesisNode_ConnectClient {
 		return null;
 	}
 
-	public RetResult<ToClient> Recv() {
+	public RResult<ToClient> Recv() {
 		logger.debug("Recv() ");
 
 		StreamObserver<ToServer> collect = nodeStub.connect(new StreamObserver<ToClient>() {
 			@Override
 			public void onNext(ToClient m) {
-				logger.debug("ToClient m: " + m.toString());
+				logger.field("m", m).debug("ToClient onNext()");
 
 			}
 
 			@Override
 			public void onError(Throwable t) {
-				logger.debug("onError t: " + t);
+				logger.field("t", t).debug("ToClient onError()");
 			}
 
 			@Override
@@ -94,7 +94,7 @@ public class LachesisNodeClient implements LachesisNode_ConnectClient {
 		return null;
 	}
 
-	public RetResult<LachesisNode_ConnectClient> Connect() {
+	public RResult<LachesisNode_ConnectClient> Connect() {
 		if (this.channel != null) {
 			this.channel.shutdownNow();
 			this.channel = null;
@@ -108,7 +108,7 @@ public class LachesisNodeClient implements LachesisNode_ConnectClient {
 		this.nodeStub = LachesisNodeGrpc.newStub(channel);
 
 //		err := cc.NewStream(ctx, &_LachesisNode_serviceDesc.Streams[0], "/internal.LachesisNode/Connect", opts...);
-		return new RetResult<>(this, null);
+		return new RResult<>(this, null);
 	}
 
 	@Override

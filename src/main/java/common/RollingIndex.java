@@ -20,29 +20,27 @@ public class RollingIndex {
 		lastIndex = -1;
 	}
 
-	public RResult2<Object[], Long> GetLastWindow() {
+	public RResult2<Object[], Long> getLastWindow() {
 		return new RResult2<Object[], Long>(items.toArray(), lastIndex);
 	}
 
-	public RetResult<Object[]> Get(long skipIndex) {
-		logger.field("skipIndex", skipIndex)
-			.field("items", items).debug("Get()");
-
+	public RResult<Object[]> get(long skipIndex) {
+//		logger.field("skipIndex", skipIndex).field("items", items).debug("Get()");
 		Object[] res = new Object[] {};
 
 		if (skipIndex > lastIndex) {
-			return new RetResult<Object[]>(res, null);
+			return new RResult<Object[]>(res, null);
 		}
 
 		long cachedItems = items.size();
 		// assume there are no gaps between indexes
 		long oldestCachedIndex = lastIndex - cachedItems + 1;
 
-		logger.field("cachedItems", cachedItems)
-			.field("oldestCachedIndex", oldestCachedIndex).debug("RollingIndex.Get()");
+//		logger.field("cachedItems", cachedItems)
+//			.field("oldestCachedIndex", oldestCachedIndex).debug("RollingIndex.Get()");
 
 		if (skipIndex + 1 < oldestCachedIndex) {
-			return new RetResult<Object[]>(res,
+			return new RResult<Object[]>(res,
 					StoreErr.newStoreErr(name, StoreErrType.TooLate, Long.toString(skipIndex, 10)));
 		}
 
@@ -51,41 +49,39 @@ public class RollingIndex {
 
 		// TBD : equivalent with items[start:]?
 		res = items.subList((int) start, items.size()).toArray();
-//		res = Appender.sliceFromToEnd(items.toArray(), (int) start);
 
-		logger.field("start", start).field("res",  res).debug("RollingIndex.Get()");
+//		logger.field("start", start).field("res",  res).debug("RollingIndex.Get()");
 
-		return new RetResult<Object[]>(res, null);
+		return new RResult<Object[]>(res, null);
 	}
 
-	public RetResult<Object> GetItem(long index) {
+	public RResult<Object> getItem(long index) {
 		long numitems = items.size();
 		long oldestCached = lastIndex - numitems + 1;
 
-		logger.field("index", index)
-			.field("items", items)
-			.field("numitems", numitems)
-			.field("oldestCached", oldestCached).debug("GetItem()");
+//		logger.field("index", index)
+//			.field("items", items)
+//			.field("numitems", numitems)
+//			.field("oldestCached", oldestCached).debug("GetItem()");
 
 		if (index < oldestCached) {
-			return new RetResult<Object>(null,
+			return new RResult<Object>(null,
 					StoreErr.newStoreErr(name, StoreErrType.TooLate, Long.toString(index, 10)));
 		}
 		int findex = (int) (index - oldestCached);
 
-		logger.field("findex", findex).debug("GetItem()");
+//		logger.field("findex", findex).debug("GetItem()");
 
 		if (findex >= numitems) {
-			return new RetResult<Object>(null,
+			return new RResult<Object>(null,
 					StoreErr.newStoreErr(name, StoreErrType.KeyNotFound, Long.toString(index, 10)));
 		}
 
-		logger.field("found item", items.get(findex)).debug("GetItem()");
-		return new RetResult<Object>(items.get(findex), null);
+//		logger.field("found item", items.get(findex)).debug("GetItem()");
+		return new RResult<Object>(items.get(findex), null);
 	}
 
-	public error Set(Object item, long index) {
-
+	public error set(Object item, long index) {
 		// only allow to set items with index <= lastIndex + 1
 		// so that we may assume there are no gaps between items
 		if (0 <= lastIndex && index > lastIndex + 1) {
@@ -95,7 +91,7 @@ public class RollingIndex {
 		// adding a new item
 		if (lastIndex < 0 || index == lastIndex + 1) {
 			if (items.size() >= 2 * size) {
-				Roll();
+				roll();
 			}
 
 			items.add(item);
@@ -119,11 +115,7 @@ public class RollingIndex {
 		return null;
 	}
 
-	public void Roll() {
-//		Object[] newList = new Object[2 * size];
-//		TBD: the above statement is converted correctly?
-//		newList = append(newList, items[size:]...);
-
+	public void roll() {
 		List<Object> newList = new ArrayList(2 * size);
 		newList.addAll(items.subList(size, items.size()));
 

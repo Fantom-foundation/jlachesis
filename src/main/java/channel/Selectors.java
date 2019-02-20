@@ -10,8 +10,8 @@ import org.jcsp.lang.One2OneChannel;
  * @param <T>
  */
 public class Selectors<T> {
-	protected final One2OneChannel<T> ch;
-	protected final CSTimer tim = new CSTimer();
+	protected One2OneChannel<T> ch;
+	protected CSTimer tim = new CSTimer();
 	protected final int EVENT = 0, TIM = 1;
 
 	public Selectors(One2OneChannel<T> ch) {

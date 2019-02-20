@@ -10,8 +10,8 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Parser;
 
 import common.IProto;
-import common.RetResult;
-import common.RetResult3;
+import common.RResult;
+import common.RResult3;
 import common.error;
 import node.FlagtableContainer;
 import poset.proto.FlagTableWrapper.Builder;
@@ -159,14 +159,14 @@ public class Event implements FlagtableContainer {
 
 	//ecdsa sig
 	public error sign(PrivateKey privKey) {
-		RetResult<byte[]> hash2 = message.Body.Hash();
+		RResult<byte[]> hash2 = message.Body.Hash();
 		byte[] signBytes = hash2.result;
 		error err = hash2.err;
 		if (err != null) {
 			return err;
 		}
 
-		RetResult3<BigInteger, BigInteger> sign = crypto.Utils.Sign(privKey, signBytes);
+		RResult3<BigInteger, BigInteger> sign = crypto.Utils.Sign(privKey, signBytes);
 		BigInteger R = sign.result1;
 		BigInteger S = sign.result2;
 		err = sign.err;
@@ -177,40 +177,40 @@ public class Event implements FlagtableContainer {
 		return err;
 	}
 
-	public RetResult<Boolean> verify() {
+	public RResult<Boolean> verify() {
 		byte[] pubBytes = message.Body.Creator;
 		PublicKey pubKey = crypto.Utils.ToECDSAPub(pubBytes);
 
-		RetResult<byte[]> hash2 = message.Body.Hash();
+		RResult<byte[]> hash2 = message.Body.Hash();
 		byte[] signBytes = hash2.result;
 		error err = hash2.err;
 		if (err != null) {
-			return new RetResult<Boolean>(false, err);
+			return new RResult<Boolean>(false, err);
 		}
 
-		RetResult3<BigInteger, BigInteger> decodeSignature = crypto.Utils.DecodeSignature(message.Signature);
+		RResult3<BigInteger, BigInteger> decodeSignature = crypto.Utils.DecodeSignature(message.Signature);
 		BigInteger r = decodeSignature.result1;
 		BigInteger s = decodeSignature.result2;
 		err = decodeSignature.err;
 		if (err != null) {
-			return new RetResult<Boolean>(false, err);
+			return new RResult<Boolean>(false, err);
 		}
 
-		return new RetResult<Boolean>(crypto.Utils.Verify(pubKey, signBytes, r, s), null);
+		return new RResult<Boolean>(crypto.Utils.Verify(pubKey, signBytes, r, s), null);
 	}
 
 	//sha256 hash of body
-	public RetResult<byte[]> hash() {
+	public RResult<byte[]> hash() {
 		if (hash == null || hash.length == 0) {
-			RetResult<byte[]> hash2 = message.Body.Hash();
+			RResult<byte[]> hash2 = message.Body.Hash();
 			byte[] hash = hash2.result;
 			error err = hash2.err;
 			if (err != null) {
-				return new RetResult<byte[]>(null, err);
+				return new RResult<byte[]>(null, err);
 			}
 			this.hash = hash;
 		}
-		return new RetResult<byte[]>(this.hash, null);
+		return new RResult<byte[]>(this.hash, null);
 	}
 
 	public String hex() {
@@ -283,17 +283,17 @@ public class Event implements FlagtableContainer {
 	public error replaceFlagTable(Map<String,Long> flagTable) {
 		FlagTableWrapper ftw = new FlagTableWrapper(flagTable);
 
-		RetResult<byte[]> byteArrayCall = ftw.marshaller().protoMarshal();
+		RResult<byte[]> byteArrayCall = ftw.marshaller().protoMarshal();
 		message.FlagTable = byteArrayCall.result;
 		error err = byteArrayCall.err;
 		return err;
 	}
 
 	// GetFlagTable returns the flag tabl
-	public RetResult<Map<String,Long>> getFlagTable() {
+	public RResult<Map<String,Long>> getFlagTable() {
 		FlagTableWrapper flagTable = new FlagTableWrapper();
 		error err = flagTable.marshaller().protoUnmarshal(message.FlagTable);
-		return new RetResult<Map<String,Long>>(flagTable.Body, err);
+		return new RResult<Map<String,Long>>(flagTable.Body, err);
 	}
 
 	/**
@@ -301,15 +301,15 @@ public class Event implements FlagtableContainer {
 	 * @param dst
 	 * @return
 	 */
-	public RetResult<Map<String,Long>> mergeFlagTable(Map<String,Long> dst) {
+	public RResult<Map<String,Long>> mergeFlagTable(Map<String,Long> dst) {
 		FlagTableWrapper src = new FlagTableWrapper();
 		error err = src.marshaller().protoUnmarshal(message.FlagTable);
 		if (err != null) {
-			return new RetResult<Map<String,Long>>(null, err);
+			return new RResult<Map<String,Long>>(null, err);
 		}
 
 		src.Body.putAll(dst);
-		return new RetResult<Map<String,Long>>(src.Body, err);
+		return new RResult<Map<String,Long>>(src.Body, err);
 	}
 
 

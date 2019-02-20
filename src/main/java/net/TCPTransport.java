@@ -7,7 +7,7 @@ import java.time.Duration;
 
 import autils.Logger;
 import common.NetUtils;
-import common.RetResult;
+import common.RResult;
 import common.error;
 
 public class TCPTransport {
@@ -29,7 +29,7 @@ public class TCPTransport {
 	 * @return a NetworkTransport that is built on top of
 	 * a TCP streaming transport layer, with log output going to the supplied Logger
 	 */
-	public static RetResult<NetworkTransport> NewTCPTransport(String bindAddr, InetAddress advertise, int maxPool,
+	public static RResult<NetworkTransport> NewTCPTransport(String bindAddr, InetAddress advertise, int maxPool,
 			Duration timeout, Logger logger) {
 		return newTCPTransport(bindAddr, advertise, maxPool, timeout, new TCPTransportCreator() {
 			public NetworkTransport transportCreator(StreamLayer stream) {
@@ -38,16 +38,16 @@ public class TCPTransport {
 		});
 	}
 
-	public static RetResult<NetworkTransport> newTCPTransport(String bindAddr, InetAddress advertise, int maxPool,
+	public static RResult<NetworkTransport> newTCPTransport(String bindAddr, InetAddress advertise, int maxPool,
 			Duration timeout, TCPTransportCreator transportCreator) {
 		// Try to bind
 //		list, err := net.Listen("tcp", bindAddr);
 
-		RetResult<ServerSocket> bind = NetUtils.bind(bindAddr);
+		RResult<ServerSocket> bind = NetUtils.bind(bindAddr);
 		ServerSocket list = bind.result;
 		error err = bind.err;
 		if (err != null) {
-			return new RetResult<NetworkTransport>(null, err);
+			return new RResult<NetworkTransport>(null, err);
 		}
 
 		// Create stream
@@ -60,17 +60,17 @@ public class TCPTransport {
 		try {
 			if (!ok) {
 				list.close();
-				return new RetResult<NetworkTransport>(null, errNotTCP);
+				return new RResult<NetworkTransport>(null, errNotTCP);
 			}
 			if (addr.getHostAddress().isEmpty()) {// .IP.IsUnspecified()) {
 				list.close();
-				return new RetResult<NetworkTransport>(null, errNotAdvertisable);
+				return new RResult<NetworkTransport>(null, errNotAdvertisable);
 			}
 		} catch (IOException e) {
-			return new RetResult<NetworkTransport>(null, error.Errorf(e.getMessage()));
+			return new RResult<NetworkTransport>(null, error.Errorf(e.getMessage()));
 		}
 		// Create the network transport
 		NetworkTransport trans = transportCreator.transportCreator(stream);
-		return new RetResult<NetworkTransport>(trans, null);
+		return new RResult<NetworkTransport>(trans, null);
 	}
 }

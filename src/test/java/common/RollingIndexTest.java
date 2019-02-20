@@ -23,11 +23,11 @@ public class RollingIndexTest {
 		String[] items = null;
 		for (long i = 0L; i < testSize; i++) {
 			String item = String.format("item%d", i);
-			RollingIndex.Set(item, i);
+			RollingIndex.set(item, i);
 			items = Appender.append(items, item);
 		}
 
-		RResult2<Object[], Long> getLastWindow = RollingIndex.GetLastWindow();
+		RResult2<Object[], Long> getLastWindow = RollingIndex.getLastWindow();
 		Object[] cached = getLastWindow.result1;
 		long lastIndex = getLastWindow.result2;
 
@@ -41,18 +41,18 @@ public class RollingIndexTest {
 			assertEquals(String.format("cached[%d]", i), items[start+i], cached[i].toString());
 		}
 
-		error err = RollingIndex.Set("ErrSkippedIndex", expectedLastIndex+2);
+		error err = RollingIndex.set("ErrSkippedIndex", expectedLastIndex+2);
 
 		assertTrue("Should return ErrSkippedIndex", StoreErr.Is(err, StoreErrType.SkippedIndex));
 
-		err = RollingIndex.GetItem(9).err;
+		err = RollingIndex.getItem(9).err;
 		assertTrue("Should return ErrTooLate", StoreErr.Is(err, StoreErrType.TooLate));
 
 		Object item;
 
 		long[] indexes = new long[]{10, 17, 29};
 		for (long i : indexes) {
-			RetResult<Object> getItem = RollingIndex.GetItem(i);
+			RResult<Object> getItem = RollingIndex.getItem(i);
 			item  = getItem.result;
 			err = getItem.err;
 
@@ -61,19 +61,19 @@ public class RollingIndexTest {
 			assertEquals("GetItem error", item, items[(int)i]);
 		}
 
-		err = RollingIndex.GetItem(lastIndex + 1).err;
+		err = RollingIndex.getItem(lastIndex + 1).err;
 		assertTrue("Should return KeyNotFound", StoreErr.Is(err, StoreErrType.KeyNotFound));
 
 		//Test updating an item in place
 		long updateIndex = 26L;
 		String updateValue = "Updated Item";
 
-		err = RollingIndex.Set(updateValue, updateIndex);
+		err = RollingIndex.set(updateValue, updateIndex);
 
 		assertNull(String.format("GetItem(%d) err", updateIndex), err);
 
 
-		RetResult<Object> getItem = RollingIndex.GetItem(updateIndex);
+		RResult<Object> getItem = RollingIndex.getItem(updateIndex);
 		item = getItem.result;
 		err = getItem.err;
 		assertNull(String.format("GetItem(%d) err", updateIndex), err);
@@ -88,23 +88,23 @@ public class RollingIndexTest {
 		int testSize = 25;
 		RollingIndex RollingIndex = new RollingIndex("test", size);
 
-		error err = RollingIndex.Get(-1).err;
+		error err = RollingIndex.get(-1).err;
 
 		assertNull("retrieve item at -1:", err);
 
 		String[] items = null;
 		for (int i = 0; i < testSize; i++) {
 			String item = String.format("item%d", i);
-			RollingIndex.Set(item, i);
+			RollingIndex.set(item, i);
 			items = Appender.append(items, item);
 		}
 
-		err = RollingIndex.Get(0).err;
+		err = RollingIndex.get(0).err;
 		assertTrue("Skipping index 0 should return ErrTooLate", StoreErr.Is(err, StoreErrType.TooLate));
 
 		int skipIndex1 = 9;
 		String[] expected1 = Appender.slice(items, skipIndex1 + 1, items.length);
-		RetResult<Object[]> getItems = RollingIndex.Get(skipIndex1);
+		RResult<Object[]> getItems = RollingIndex.get(skipIndex1);
 		Object[] cached1 = getItems.result;
 		err = getItems.err;
 
@@ -120,7 +120,7 @@ public class RollingIndexTest {
 
 		int skipIndex2 = 15;
 		String[] expected2 = Appender.slice(items, skipIndex2+1, items.length);
-		RetResult<Object[]> getItems2 = RollingIndex.Get(skipIndex2);
+		RResult<Object[]> getItems2 = RollingIndex.get(skipIndex2);
 		Object[] cached2 = getItems2.result;
 		err = getItems2.err;
 
@@ -137,7 +137,7 @@ public class RollingIndexTest {
 		int skipIndex3 = 27;
 		String expected3 = null;
 
-		RetResult<Object[]> getItems3 = RollingIndex.Get(skipIndex3);
+		RResult<Object[]> getItems3 = RollingIndex.get(skipIndex3);
 		Object[] cached3 = getItems3.result;
 		err = getItems3.err;
 

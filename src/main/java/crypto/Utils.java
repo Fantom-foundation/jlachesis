@@ -29,32 +29,32 @@ import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemObjectGenerator;
 import org.bouncycastle.util.io.pem.PemWriter;
 
-import common.RetResult;
-import common.RetResult3;
+import common.RResult;
+import common.RResult3;
 import common.error;
 
 public class Utils {
-	public static RetResult<PrivateKey> GenerateECDSAKey() {
+	public static RResult<PrivateKey> GenerateECDSAKey() {
 		PrivateKey privKey;
 		try {
 			privKey = ECDHPub.generatePrivateKey();
 		} catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidKeySpecException
 				| InvalidAlgorithmParameterException e) {
-			return new RetResult<PrivateKey>(null, error.Errorf(e.getMessage()));
+			return new RResult<PrivateKey>(null, error.Errorf(e.getMessage()));
 		}
 
-		return new RetResult<PrivateKey>(privKey, null);
+		return new RResult<PrivateKey>(privKey, null);
 	}
 
-	public static RetResult<KeyPair> GenerateECDSAKeyPair() {
+	public static RResult<KeyPair> GenerateECDSAKeyPair() {
 		KeyPair privKey;
 		try {
 			privKey = ECDHPub.generateECDSAKeyPair();
 		} catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidAlgorithmParameterException e) {
-			return new RetResult<KeyPair>(null, error.Errorf(e.getMessage()));
+			return new RResult<KeyPair>(null, error.Errorf(e.getMessage()));
 		}
 
-		return new RetResult<KeyPair>(privKey, null);
+		return new RResult<KeyPair>(privKey, null);
 	}
 
 	public static PublicKey ToECDSAPub(byte[] pubBytes) {
@@ -81,7 +81,7 @@ public class Utils {
 		return pub.getEncoded();
 	}
 
-	public static RetResult3<BigInteger, BigInteger> Sign(PrivateKey priv, byte[] hash) {
+	public static RResult3<BigInteger, BigInteger> Sign(PrivateKey priv, byte[] hash) {
 		Signature ver;
 		try {
 			//ver = Signature.getInstance("SHA256withECDSA");
@@ -92,9 +92,9 @@ public class Utils {
 
 			BigInteger R = ECDHPub.extractR(signature);
 			BigInteger S = ECDHPub.extractS(signature);
-			return new RetResult3<BigInteger, BigInteger>(R, S, null);
+			return new RResult3<BigInteger, BigInteger>(R, S, null);
 		} catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | NoSuchProviderException e) {
-			return new RetResult3<BigInteger, BigInteger>(null, null,
+			return new RResult3<BigInteger, BigInteger>(null, null,
 					error.Errorf("Signature Verification failed" + e.getMessage()));
 		}
 	}
@@ -130,19 +130,19 @@ public class Utils {
 		return String.format("%s|%s", r.toString(36), s.toString(36));
 	}
 
-	public static RetResult3<BigInteger, BigInteger> DecodeSignature(String sig) {
+	public static RResult3<BigInteger, BigInteger> DecodeSignature(String sig) {
 		BigInteger r = null;
 		BigInteger s = null;
 
 		String[] values = sig.split("\\|");
 		if (values.length != 2) {
-			return new RetResult3<BigInteger, BigInteger>(r, s,
+			return new RResult3<BigInteger, BigInteger>(r, s,
 					error.Errorf(String.format("wrong number of values in signature: got %d, want 2", values.length)));
 		}
 
 		r = new BigInteger(values[0], 36);
 		s = new BigInteger(values[1], 36);
-		return new RetResult3<BigInteger, BigInteger>(r, s, null);
+		return new RResult3<BigInteger, BigInteger>(r, s, null);
 	}
 
 
@@ -195,14 +195,14 @@ public class Utils {
 		return Base64.getMimeEncoder().encodeToString(key.getEncoded());
 	}
 
-	public static RetResult<byte[]> decodeString(String s) {
+	public static RResult<byte[]> decodeString(String s) {
 		BigInteger bigInteger = null;
 		try {
 			bigInteger = new BigInteger(s, 16);
 		} catch (NumberFormatException nfe) {
-			return new RetResult<byte[]>(bigInteger.toByteArray(), error.Errorf(nfe.toString()));
+			return new RResult<byte[]>(bigInteger.toByteArray(), error.Errorf(nfe.toString()));
 		}
-		return new RetResult<byte[]>(bigInteger.toByteArray(), null);
+		return new RResult<byte[]>(bigInteger.toByteArray(), null);
 	}
 
 	public static String keyToString(Key key) {

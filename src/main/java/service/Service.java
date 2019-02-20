@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import autils.JsonUtils;
 import autils.Logger;
-import common.RetResult;
-import common.RetResult3;
+import common.RResult;
+import common.RResult3;
 import common.error;
 import node.Graph;
 import node.Graph.Infos;
@@ -45,7 +45,7 @@ public class Service {
 
 	@RequestMapping("/participants")
     String participants() {
-		RetResult<Peers> getParticipants = node.getParticipants();
+		RResult<Peers> getParticipants = node.getParticipants();
 		Peers participants = getParticipants.result;
 		error err = getParticipants.err;
 		if (err != null) {
@@ -58,7 +58,7 @@ public class Service {
 
 	@RequestMapping("/event")
     String event(@RequestBody String param) {
-		RetResult<Event> getEvent = node.getEvent(param);
+		RResult<Event> getEvent = node.getEvent(param);
 		Event event = getEvent.result;
 		error err = getEvent.err;
 		if (err != null) {
@@ -71,7 +71,7 @@ public class Service {
 
 	@RequestMapping("/lasteventfrom")
     String lastevents(@RequestBody String param) {
-		RetResult3<String, Boolean> getLastEventFrom = node.getLastEventFrom(param);
+		RResult3<String, Boolean> getLastEventFrom = node.getLastEventFrom(param);
 		String event = getLastEventFrom.result1;
 		error err = getLastEventFrom.err;
 		if (err != null) {
@@ -108,7 +108,7 @@ public class Service {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(err.Error()).toString();
 		}
 
-		RetResult<RoundInfo> getRound = node.getRound(roundIndex);
+		RResult<RoundInfo> getRound = node.getRound(roundIndex);
 		RoundInfo round = getRound.result;
 		err = getRound.err;
 		if (err != null) {
@@ -172,7 +172,7 @@ public class Service {
 		} catch (Exception e) {
 			err = error.Errorf(e.getMessage());
 		}
-		RetResult<Root> getRoot = node.getRoot(rootIndex);
+		RResult<Root> getRoot = node.getRoot(rootIndex);
 		Root root = getRoot.result;
 
 		err = getRoot.err;
@@ -199,7 +199,7 @@ public class Service {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(err.Error()).toString();
 		}
 
-		RetResult<Block> getBlock = node.getBlock(blockIndex);
+		RResult<Block> getBlock = node.getBlock(blockIndex);
 		Block block = getBlock.result;
 		err = getBlock.err;
 		if (err != null) {

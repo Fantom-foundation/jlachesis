@@ -19,8 +19,8 @@ import autils.Logger;
 import autils.time;
 import channel.ChannelUtils;
 import channel.ExecService;
-import common.RetResult;
-import common.RetResult3;
+import common.RResult;
+import common.RResult3;
 import common.error;
 import net.EagerSyncRequest;
 import net.EagerSyncResponse;
@@ -81,7 +81,7 @@ public class Node extends NodeState {
 
 		String localAddr = trans.localAddr();
 
-		Peers pmap = store.Participants().result;
+		Peers pmap = store.participants().result;
 
 		One2OneChannel<poset.Block> commitCh = Channel.one2one(); // TBD // make(chan poset.Block, 400);
 		Core core = new Core(id, key, pmap, store, commitCh, conf.getLogger());
@@ -91,7 +91,7 @@ public class Node extends NodeState {
 		PeerSelector peerSelector = new SmartPeerSelector(participants, pubKey,
 				new FlagtableContainer() {
 					@Override
-					public RetResult<Map<String, Long>> getFlagTable() {
+					public RResult<Map<String, Long>> getFlagTable() {
 						return core.poset.GetFlagTableOfRandomUndeterminedEvent();
 					}}
 			);
@@ -119,7 +119,7 @@ public class Node extends NodeState {
 		logger.field("peers", pmap).debug("pmap");
 		logger.field("pubKey", pubKey).debug("pubKey");
 
-		needBoostrap = store.NeedBoostrap();
+		needBoostrap = store.needBoostrap();
 
 		// Initialize
 		setState(NodeStates.Gossiping);
@@ -324,7 +324,7 @@ public class Node extends NodeState {
 			// Compute Diff
 			long start = System.nanoTime();
 			coreLock.lock();
-			RetResult<Event[]> eventDiffCall = core.eventDiff(cmd.getKnown());
+			RResult<Event[]> eventDiffCall = core.eventDiff(cmd.getKnown());
 			Event[] eventDiff = eventDiffCall.result;
 			error err = eventDiffCall.err;
 			coreLock.unlock();
@@ -335,7 +335,7 @@ public class Node extends NodeState {
 			}
 
 			// Convert to WireEvents
-			RetResult<WireEvent[]> toWireCall = core.toWire(eventDiff);
+			RResult<WireEvent[]> toWireCall = core.toWire(eventDiff);
 			WireEvent[] wireEvents = toWireCall.result;
 			err = toWireCall.err;
 			if (err != null) {
@@ -389,7 +389,7 @@ public class Node extends NodeState {
 
 		// Get latest Frame
 		coreLock.lock();
-		RetResult3<Block, Frame> getAnchorBlockWithFrame = core.getAnchorBlockWithFrame();
+		RResult3<Block, Frame> getAnchorBlockWithFrame = core.getAnchorBlockWithFrame();
 		Block block = getAnchorBlockWithFrame.result1;
 		Frame frame = getAnchorBlockWithFrame.result2;
 		error err = getAnchorBlockWithFrame.err;
@@ -402,7 +402,7 @@ public class Node extends NodeState {
 			resp.setFrame(frame);
 
 			// Get snapshot
-			RetResult<byte[]> getSnapshot = proxy.GetSnapshot(block.Index());
+			RResult<byte[]> getSnapshot = proxy.GetSnapshot(block.Index());
 			byte[] snapshot = getSnapshot.result;
 			err = getSnapshot.err;
 			if (err != null) {
@@ -430,7 +430,7 @@ public class Node extends NodeState {
 	 */
 	public error gossip(String peerAddr, One2OneChannelInt parentReturnCh /* chan struct{} */)  {
 		// pull
-		RetResult3<Boolean, Map<Long, Long>> pullCall = pull(peerAddr);
+		RResult3<Boolean, Map<Long, Long>> pullCall = pull(peerAddr);
 		boolean syncLimit = pullCall.result1;
 		Map<Long, Long> otherKnownEvents = pullCall.result2;
 		error err = pullCall.err;
@@ -460,7 +460,7 @@ public class Node extends NodeState {
 		return null;
 	}
 
-	public RetResult3<Boolean,Map<Long,Long>> pull(String peerAddr) {
+	public RResult3<Boolean,Map<Long,Long>> pull(String peerAddr) {
 	/* (boolean syncLimit, Map<Long,Long> otherKnownEvents, error err) { */
 		// Compute Known
 		coreLock.lock();
@@ -469,7 +469,7 @@ public class Node extends NodeState {
 
 		// Send SyncRequest
 		long start = System.nanoTime();
-		RetResult<net.SyncResponse> requestSyncCall = requestSync(peerAddr, knownEvents);
+		RResult<net.SyncResponse> requestSyncCall = requestSync(peerAddr, knownEvents);
 		net.SyncResponse resp = requestSyncCall.result;
 		error err = requestSyncCall.err;
 		long elapsed = System.nanoTime() - start;
@@ -480,7 +480,7 @@ public class Node extends NodeState {
 		//	}
 		if (err != null) {
 			logger.field("Error", err).error("requestSync(peerAddr, knownEvents)");
-			return new RetResult3<Boolean,Map<Long,Long>>(false, null, err);
+			return new RResult3<Boolean,Map<Long,Long>>(false, null, err);
 		}
 		logger
 			.field("from_id",     resp.getFromID())
@@ -491,7 +491,7 @@ public class Node extends NodeState {
 			.debug("SyncResponse");
 
 		if (resp.isSyncLimit()) {
-			return new RetResult3<Boolean,Map<Long,Long>>(true, null, null);
+			return new RResult3<Boolean,Map<Long,Long>>(true, null, null);
 		}
 
 		// Add Events to poset and create new Head if necessary
@@ -500,10 +500,10 @@ public class Node extends NodeState {
 		coreLock.unlock();
 		if (err != null) {
 //			logger.field("error", err).error("sync(resp.Events)")
-			return new RetResult3<Boolean,Map<Long,Long>>(false, null, err);
+			return new RResult3<Boolean,Map<Long,Long>>(false, null, err);
 		}
 
-		return new RetResult3<Boolean,Map<Long,Long>>(false, resp.getKnown(), null);
+		return new RResult3<Boolean,Map<Long,Long>>(false, resp.getKnown(), null);
 	}
 
 	public error push(String peerAddr, Map<Long,Long> knownEvents)  {
@@ -519,7 +519,7 @@ public class Node extends NodeState {
 		// Compute Diff
 		long start = System.nanoTime();
 		coreLock.lock();
-		RetResult<Event[]> eventDiffCall = core.eventDiff(knownEvents);
+		RResult<Event[]> eventDiffCall = core.eventDiff(knownEvents);
 		Event[] eventDiff = eventDiffCall.result;
 		error err = eventDiffCall.err;
 		coreLock.unlock();
@@ -531,7 +531,7 @@ public class Node extends NodeState {
 
 		if (eventDiff.length > 0) {
 			// Convert to WireEvents
-			RetResult<WireEvent[]> toWire = core.toWire(eventDiff);
+			RResult<WireEvent[]> toWire = core.toWire(eventDiff);
 			WireEvent[] wireEvents = toWire.result;
 			err = toWire.err;
 			if (err != null) {
@@ -543,7 +543,7 @@ public class Node extends NodeState {
 			start = System.nanoTime();
 			logger.field("wireEvents", wireEvents).debug("Sending requestEagerSync.wireEvents");
 
-			RetResult<EagerSyncResponse> requestEagerSync = requestEagerSync(peerAddr, wireEvents);
+			RResult<EagerSyncResponse> requestEagerSync = requestEagerSync(peerAddr, wireEvents);
 			EagerSyncResponse resp2 = requestEagerSync.result;
 			err = requestEagerSync.err;
 			logger.field("Duration", time.Since(start)).debug("requestEagerSync(peerAddr, wireEvents)");
@@ -569,7 +569,7 @@ public class Node extends NodeState {
 		// fastForwardRequest
 		Peer peer = peerSelector.next();
 		long start = System.nanoTime();
-		RetResult<net.FastForwardResponse> requestFastForwardCall = requestFastForward(peer.getNetAddr());
+		RResult<net.FastForwardResponse> requestFastForwardCall = requestFastForward(peer.getNetAddr());
 		FastForwardResponse resp = requestFastForwardCall.result;
 		error err = requestFastForwardCall.err;
 		logger.field("Duration", time.Since(start)).debug("requestFastForward(peer.NetAddr)");
@@ -607,17 +607,17 @@ public class Node extends NodeState {
 		return null;
 	}
 
-	public RetResult<net.SyncResponse> requestSync(String target, Map<Long,Long> known) {
+	public RResult<net.SyncResponse> requestSync(String target, Map<Long,Long> known) {
 
 		SyncRequest args = new SyncRequest(id, known);
 
 		net.SyncResponse out = new net.SyncResponse();
 		error err = trans.sync(target, args, out);
 		//logger.field("out", out).debug("requestSync(target string, known map[int]int)")
-		return new RetResult<net.SyncResponse>(out, err);
+		return new RResult<net.SyncResponse>(out, err);
 	}
 
-	public RetResult<net.EagerSyncResponse> requestEagerSync(String target, poset.WireEvent[] events ) {
+	public RResult<net.EagerSyncResponse> requestEagerSync(String target, poset.WireEvent[] events ) {
 		EagerSyncRequest args = new net.EagerSyncRequest (id, events);
 
 		net.EagerSyncResponse out = new net.EagerSyncResponse();
@@ -625,10 +625,10 @@ public class Node extends NodeState {
 			.debug("requestEagerSync(target string, events []poset.WireEvent)");
 		error err = trans.eagerSync(target, args, out);
 
-		return new RetResult<net.EagerSyncResponse>(out, err);
+		return new RResult<net.EagerSyncResponse>(out, err);
 	}
 
-	public RetResult<net.FastForwardResponse> requestFastForward(String target) {
+	public RResult<net.FastForwardResponse> requestFastForward(String target) {
 		logger.field("target", target)
 			.debug("requestFastForward(target string) (net.FastForwardResponse, error)");
 
@@ -637,7 +637,7 @@ public class Node extends NodeState {
 		net.FastForwardResponse out = new net.FastForwardResponse();
 		error err = trans.fastForward(target, args, out);
 
-		return new RetResult<net.FastForwardResponse>(out, err);
+		return new RResult<net.FastForwardResponse>(out, err);
 	}
 
 	public error sync(poset.WireEvent[] events ) {
@@ -693,7 +693,7 @@ public class Node extends NodeState {
 			block.setStateHash(stateHash);
 			coreLock.lock();
 			try {
-				RetResult<BlockSignature> signBlockCall = core.SignBlock(block);
+				RResult<BlockSignature> signBlockCall = core.SignBlock(block);
 				BlockSignature sig = signBlockCall.result;
 				err = signBlockCall.err;
 				if (err != null) {
@@ -745,7 +745,7 @@ public class Node extends NodeState {
 			// transport and store should only be closed once all concurrent operations
 			// are finished otherwise they will panic trying to use close objects
 			trans.close();
-			core.poset.Store.Close();
+			core.poset.Store.close();
 		}
 	}
 
@@ -816,15 +816,15 @@ public class Node extends NodeState {
 	 * Diff tool interface implementation (tmp)
 	 */
 	public long getLastBlockIndex() {
-		return core.poset.Store.LastBlockIndex();
+		return core.poset.Store.lastBlockIndex();
 	}
 
 	public String[] roundWitnesses(long i) {
-		return core.poset.Store.RoundWitnesses(i);
+		return core.poset.Store.roundWitnesses(i);
 	}
 
-	public RetResult<poset.Frame> getFrame(long i) {
-		return core.poset.Store.GetFrame(i);
+	public RResult<poset.Frame> getFrame(long i) {
+		return core.poset.Store.getFrame(i);
 	}
 
 	/**
@@ -852,57 +852,57 @@ public class Node extends NodeState {
 		return 1 - syncErrorRate;
 	}
 
-	public RetResult<peers.Peers> getParticipants() {
-		return core.poset.Store.Participants();
+	public RResult<peers.Peers> getParticipants() {
+		return core.poset.Store.participants();
 	}
 
-	public RetResult<poset.Event> getEvent(String event) {
-		return core.poset.Store.GetEvent(event);
+	public RResult<poset.Event> getEvent(String event) {
+		return core.poset.Store.getEvent(event);
 	}
 
-	public RetResult3<String,Boolean> getLastEventFrom(String participant) {
-		return core.poset.Store.LastEventFrom(participant);
+	public RResult3<String,Boolean> getLastEventFrom(String participant) {
+		return core.poset.Store.lastEventFrom(participant);
 	}
 
 	public Map<Long,Long> getKnownEvents() {
-		return core.poset.Store.KnownEvents();
+		return core.poset.Store.knownEvents();
 	}
 
-	public RetResult<Map<Long,Long>> getEvents()  {
+	public RResult<Map<Long,Long>> getEvents()  {
 		Map<Long, Long> res = core.knownEvents();
-		return new RetResult(res, null);
+		return new RResult(res, null);
 	}
 
 	public String[] getConsensusEvents() {
-		return core.poset.Store.ConsensusEvents();
+		return core.poset.Store.consensusEvents();
 	}
 
 	public long getConsensusTransactionsCount() {
 		return core.getConsensusTransactionsCount();
 	}
 
-	public RetResult<poset.RoundInfo> getRound(long roundIndex) {
-		return core.poset.Store.GetRound(roundIndex);
+	public RResult<poset.RoundInfo> getRound(long roundIndex) {
+		return core.poset.Store.getRound(roundIndex);
 	}
 
 	public long getLastRound() {
-		return core.poset.Store.LastRound();
+		return core.poset.Store.lastRound();
 	}
 
 	public String[] getRoundWitnesses(long roundIndex) {
-		return core.poset.Store.RoundWitnesses(roundIndex);
+		return core.poset.Store.roundWitnesses(roundIndex);
 	}
 
 	public int getRoundEvents(long roundIndex) {
-		return core.poset.Store.RoundEvents(roundIndex);
+		return core.poset.Store.roundEvents(roundIndex);
 	}
 
-	public RetResult<poset.Root> getRoot(long rootIndex) {
-		return core.poset.Store.GetRoot("" + rootIndex);
+	public RResult<poset.Root> getRoot(long rootIndex) {
+		return core.poset.Store.getRoot("" + rootIndex);
 	}
 
-	public RetResult<poset.Block> getBlock(long blockIndex) {
-		return core.poset.Store.GetBlock(blockIndex);
+	public RResult<poset.Block> getBlock(long blockIndex) {
+		return core.poset.Store.getBlock(blockIndex);
 	}
 
 	public long ID() {

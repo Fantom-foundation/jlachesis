@@ -21,61 +21,61 @@ public class RollingIndexMap {
 	}
 
 	// return key items with index > skip
-	public RetResult<Object[]> Get(long key, long skipIndex) {
+	public RResult<Object[]> get(long key, long skipIndex) {
 		RollingIndex items = mapping.get(key);
 		if (items == null) {
-			return new RetResult<Object[]>(null,
+			return new RResult<Object[]>(null,
 					StoreErr.newStoreErr(name, StoreErrType.KeyNotFound, Long.toString(key, 10)));
 		}
 
-		RetResult<Object[]> skipItems = items.Get(skipIndex);
+		RResult<Object[]> skipItems = items.get(skipIndex);
 		Object[] cached = skipItems.result;
 		error err = skipItems.err;
 		if (err != null) {
-			return new RetResult<Object[]>(null, err);
+			return new RResult<Object[]>(null, err);
 		}
 
-		return new RetResult<Object[]>(cached, null);
+		return new RResult<Object[]>(cached, null);
 	}
 
-	public RetResult<Object> GetItem(long key, long index) {
-		return mapping.get(key).GetItem(index);
+	public RResult<Object> getItem(long key, long index) {
+		return mapping.get(key).getItem(index);
 	}
 
-	public RetResult<Object> GetLast(long key) {
+	public RResult<Object> getLast(long key) {
 		RollingIndex pe = mapping.get(key);
 		if (pe == null) {
-			return new RetResult<Object>(null,
+			return new RResult<Object>(null,
 					StoreErr.newStoreErr(name, StoreErrType.KeyNotFound, Long.toString(key, 10)));
 		}
-		Object[] cached = pe.GetLastWindow().result1;
+		Object[] cached = pe.getLastWindow().result1;
 		if (cached.length == 0) {
-			return new RetResult<Object>("", StoreErr.newStoreErr(name, StoreErrType.Empty, ""));
+			return new RResult<Object>("", StoreErr.newStoreErr(name, StoreErrType.Empty, ""));
 		}
-		return new RetResult<Object>(cached[cached.length - 1], null);
+		return new RResult<Object>(cached[cached.length - 1], null);
 	}
 
-	public error Set(long key, Object item, long index) {
+	public error set(long key, Object item, long index) {
 		RollingIndex items = mapping.get(key);
 		if (items == null) {
 			items = new RollingIndex(String.format("%s[%d]", name, key), size);
 			mapping.put(key, items);
 		}
-		return items.Set(item, index);
+		return items.set(item, index);
 	}
 
 	// returns [key] => lastKnownIndex
-	public Map<Long, Long> Known() {
+	public Map<Long, Long> known() {
 		Map<Long, Long> known = new HashMap<Long, Long>();
 		for (long key : mapping.keySet()) {
 			RollingIndex items = mapping.get(key);
-			Long lastIndex = items.GetLastWindow().result2;
+			Long lastIndex = items.getLastWindow().result2;
 			known.put(key, lastIndex);
 		}
 		return known;
 	}
 
-	public error Reset() {
+	public error reset() {
 		Map<Long, RollingIndex> items = new HashMap<Long, RollingIndex>();
 		for (long key : keys) {
 			items.put(key, new RollingIndex(String.format("%s[%d]", name, key), size));
@@ -84,15 +84,12 @@ public class RollingIndexMap {
 		return null;
 	}
 
-	public void Import(RollingIndexMap other) {
+	public void copy(RollingIndexMap other) {
 		for (long key : other.keys) {
 			RollingIndex rollingIndex = new RollingIndex(String.format("%s[%d]", name, key), size);
 			mapping.put(key, rollingIndex);
 			rollingIndex.lastIndex = other.mapping.get(key).lastIndex;
 			rollingIndex.items = other.mapping.get(key).items;
-
-			// copy(mapping[key].items[:len(other.mapping[key].items)],
-			// other.mapping[key].items)
 		}
 	}
 }

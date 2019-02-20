@@ -11,11 +11,11 @@ import java.util.Map;
  * @param <V>
  */
 public class LRUCache<K,V> extends LinkedHashMap<K, V> {
-	public static <K,V> RetResult<LRUCache<K,V>> New(int i) {
+	public static <K,V> RResult<LRUCache<K,V>> New(int i) {
 		// TBD implement it
 		LRUCache<K,V> lruCache = new LRUCache<K,V>(i);
 
-		return new RetResult<LRUCache<K,V>>(lruCache, null);
+		return new RResult<LRUCache<K,V>>(lruCache, null);
 	}
 
 	private int cacheSize;

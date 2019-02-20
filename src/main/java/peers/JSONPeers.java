@@ -5,7 +5,7 @@ import java.util.concurrent.Semaphore;
 
 import autils.FileUtils;
 import autils.JsonUtils;
-import common.RetResult;
+import common.RResult;
 import common.error;
 
 /**
@@ -25,30 +25,30 @@ public class JSONPeers  implements PeerStore {
 		this.path = Paths.get(base, Peer.jsonPeerPath).toString();
 	}
 
-	public RetResult<Peers> peers() {
+	public RResult<Peers> peers() {
 		try {
 			l.acquire();
 
 			// Read the file
-			RetResult<byte[]> readResult = FileUtils.readFileToByteArray(path);
+			RResult<byte[]> readResult = FileUtils.readFileToByteArray(path);
 			byte[] buf = readResult.result;
 			error err = readResult.err;
 
 			if (err != null) {
-				return new RetResult<Peers>(null, err);
+				return new RResult<Peers>(null, err);
 			}
 
 			// Check for no peers
 			if (buf == null || buf.length == 0) {
-				return new RetResult<Peers>(null, null);
+				return new RResult<Peers>(null, null);
 			}
 
 			// Decode the peers
 			 Peer[] peerSet = JsonUtils.StringToObject(new String(buf), Peer[].class);
-			return new RetResult<Peers>(Peers.newPeersFromSlice(peerSet), null);
+			return new RResult<Peers>(Peers.newPeersFromSlice(peerSet), null);
 		} catch (InterruptedException e) {
 			error err = new error(e.getMessage());
-			return new RetResult<Peers>(null, err);
+			return new RResult<Peers>(null, err);
 		} finally {
 			l.release();
 		}

@@ -4,7 +4,7 @@ import java.security.KeyPair;
 
 import autils.Logger;
 import channel.ExecService;
-import common.RetResult;
+import common.RResult;
 import common.error;
 import crypto.PemDump;
 import crypto.PemKey;
@@ -28,7 +28,7 @@ public class Lachesis {
 	}
 
 	public error initTransport() {
-		RetResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(
+		RResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport(
 				Config.BindAddr,
 				null,
 				Config.MaxPool,
@@ -56,7 +56,7 @@ public class Lachesis {
 		}
 
 		JSONPeers peerStore = new peers.JSONPeers(Config.DataDir);
-		RetResult<peers.Peers> peersCall = peerStore.peers();
+		RResult<peers.Peers> peersCall = peerStore.peers();
 		peers.Peers participants = peersCall.result;
 		error err = peersCall.err;
 
@@ -84,7 +84,7 @@ public  error initStore() {
 		error err;
 
 		Config.logger.field("path", Config.BadgerDir()).debug("Attempting to load or create database");
-		RetResult<BadgerStore> loadOrCreateBadgerStore = BadgerStore.LoadOrCreateBadgerStore(Peers, Config.NodeConfig.getCacheSize(), dbDir);
+		RResult<BadgerStore> loadOrCreateBadgerStore = BadgerStore.LoadOrCreateBadgerStore(Peers, Config.NodeConfig.getCacheSize(), dbDir);
 		setStore(loadOrCreateBadgerStore.result);
 		err = loadOrCreateBadgerStore.err;
 
@@ -92,7 +92,7 @@ public  error initStore() {
 			return err;
 		}
 
-		if (getStore().NeedBoostrap()) {
+		if (getStore().needBoostrap()) {
 			Config.logger.debug("loaded badger store from existing database at " + dbDir);
 		} else {
 			Config.logger.debug("created new badger store from fresh database");
@@ -105,14 +105,14 @@ public  error initStore() {
 public error initKey() {
 	if (Config.Key == null) {
 		PemKey pemKey = new PemKey(Config.DataDir);
-		RetResult<KeyPair> readKey = pemKey.ReadKeyPair();
+		RResult<KeyPair> readKey = pemKey.ReadKeyPair();
 		KeyPair privKey = readKey.result;
 		error err = readKey.err;
 
 		if (err != null) {
 			Config.logger.warn("Cannot read private key from file" + err);
 
-			RetResult<KeyPair> keygen = Keygen(Config.DataDir);
+			RResult<KeyPair> keygen = Keygen(Config.DataDir);
 			privKey = keygen.result;
 			err = keygen.err;
 
@@ -122,7 +122,7 @@ public error initKey() {
 				return err;
 			}
 
-			RetResult<PemDump> toPemKey = crypto.PemKey.ToPemKey(privKey);
+			RResult<PemDump> toPemKey = crypto.PemKey.ToPemKey(privKey);
 			PemDump pem = toPemKey.result;
 
 			Config.logger.info("Created a new key:" + pem.PublicKey);
@@ -218,28 +218,28 @@ public error initNode() {
 		getNode().run(true);
 	}
 
-	public RetResult<KeyPair> Keygen(String datadir) {
+	public RResult<KeyPair> Keygen(String datadir) {
 		PemKey pemKey = new PemKey(datadir);
 
 		error err = pemKey.ReadKeyPair().err;
 		if (err == null) {
-			return new RetResult<>(null, error.Errorf( String.format("another key already lives under %s", datadir)));
+			return new RResult<>(null, error.Errorf( String.format("another key already lives under %s", datadir)));
 		}
 
-		RetResult<KeyPair> generateECDSAKey = crypto.Utils.GenerateECDSAKeyPair();
+		RResult<KeyPair> generateECDSAKey = crypto.Utils.GenerateECDSAKeyPair();
 		KeyPair keyPair = generateECDSAKey.result;
 		err = generateECDSAKey.err;
 
 		if (err != null) {
-			return new RetResult<>(null, err);
+			return new RResult<>(null, err);
 		}
 
 		err = pemKey.WriteKey(keyPair);
 		if (err != null) {
-			return new RetResult<>(null, err);
+			return new RResult<>(null, err);
 		}
 
-		return new RetResult<>(keyPair, null);
+		return new RResult<>(keyPair, null);
 	}
 
 	public poset.Store getStore() {

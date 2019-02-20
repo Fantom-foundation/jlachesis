@@ -12,8 +12,8 @@ import org.jcsp.lang.One2OneChannel;
 import autils.Appender;
 import autils.Logger;
 import autils.time;
-import common.RetResult;
-import common.RetResult3;
+import common.RResult;
+import common.RResult3;
 import common.error;
 import peers.Peer;
 import poset.BlockSignature;
@@ -107,7 +107,7 @@ public class Core {
 	public Map<String,Long> heights() {
 		HashMap<String, Long> heights = new HashMap<String,Long>();
 		for (String pubKey : participants.getByPubKey().keySet()) {
-			RetResult<String[]> participantEventsCre = poset.Store.ParticipantEvents(pubKey, -1);
+			RResult<String[]> participantEventsCre = poset.Store.participantEvents(pubKey, -1);
 			String[] participantEvents = participantEventsCre.result;
 			error err = participantEventsCre.err;
 
@@ -128,7 +128,7 @@ public class Core {
 		String head;
 		long seq;
 
-		RetResult3<String, Boolean> lastEventFrom = poset.Store.LastEventFrom(hexID());
+		RResult3<String, Boolean> lastEventFrom = poset.Store.lastEventFrom(hexID());
 		String last = lastEventFrom.result1;
 		Boolean isRoot = lastEventFrom.result2;
 		error err = lastEventFrom.err;
@@ -137,7 +137,7 @@ public class Core {
 		}
 
 		if (isRoot) {
-			RetResult<Root> getRoot = poset.Store.GetRoot(hexID());
+			RResult<Root> getRoot = poset.Store.getRoot(hexID());
 			Root root = getRoot.result;
 			err = getRoot.err;
 			if (err != null) {
@@ -146,7 +146,7 @@ public class Core {
 			head = root.GetSelfParent().GetHash();
 			seq = root.GetSelfParent().GetIndex();
 		} else {
-			RetResult<Event> getEvent = getEvent(last);
+			RResult<Event> getEvent = getEvent(last);
 			Event lastEvent = getEvent.result;
 			err = getEvent.err;
 			if (err != null) {
@@ -177,7 +177,7 @@ public class Core {
 	public void bootstrapInDegrees() {
 		for (String pubKey : participants.getByPubKey().keySet()) {
 			inDegrees.put(pubKey, (long) 0);
-			RetResult3<String, Boolean> lastEventFrom = poset.Store.LastEventFrom(pubKey);
+			RResult3<String, Boolean> lastEventFrom = poset.Store.lastEventFrom(pubKey);
 			String eventHash = lastEventFrom.result1;
 			error err = lastEventFrom.err;
 			if (err != null) {
@@ -187,14 +187,14 @@ public class Core {
 				if (otherPubKey.equals(pubKey)) {
 					continue;
 				}
-				RetResult<String[]> participantEventsCr = poset.Store.ParticipantEvents(otherPubKey, -1);
+				RResult<String[]> participantEventsCr = poset.Store.participantEvents(otherPubKey, -1);
 				String[] events = participantEventsCr.result;
 				err = participantEventsCr.err;
 				if (err != null) {
 					continue;
 				}
 				for (String eh : events) {
-					RetResult<Event> getEvent = poset.Store.GetEvent(eh);
+					RResult<Event> getEvent = poset.Store.getEvent(eh);
 					Event event = getEvent.result;
 					err = getEvent.err;
 					if (err != null) {
@@ -236,7 +236,7 @@ public class Core {
 		}
 
 		inDegrees.put(event.creator(), (long) 0);
-		RetResult<Event> getEvent = poset.Store.GetEvent(event.otherParent());
+		RResult<Event> getEvent = poset.Store.getEvent(event.otherParent());
 		Event otherEvent = getEvent.result;
 		err = getEvent.err;
 		if  (err == null) {
@@ -247,23 +247,23 @@ public class Core {
 	}
 
 	public Map<Long,Long> knownEvents() {
-		return poset.Store.KnownEvents();
+		return poset.Store.knownEvents();
 	}
 
 	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-	public RetResult<poset.BlockSignature> SignBlock(poset.Block block) {
-		RetResult<BlockSignature> signCall = block.sign(key);
+	public RResult<poset.BlockSignature> SignBlock(poset.Block block) {
+		RResult<BlockSignature> signCall = block.sign(key);
 		BlockSignature sig = signCall.result;
 		error err = signCall.err;
 		if (err != null) {
-			return new RetResult<poset.BlockSignature>(new poset.BlockSignature(), err);
+			return new RResult<poset.BlockSignature>(new poset.BlockSignature(), err);
 		}
 		err = block.setSignature(sig);
 		if  (err != null) {
-			return new RetResult<poset.BlockSignature>(new poset.BlockSignature(), err);
+			return new RResult<poset.BlockSignature>(new poset.BlockSignature(), err);
 		}
-		return new RetResult<poset.BlockSignature>(sig, poset.Store.SetBlock(block));
+		return new RResult<poset.BlockSignature>(sig, poset.Store.setBlock(block));
 	}
 
 	// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -283,12 +283,12 @@ public class Core {
 		return false;
 	}
 
-	public RetResult3<poset.Block, poset.Frame> getAnchorBlockWithFrame() {
+	public RResult3<poset.Block, poset.Frame> getAnchorBlockWithFrame() {
 		return poset.GetAnchorBlockWithFrame();
 	}
 
 	// returns events that c knows about and are not in 'known'
-	public RetResult<poset.Event[]> eventDiff(Map<Long,Long> known) {
+	public RResult<poset.Event[]> eventDiff(Map<Long,Long> known) {
 		poset.Event[] unknown = new poset.Event[0];
 		// known represents the index of the last event known for every participant
 		// compare this to our view of events and fill unknown with events that we know of
@@ -302,18 +302,18 @@ public class Core {
 				continue;
 			}
 			// get participant Events with index > ct
-			RetResult<String[]> ParticipantEventsCall = poset.Store.ParticipantEvents(peer.getPubKeyHex(), ct);
+			RResult<String[]> ParticipantEventsCall = poset.Store.participantEvents(peer.getPubKeyHex(), ct);
 			String[] participantEvents = ParticipantEventsCall.result;
 			error err = ParticipantEventsCall.err;
 			if (err != null) {
-				return new RetResult<poset.Event[]> ( new poset.Event[] {}, err);
+				return new RResult<poset.Event[]> ( new poset.Event[] {}, err);
 			}
 			for (String e : participantEvents) {
-				RetResult<Event> getEvent = poset.Store.GetEvent(e);
+				RResult<Event> getEvent = poset.Store.getEvent(e);
 				Event ev = getEvent.result;
 				err = getEvent.err;
 				if (err != null) {
-					return new RetResult<poset.Event[]>(new poset.Event[] {}, err);
+					return new RResult<poset.Event[]>(new poset.Event[] {}, err);
 				}
 				logger.field("event", ev).field("creator", ev.creator())
 				.field("selfParent", ev.selfParent())
@@ -327,7 +327,7 @@ public class Core {
 		Arrays.sort(unknown, new EventComparatorByTopologicalOrder());
 
 
-		return new RetResult<poset.Event[]>(unknown, null);
+		return new RResult<poset.Event[]>(unknown, null);
 	}
 
 	public error Sync(poset.WireEvent[] unknownEvents)  {
@@ -346,7 +346,7 @@ public class Core {
 			poset.WireEvent we = unknownEvents[k];
 			logger.field("we", we).error("Sync");
 
-			RetResult<Event> readWireInfo = poset.ReadWireInfo(we);
+			RResult<Event> readWireInfo = poset.ReadWireInfo(we);
 			Event ev = readWireInfo.result;
 			logger.field("ev", ev).error("Sync");
 			error err = readWireInfo.err;
@@ -393,7 +393,7 @@ public class Core {
 		}
 
 		// Check Frame Hash
-		RetResult<byte[]> hashCall = frame.Hash();
+		RResult<byte[]> hashCall = frame.Hash();
 		byte[] frameHash = hashCall.result;
 		err = hashCall.err;
 
@@ -431,14 +431,14 @@ public class Core {
 	}
 
 	public error addSelfEventBlock(String otherHead) {
-		RetResult<Event> getEvent = poset.Store.GetEvent(head);
+		RResult<Event> getEvent = poset.Store.getEvent(head);
 		// Get flag tables from parents
 		Event parentEvent = getEvent.result;
 		error errSelf = getEvent.err;
 		if (errSelf != null) {
 			logger.warn(String.format("failed to get parent: %s", errSelf));
 		}
-		RetResult<Event> getEventOtherCall = poset.Store.GetEvent(otherHead);
+		RResult<Event> getEventOtherCall = poset.Store.getEvent(otherHead);
 		Event otherParentEvent = getEventOtherCall.result;
 		error errOther = getEventOtherCall.err;
 		if (errOther != null) {
@@ -452,7 +452,7 @@ public class Core {
 			flagTable = new HashMap<String,Long>();
 			flagTable.put(head, (long) 1);
 		} else {
-			RetResult<Map<String, Long>> getFlagTable = parentEvent.getFlagTable();
+			RResult<Map<String, Long>> getFlagTable = parentEvent.getFlagTable();
 			flagTable = getFlagTable.result;
 			err = getFlagTable.err;
 			if (err != null) {
@@ -461,7 +461,7 @@ public class Core {
 		}
 
 		if (errOther == null) {
-			RetResult<Map<String, Long>> mergeFlagTableCall = otherParentEvent.mergeFlagTable(flagTable);
+			RResult<Map<String, Long>> mergeFlagTableCall = otherParentEvent.mergeFlagTable(flagTable);
 			flagTable = mergeFlagTableCall.result;
 			err = mergeFlagTableCall.err;
 			if (err != null) {
@@ -500,26 +500,26 @@ public class Core {
 		return null;
 	}
 
-	public RetResult<poset.Event[]> fromWire(poset.WireEvent[] wireEvents)  {
+	public RResult<poset.Event[]> fromWire(poset.WireEvent[] wireEvents)  {
 		poset.Event[] events = new poset.Event[wireEvents.length];
 		for (int i = 0; i < wireEvents.length; ++i) {
-			RetResult<Event> readWireInfo = poset.ReadWireInfo(wireEvents[i]);
+			RResult<Event> readWireInfo = poset.ReadWireInfo(wireEvents[i]);
 			Event ev = readWireInfo.result;
 			error err = readWireInfo.err;
 			if (err != null) {
-				return new RetResult<poset.Event[]>(null, err);
+				return new RResult<poset.Event[]>(null, err);
 			}
 			events[i] = new Event(ev);
 		}
-		return new RetResult<poset.Event[]>(events, null);
+		return new RResult<poset.Event[]>(events, null);
 	}
 
-	public RetResult<poset.WireEvent[]> toWire(poset.Event[] events) {
+	public RResult<poset.WireEvent[]> toWire(poset.Event[] events) {
 		poset.WireEvent[] wireEvents = new poset.WireEvent[events.length];
 		for (int i = 0; i < events.length; ++i) {
 			wireEvents[i] = events[i].toWire();
 		}
-		return new RetResult<poset.WireEvent[]>(wireEvents, null);
+		return new RResult<poset.WireEvent[]>(wireEvents, null);
 	}
 
 	public error runConsensus()  {
@@ -584,32 +584,32 @@ public class Core {
 		blockSignaturePool = Appender.append(blockSignaturePool, bs);
 	}
 
-	public RetResult<poset.Event> getHead() {
-		return poset.Store.GetEvent(head);
+	public RResult<poset.Event> getHead() {
+		return poset.Store.getEvent(head);
 	}
 
-	public RetResult<poset.Event> getEvent(String hash) {
-		return poset.Store.GetEvent(hash);
+	public RResult<poset.Event> getEvent(String hash) {
+		return poset.Store.getEvent(hash);
 	}
 
-	public RetResult<byte[][]> getEventTransactions(String hash){
+	public RResult<byte[][]> getEventTransactions(String hash){
 		byte[][] txs = null;
-		RetResult<Event> getEvent = getEvent(hash);
+		RResult<Event> getEvent = getEvent(hash);
 		Event ex = getEvent.result;
 		error err = getEvent.err;
 		if (err != null) {
-			return new RetResult<byte[][]>(txs, err);
+			return new RResult<byte[][]>(txs, err);
 		}
 		txs = ex.transactions();
-		return new RetResult<byte[][]>(txs, null);
+		return new RResult<byte[][]>(txs, null);
 	}
 
 	public String[] getConsensusEvents() {
-		return poset.Store.ConsensusEvents();
+		return poset.Store.consensusEvents();
 	}
 
 	public long getConsensusEventsCount() {
-		return poset.Store.ConsensusEventsCount();
+		return poset.Store.consensusEventsCount();
 	}
 
 	public List<String> getUndeterminedEvents() {
@@ -620,19 +620,19 @@ public class Core {
 		return poset.getPendingLoadedEvents();
 	}
 
-	public RetResult<byte[][]> getConsensusTransactions() {
+	public RResult<byte[][]> getConsensusTransactions() {
 		byte[][] txs = null;
 		for (String e : getConsensusEvents()) {
-			RetResult<byte[][]> getTrans = getEventTransactions(e);
+			RResult<byte[][]> getTrans = getEventTransactions(e);
 			byte[][] eTxs = getTrans.result;
 			error err = getTrans.err;
 			if (err != null) {
-				return new RetResult<byte[][]>(txs, error.Errorf(
+				return new RResult<byte[][]>(txs, error.Errorf(
 						String.format("GetConsensusTransactions(): %s", e)));
 			}
 			txs = Appender.append(txs, eTxs);
 		}
-		return new RetResult<byte[][]>(txs, null);
+		return new RResult<byte[][]>(txs, null);
 	}
 
 	public long getLastConsensusRoundIndex() {
@@ -648,7 +648,7 @@ public class Core {
 	}
 
 	public long getLastBlockIndex() {
-		return poset.Store.LastBlockIndex();
+		return poset.Store.lastBlockIndex();
 	}
 
 	@Override

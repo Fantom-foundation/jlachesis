@@ -14,8 +14,8 @@ import org.junit.Test;
 import autils.Appender;
 import autils.Logger;
 import common.Hash32;
-import common.RetResult;
-import common.RetResult3;
+import common.RResult;
+import common.RResult3;
 import common.error;
 import crypto.Utils;
 import peers.Peer;
@@ -61,7 +61,7 @@ public class CoreTest {
 		*/
 
 		Map<Long,Long> knownBy1 = cores[1].knownEvents();
-		RetResult<poset.Event[]> eventDiff = cores[0].eventDiff(knownBy1);
+		RResult<poset.Event[]> eventDiff = cores[0].eventDiff(knownBy1);
 		Event[] unknownBy1 = eventDiff.result;
 		error err = eventDiff.err;
 		assertNull("No error when event diff", err);
@@ -345,7 +345,7 @@ public class CoreTest {
 		error err;
 		for (int i = 0; i < cores.length; i++) {
 			if (i != participant) {
-				RetResult<Event> getEvent = cores[i].getEvent(index.get(String.format("e%d", i)));
+				RResult<Event> getEvent = cores[i].getEvent(index.get(String.format("e%d", i)));
 				Event event = getEvent.result;
 				err = getEvent.err;
 				assertNull("No error getEvent", err);
@@ -356,12 +356,12 @@ public class CoreTest {
 		}
 
 		// Get flag tables from parents
-		RetResult<Event> getEvent = cores[0].poset.Store.GetEvent(index.get("e0"));
+		RResult<Event> getEvent = cores[0].poset.Store.getEvent(index.get("e0"));
 		Event event0 = getEvent.result;
 		err = getEvent.err;
 		assertNull("No error to get parent", err);
 
-		RetResult<Event> getEventCall1 = cores[0].poset.Store.GetEvent(index.get("e1"));
+		RResult<Event> getEventCall1 = cores[0].poset.Store.getEvent(index.get("e1"));
 
 		Event event1 = getEventCall1.result;
 		err = getEventCall1.err;
@@ -381,7 +381,7 @@ public class CoreTest {
 		assertNull("No error inserting e01", err);
 
 		// Get flag tables from parents
-		RetResult<Event> getEventCall2 = cores[2].poset.Store.GetEvent(index.get("e2"));
+		RResult<Event> getEventCall2 = cores[2].poset.Store.getEvent(index.get("e2"));
 		Event event2 = getEventCall2.result;
 		err = getEventCall2.err;
 		assertNull("No error get parent", err);
@@ -927,7 +927,7 @@ public class CoreTest {
 		assertNotNull("GetAnchorBlockWithFrame should throw an error" +
 				" because there is no anchor block yet", err);
 
-		RetResult<Block> getBlock = cores[1].poset.Store.GetBlock(0);
+		RResult<Block> getBlock = cores[1].poset.Store.getBlock(0);
 		Block block0 = getBlock.result;
 		err = getBlock.err;
 		assertNull("No error when GetBlock 0", err);
@@ -936,12 +936,12 @@ public class CoreTest {
 		BlockSignature[] signatures = new BlockSignature[3];
 		for (int k = 1; k< cores.length; ++k) {
 			Core c = cores[k];
-			RetResult<Block> getBlock2 = c.poset.Store.GetBlock(0);
+			RResult<Block> getBlock2 = c.poset.Store.getBlock(0);
 			Block b = getBlock2.result;
 			err = getBlock2.err;
 			assertNull("No error when GetBlock 0", err);
 
-			RetResult<BlockSignature> signBlock = c.SignBlock(b);
+			RResult<BlockSignature> signBlock = c.SignBlock(b);
 			BlockSignature sig = signBlock.result;
 			err = signBlock.err;
 			assertNull("No error when SignBlock b=" + b, err);
@@ -955,14 +955,14 @@ public class CoreTest {
 		assertNull("No error when SetSignature 0", err);
 
 		// Save Block
-		err = cores[1].poset.Store.SetBlock(block0);
+		err = cores[1].poset.Store.setBlock(block0);
 		assertNull("No error when SetBlock 0" + block0, err);
 
 		// Assign AnchorBlock
 		cores[1].poset.setAnchorBlock(0L);
 
 			// Now the publiction should find an AnchorBlock
-		RetResult3<Block, Frame> getAnchorBlockWithFrame = cores[1].getAnchorBlockWithFrame();
+		RResult3<Block, Frame> getAnchorBlockWithFrame = cores[1].getAnchorBlockWithFrame();
 		Block block = getAnchorBlockWithFrame.result1;
 		Frame frame = getAnchorBlockWithFrame.result2;
 		err = getAnchorBlockWithFrame.err;
@@ -983,10 +983,10 @@ public class CoreTest {
 		}
 
 		// Save Block
-		err = cores[1].poset.Store.SetBlock(block0);
+		err = cores[1].poset.Store.setBlock(block0);
 		assertNull("No error when SetBlock() of " + block0, err);
 
-		RetResult3<Block, Frame> getAnchorBlockWithFrame2 = cores[1].getAnchorBlockWithFrame();
+		RResult3<Block, Frame> getAnchorBlockWithFrame2 = cores[1].getAnchorBlockWithFrame();
 		block = getAnchorBlockWithFrame2.result1;
 		frame = getAnchorBlockWithFrame2.result2;
 		err = getAnchorBlockWithFrame2.err;
@@ -1009,17 +1009,17 @@ public class CoreTest {
 		long r = cores[0].getLastConsensusRoundIndex();
 		assertEquals("Cores[0] last consensus Round should be 1, not %v", 1, r);
 
-		long lbi = cores[0].poset.Store.LastBlockIndex();
+		long lbi = cores[0].poset.Store.lastBlockIndex();
 		assertEquals("Cores[0].poset.LastBlockIndex should be 0, not %d", 0, lbi);
 
-		RetResult<Block> getBlock2 = cores[0].poset.Store.GetBlock(block.Index());
+		RResult<Block> getBlock2 = cores[0].poset.Store.getBlock(block.Index());
 		Block sBlock = getBlock2.result;
 		err = getBlock2.err;
 		assertNull("No Error retrieving latest Block from reset poset", err);
 
 		assertEquals("Blocks match", sBlock.getBody(), block.getBody());
 
-		RetResult3<String, Boolean> lastEventFrom = cores[0].poset.Store.LastEventFrom(cores[0].hexID);
+		RResult3<String, Boolean> lastEventFrom = cores[0].poset.Store.lastEventFrom(cores[0].hexID);
 		String lastEventFrom0 = lastEventFrom.result1;
 		err = lastEventFrom.err;
 		assertNull("No Error when call LastEventFrom", err);
@@ -1033,14 +1033,14 @@ public class CoreTest {
 
 	private error synchronizeCores(Core[] cores, int from, int to, byte[][] payload) {
 		Map<Long, Long> knownByTo = cores[to].knownEvents();
-		RetResult<Event[]> eventDiff = cores[from].eventDiff(knownByTo);
+		RResult<Event[]> eventDiff = cores[from].eventDiff(knownByTo);
 		Event[] unknownByTo = eventDiff.result;
 		error err = eventDiff.err;
 		if (err != null) {
 			return err;
 		}
 
-		RetResult<WireEvent[]> toWire = cores[from].toWire(unknownByTo);
+		RResult<WireEvent[]> toWire = cores[from].toWire(unknownByTo);
 		WireEvent[] unknownWire = toWire.result;
 		err = toWire.err;
 		if (err != null) {

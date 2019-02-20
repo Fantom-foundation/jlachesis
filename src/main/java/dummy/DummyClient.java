@@ -5,7 +5,7 @@ import org.jcsp.lang.Guard;
 
 import autils.Logger;
 import channel.ExecService;
-import common.RetResult;
+import common.RResult;
 import common.error;
 import dummy.DummyClient;
 import proxy.GrpcLachesisProxy;
@@ -66,10 +66,10 @@ public class DummyClient {
 	 * @param logger
 	 * @return
 	 */
-	public RetResult<DummyClient> NewDummyClient(proxy.LachesisProxy lachesisProxy , proxy.ProxyHandler handler , Logger logger) {
+	public RResult<DummyClient> NewDummyClient(proxy.LachesisProxy lachesisProxy , proxy.ProxyHandler handler , Logger logger) {
 		DummyClient c = new DummyClient( logger, handler, lachesisProxy);
 		if (handler == null) {
-			return new RetResult<DummyClient>(c, null);
+			return new RResult<DummyClient>(c, null);
 		}
 
 		error err1 = null;
@@ -116,7 +116,7 @@ public class DummyClient {
 							return;
 						}
 						logger.debug(String.format("block commit event: %s", b.getBlock()));
-						RetResult<byte[]> commitHandler = handler.CommitHandler(b.getBlock());
+						RResult<byte[]> commitHandler = handler.CommitHandler(b.getBlock());
 						err = commitHandler.err;
 						hash = commitHandler.result;
 						b.Respond(hash, err);
@@ -127,7 +127,7 @@ public class DummyClient {
 							return;
 						}
 						logger.debug(String.format("snapshot restore command: %s", r.getSnapshot()));
-						RetResult<byte[]> restoreHandler = handler.RestoreHandler(r.getSnapshot());
+						RResult<byte[]> restoreHandler = handler.RestoreHandler(r.getSnapshot());
 						hash = restoreHandler.result;
 						err = restoreHandler.err;
 						r.Respond(hash, err);
@@ -138,7 +138,7 @@ public class DummyClient {
 							return;
 						}
 						logger.debug(String.format("get snapshot query: %d", s.getBlockIndex()));
-						RetResult<byte[]> snapshotHandler = handler.SnapshotHandler(s.getBlockIndex());
+						RResult<byte[]> snapshotHandler = handler.SnapshotHandler(s.getBlockIndex());
 						hash = snapshotHandler.result;
 						err = snapshotHandler.err;
 						s.Respond(hash, err);
@@ -151,6 +151,6 @@ public class DummyClient {
 			}
 		});
 
-		return new RetResult<DummyClient>(c, err1);
+		return new RResult<DummyClient>(c, err1);
 	}
 }

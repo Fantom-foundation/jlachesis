@@ -2,40 +2,40 @@ package poset;
 
 import java.util.Map;
 
-import common.RetResult;
-import common.RetResult3;
+import common.RResult;
+import common.RResult3;
 import common.error;
 
 // Store provides an interface for persistent and non-persistent stores
 // to store key lachesis consensus information on a node.
 public interface Store {
-	int CacheSize();
-	RetResult<peers.Peers> Participants();
-	RetResult<Map<String,Root>> RootsBySelfParent();
-	RetResult<Event> GetEvent(String s);
-	error SetEvent(Event e);
-	RetResult<String[]> ParticipantEvents(String s, long l);
-	RetResult<String> ParticipantEvent(String s, long l);
-	RetResult3<String,Boolean> LastEventFrom(String s);
-	RetResult3<String,Boolean> LastConsensusEventFrom(String s);
-	Map<Long,Long> KnownEvents();
-	String[] ConsensusEvents();
-	long ConsensusEventsCount();
-	error AddConsensusEvent(Event e);
-	RetResult<RoundInfo> GetRound(long l);
-	error SetRound(long l, RoundInfo r);
-	long LastRound();
-	String[] RoundWitnesses(long l);
-	int RoundEvents(long l);
-	RetResult<Root> GetRoot(String s);
-	RetResult<Block> GetBlock(long l);
-	error SetBlock(Block b);
-	long LastBlockIndex();
-	RetResult<Frame>  GetFrame(long l);
-	error SetFrame(Frame f);
-	error Reset(Map<String,Root> map);
-	error Close();
-	boolean NeedBoostrap(); // Was the store loaded from existing db
-	String StorePath();
-//	RetResult<Event[]> TopologicalEvents();
+	int cacheSize();
+	RResult<peers.Peers> participants();
+	RResult<Map<String,Root>> rootsBySelfParent();
+	RResult<Event> getEvent(String s);
+	error setEvent(Event e);
+	RResult<String[]> participantEvents(String s, long l);
+	RResult<String> participantEvent(String s, long l);
+	RResult3<String,Boolean> lastEventFrom(String s);
+	RResult3<String,Boolean> lastConsensusEventFrom(String s);
+	Map<Long,Long> knownEvents();
+	String[] consensusEvents();
+	long consensusEventsCount();
+	error addConsensusEvent(Event e);
+	RResult<RoundInfo> getRound(long l);
+	error setRound(long l, RoundInfo r);
+	long lastRound();
+	String[] roundWitnesses(long l);
+	int roundEvents(long l);
+	RResult<Root> getRoot(String s);
+	RResult<Block> getBlock(long l);
+	error setBlock(Block b);
+	long lastBlockIndex();
+	RResult<Frame>  getFrame(long l);
+	error setFrame(Frame f);
+	error reset(Map<String,Root> map);
+	error close();
+	boolean needBoostrap(); // Was the store loaded from existing db
+	String storePath();
+	RResult<Event[]> topologicalEvents();
 }

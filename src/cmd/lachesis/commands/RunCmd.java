@@ -10,7 +10,7 @@ import autils.FileUtils;
 import autils.time;
 import channel.ExecService;
 import common.Cmd;
-import common.RetResult;
+import common.RResult;
 import common.error;
 import lachesis.ConfigUtils;
 import lachesis.Lachesis;
@@ -228,7 +228,7 @@ public class RunCmd extends Cmd {
 		}
 
 		if (config.Lachesis.isTest()) {
-			RetResult<Peers> participantsCall = engine.getStore().Participants();
+			RResult<Peers> participantsCall = engine.getStore().participants();
 			Peers p = participantsCall.result;
 			err = participantsCall.err;
 			if (err != null) {

@@ -17,7 +17,7 @@ import org.junit.Test;
 
 import autils.Appender;
 import autils.Logger;
-import common.RetResult;
+import common.RResult;
 import common.error;
 import peers.Peer;
 import peers.Peers;
@@ -273,7 +273,7 @@ public class PosetTest {
 		Store store;
 		error err;
 		if (db) {
-			RetResult<BadgerStore> newBadgerStore = BadgerStore.NewBadgerStore(participants, cacheSize, badgerDir);
+			RResult<BadgerStore> newBadgerStore = BadgerStore.NewBadgerStore(participants, cacheSize, badgerDir);
 			store = newBadgerStore.result;
 			err = newBadgerStore.err;
 			assertNull("No ERROR creating badger store", err);
@@ -317,7 +317,7 @@ public class PosetTest {
 		// Add reference to each participants' root event
 		for (int i = 0; i< peerSlice.length; ++i) {
 			Peer peer = peerSlice[i];
-			RetResult<Root> getRoot = poset.Store.GetRoot(peer.getPubKeyHex());
+			RResult<Root> getRoot = poset.Store.getRoot(peer.getPubKeyHex());
 			Root root = getRoot.result;
 			error err  = getRoot.err;
 			assertNull("No error", err);
@@ -357,7 +357,7 @@ public class PosetTest {
 
 		for (int i = 0; i< orderedEvents.length; ++i) {
 			Event ev = orderedEvents[i];
-			error err = poset.Store.SetEvent(ev);
+			error err = poset.Store.setEvent(ev);
 			assertNull(String.format("No error for setting event at %d", i), err);
 		}
 	}
@@ -406,7 +406,7 @@ public class PosetTest {
 		};
 
 		for (ancestryItem exp : expected) {
-			RetResult<Boolean> ancestorCall = poset.ancestor(index.get(exp.descendant), index.get(exp.ancestor));
+			RResult<Boolean> ancestorCall = poset.ancestor(index.get(exp.descendant), index.get(exp.ancestor));
 			boolean a = ancestorCall.result;
 			error err = ancestorCall.err;
 			assertNull(String.format("No error when computing ancestor(%s, %s)",
@@ -444,7 +444,7 @@ public class PosetTest {
 		};
 
 		for (ancestryItem exp : expected) {
-			RetResult<Boolean> selfAncestorCall = poset.selfAncestor(index.get(exp.descendant), index.get(exp.ancestor));
+			RResult<Boolean> selfAncestorCall = poset.selfAncestor(index.get(exp.descendant), index.get(exp.ancestor));
 			boolean a = selfAncestorCall.result;
 			error err = selfAncestorCall.err;
 			assertNull(String.format("No Error when computing selfAncestor(%s, %s)",
@@ -470,7 +470,7 @@ public class PosetTest {
 		};
 
 		for (ancestryItem exp : expected) {
-			RetResult<Boolean> see = poset.see(index.get(exp.descendant), index.get(exp.ancestor));
+			RResult<Boolean> see = poset.see(index.get(exp.descendant), index.get(exp.ancestor));
 			boolean a = see.result;
 			error err = see.err;
 			assertNull(String.format("No Error computing see(%s, %s)",
@@ -497,7 +497,7 @@ public class PosetTest {
 
 		for (String e : expectedTimestamps.keySet()) {
 			long ets = expectedTimestamps.get(e);
-			RetResult<Long> lamportTimestampCall = poset.lamportTimestamp(index.get(e));
+			RResult<Long> lamportTimestampCall = poset.lamportTimestamp(index.get(e));
 			long ts = lamportTimestampCall.result;
 			error err = lamportTimestampCall.err;
 			assertNull(String.format("No Error computing lamportTimestamp(%s)", e), err);
@@ -611,7 +611,7 @@ public class PosetTest {
 		initRoundPoset();
 
 		// "Check Event Coordinates"
-		RetResult<Event> getEventCall = poset.Store.GetEvent(index.get(e0));
+		RResult<Event> getEventCall = poset.Store.getEvent(index.get(e0));
 		Event e0Event = getEventCall.result;
 		error err = getEventCall.err;
 		assertNull("No error", err);
@@ -623,12 +623,12 @@ public class PosetTest {
 			fail(String.format("Invalid wire info on %s", e0));
 		}
 
-		RetResult<Event> getEvent = poset.Store.GetEvent(index.get(e21));
+		RResult<Event> getEvent = poset.Store.getEvent(index.get(e21));
 		Event e21Event = getEvent.result;
 		err = getEvent.err;
 		assertNull("No error", err);
 
-		getEvent = poset.Store.GetEvent(index.get(e10));
+		getEvent = poset.Store.getEvent(index.get(e10));
 		Event e10Event = getEvent.result;
 		err = getEvent.err;
 		assertNull("No error", err);
@@ -640,7 +640,7 @@ public class PosetTest {
 			fail(String.format("Invalid wire info on %s", e21));
 		}
 
-		getEvent = poset.Store.GetEvent(index.get(f1));
+		getEvent = poset.Store.getEvent(index.get(f1));
 		Event f1Event = getEvent.result;
 		err = getEvent.err;
 		assertNull("No error", err);
@@ -699,7 +699,7 @@ public class PosetTest {
 
 
 	private boolean checkParents(String e, String selfAncestor, String ancestor) {
-		RetResult<Event> getEvent = poset.Store.GetEvent(index.get(e));
+		RResult<Event> getEvent = poset.Store.getEvent(index.get(e));
 		Event ev = getEvent.result;
 		error err = getEvent.err;
 		assertNull("No error", err);
@@ -715,14 +715,14 @@ public class PosetTest {
 			if (k.charAt(0) == 'r') {
 				return;
 			}
-			RetResult<Event> getEvent = poset.Store.GetEvent(evh);
+			RResult<Event> getEvent = poset.Store.getEvent(evh);
 			Event ev = getEvent.result;
 			error err = getEvent.err;
 			assertNull("No error", err);
 
 			WireEvent evWire = ev.toWire();
 
-			RetResult<Event> readWireInfo = poset.ReadWireInfo(evWire);
+			RResult<Event> readWireInfo = poset.ReadWireInfo(evWire);
 			Event evFromWire = readWireInfo.result;
 			err = readWireInfo.err;
 			assertNull("No error", err);
@@ -735,7 +735,7 @@ public class PosetTest {
 				ev.message.Body,evFromWire.message.Body);
 			assertEquals(String.format("Error converting %s.Signature from light wire", k), ev.message.Signature,
 				evFromWire.message.Signature);
-			RetResult<Boolean> verify = evFromWire.verify();
+			RResult<Boolean> verify = evFromWire.verify();
 			boolean ok = verify.result;
 			err = verify.err;
 			assertTrue(String.format("Error verifying signature for %s from ligh wire: %s",
@@ -776,7 +776,7 @@ public class PosetTest {
 		};
 
 		for (ancestryItem exp : expected) {
-			RetResult<Boolean> sSee = poset.stronglySee(index.get(exp.descendant), index.get(exp.ancestor));
+			RResult<Boolean> sSee = poset.stronglySee(index.get(exp.descendant), index.get(exp.ancestor));
 			boolean s = sSee.result;
 			error err = sSee.err;
 			if (err != null && !exp.err) {
@@ -796,12 +796,12 @@ public class PosetTest {
 		round0Witnesses.put(index.get(e0), new RoundEvent(true, Trilean.UNDEFINED));
 		round0Witnesses.put(index.get(e1), new RoundEvent(true, Trilean.UNDEFINED));
 		round0Witnesses.put(index.get(e2), new RoundEvent( true, Trilean.UNDEFINED));
-		poset.Store.SetRound(0, new RoundInfo(
+		poset.Store.setRound(0, new RoundInfo(
 				new RoundInfoMessage(round0Witnesses)));
 
 		Map<String, RoundEvent> round1Witnesses = new HashMap<String,RoundEvent>();
 		round1Witnesses.put(index.get(f1), new RoundEvent(true, Trilean.UNDEFINED));
-		poset.Store.SetRound(1, new RoundInfo(new RoundInfoMessage(round1Witnesses)));
+		poset.Store.setRound(1, new RoundInfo(new RoundInfoMessage(round1Witnesses)));
 
 		ancestryItem[] expected = new ancestryItem[]{
 			new ancestryItem("", e0, true, false),
@@ -814,7 +814,7 @@ public class PosetTest {
 		};
 
 		for (ancestryItem exp : expected) {
-			RetResult<Boolean> witnessCall = poset.witness(index.get(exp.ancestor));
+			RResult<Boolean> witnessCall = poset.witness(index.get(exp.ancestor));
 			boolean s = witnessCall.result;
 			error err = witnessCall.err;
 			assertNull(String.format("No Error computing witness(%s)",
@@ -3218,12 +3218,12 @@ public class PosetTest {
 	public void compareRoundWitnesses(Poset p, Poset p2, HashMap<String,String> index, long round, boolean check) {
 
 		for (int i = (int) round; i <= 5; i++) {
-			RetResult<RoundInfo> getRound = poset.Store.GetRound(i);
+			RResult<RoundInfo> getRound = poset.Store.getRound(i);
 			RoundInfo pRound = getRound.result;
 			error err = getRound.err;
 			assertNull("No error", err);
 
-			getRound = p2.Store.GetRound(i);
+			getRound = p2.Store.getRound(i);
 			RoundInfo p2Round = getRound.result;
 			err = getRound.err;
 			assertNull("No error", err);
@@ -3255,13 +3255,13 @@ public class PosetTest {
 			long ct = known.get(id);
 			String pk = poset.Participants.byId(id).getPubKeyHex();
 			// get participant Events with index > ct
-			RetResult<String[]> pEventsCall = poset.Store.ParticipantEvents(pk, ct);
+			RResult<String[]> pEventsCall = poset.Store.participantEvents(pk, ct);
 			String[] participantEvents = pEventsCall.result;
 			error err = pEventsCall.err;
 			assertNull("No error", err);
 
 			for (String e : participantEvents) {
-				RetResult<Event> getEvent = poset.Store.GetEvent(e);
+				RResult<Event> getEvent = poset.Store.getEvent(e);
 				Event ev = getEvent.result;
 				err = getEvent.err;
 				assertNull("No error", err);

@@ -6,17 +6,17 @@ import java.net.ServerSocket;
 public class NetUtils {
 
 	/**
-	 *
+	 * Creates a server socket and binds to the specified address
 	 * @param bindAddr a bind address in the form of ":9000"
 	 * @return
 	 */
-	public static RetResult<ServerSocket> bind(String bindAddr) {
+	public static RResult<ServerSocket> bind(String bindAddr) {
 		try {
 			int port = parsePort(bindAddr);
 			ServerSocket list = new ServerSocket(port, 50);
-			return new RetResult<>(list, null);
+			return new RResult<>(list, null);
 		} catch (Exception e) {
-			return new RetResult<>(null, error.Errorf(e.getMessage()));
+			return new RResult<>(null, error.Errorf(e.getMessage()));
 		}
 	}
 
@@ -29,7 +29,7 @@ public class NetUtils {
 		return port;
 	}
 
-	public static String GetUnusedNetAddr() {
+	public static String getUnusedNetAddr() {
 		ServerSocket server = null;
 		try {
 			server= new ServerSocket(0, 50);

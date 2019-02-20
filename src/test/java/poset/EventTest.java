@@ -12,7 +12,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import common.RetResult;
+import common.RResult;
 import common.error;
 
 /**
@@ -25,7 +25,7 @@ public class EventTest {
 	@Test
 	public void TestMarshallBody() {
 		EventBody body = createDummyEventBody();
-		RetResult<byte[]> protoMarshal = body.marshaller().protoMarshal();
+		RResult<byte[]> protoMarshal = body.marshaller().protoMarshal();
 
 		byte[] raw = protoMarshal.result;
 		error err = protoMarshal.err;
@@ -54,7 +54,7 @@ public class EventTest {
 		error err = event.sign(key.getPrivate());
 		assertNull("No Error signing Event", err);
 
-		RetResult<Boolean> verify = event.verify();
+		RResult<Boolean> verify = event.verify();
 		boolean res = verify.result;
 		err = verify.err;
 		assertNull("Node Error verifying signature", err);
@@ -73,7 +73,7 @@ public class EventTest {
 		error err = event.sign(key.getPrivate());
 		assertNull("No Error signing Event", err);
 
-		RetResult<byte[]> protoMarshal = event.marshaller().protoMarshal();
+		RResult<byte[]> protoMarshal = event.marshaller().protoMarshal();
 		byte[] raw = protoMarshal.result;
 		err = protoMarshal.err;
 		assertNull("No Error marshalling Event", err);
@@ -160,7 +160,7 @@ public class EventTest {
 
 		assertTrue("FlagTable is null", event.message.FlagTable.length != 0);
 
-		RetResult<Map<String, Long>> getFlagTable = event.getFlagTable();
+		RResult<Map<String, Long>> getFlagTable = event.getFlagTable();
 		Map<String, Long> res = getFlagTable.result;
 		error err = getFlagTable.err;
 		assertNull("No error", err);
@@ -198,7 +198,7 @@ public class EventTest {
 		Event event = new Event(eventMessage );
 
 		for (HashMap<String, Long> v : syncData) {
-			RetResult<Map<String, Long>> mergeFlagTable = event.mergeFlagTable(v);
+			RResult<Map<String, Long>> mergeFlagTable = event.mergeFlagTable(v);
 			Map<String, Long> flagTable = mergeFlagTable.result;
 			error err = mergeFlagTable.err;
 			assertNull("No error", err);

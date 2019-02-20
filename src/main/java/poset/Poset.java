@@ -16,8 +16,8 @@ import org.jcsp.lang.One2OneChannel;
 import autils.Appender;
 import autils.Logger;
 import common.LRUCache;
-import common.RetResult;
-import common.RetResult3;
+import common.RResult;
+import common.RResult3;
 import common.StoreErr;
 import common.StoreErrType;
 import common.error;
@@ -64,36 +64,36 @@ public class Poset {
 		int superMajority = (int) 2*participants.length()/3 + 1;
 		int trustCount = (int) Math.ceil(((double) participants.length()) / 3);
 
-		int cacheSize = store.CacheSize();
-		RetResult<LRUCache<String,Boolean>> ancestorCacheCre = LRUCache.New(cacheSize);
+		int cacheSize = store.cacheSize();
+		RResult<LRUCache<String,Boolean>> ancestorCacheCre = LRUCache.New(cacheSize);
 		LRUCache<String,Boolean> ancestorCache = ancestorCacheCre.result;
 		error err = ancestorCacheCre.err;
 		if ( err != null) {
 			logger.fatal("Unable to init Poset.ancestorCache");
 		}
 
-		RetResult<LRUCache<String,Boolean>> selfAncestorCacheCre = LRUCache.New(cacheSize);
+		RResult<LRUCache<String,Boolean>> selfAncestorCacheCre = LRUCache.New(cacheSize);
 		LRUCache<String,Boolean> selfAncestorCache = selfAncestorCacheCre.result;
 		err = selfAncestorCacheCre.err;
 		if ( err != null) {
 			logger.fatal("Unable to init Poset.selfAncestorCache");
 		}
 
-		RetResult<LRUCache<String,Boolean>> stronglySeeCacheCre = LRUCache.New(cacheSize);
+		RResult<LRUCache<String,Boolean>> stronglySeeCacheCre = LRUCache.New(cacheSize);
 		LRUCache<String,Boolean> stronglySeeCache = stronglySeeCacheCre.result;
 		err = stronglySeeCacheCre.err;
 		if ( err != null) {
 			logger.fatal("Unable to init Poset.stronglySeeCache");
 		}
 
-		RetResult<LRUCache<String,Long>> roundCacheCre = LRUCache.New(cacheSize);
+		RResult<LRUCache<String,Long>> roundCacheCre = LRUCache.New(cacheSize);
 		LRUCache<String,Long> roundCache = roundCacheCre.result;
 		err = roundCacheCre.err;
 		if ( err != null) {
 			logger.fatal("Unable to init Poset.roundCache");
 		}
 
-		RetResult<LRUCache<String,Long>> timestampCacheCre = LRUCache.New(cacheSize);
+		RResult<LRUCache<String,Long>> timestampCacheCre = LRUCache.New(cacheSize);
 		LRUCache<String,Long> timestampCache = timestampCacheCre.result;
 		err = timestampCacheCre.err;
 		if ( err != null) {
@@ -137,169 +137,169 @@ public class Poset {
 	}
 
 	//true if y is an ancestor of x
-	public RetResult<Boolean> ancestor(String x, String y) {
+	public RResult<Boolean> ancestor(String x, String y) {
 		Boolean c = ancestorCache.get(Key (x, y));
 		if(c != null) {
-			return new RetResult<Boolean>(c, null);
+			return new RResult<Boolean>(c, null);
 		}
 
 		if (x.isEmpty() || y.isEmpty()) {
-			return new RetResult<Boolean>(false, null);
+			return new RResult<Boolean>(false, null);
 		}
 
-		RetResult<Boolean> ancestor2 = ancestor2(x, y);
+		RResult<Boolean> ancestor2 = ancestor2(x, y);
 		Boolean a = ancestor2.result;
 		error err = ancestor2.err;
 		if (err != null) {
-			return new RetResult<Boolean>(false, err);
+			return new RResult<Boolean>(false, err);
 		}
 		ancestorCache.put(Key(x, y), a);
-		return new RetResult<Boolean>(a, null);
+		return new RResult<Boolean>(a, null);
 	}
 
-	public RetResult<Boolean> ancestor2(String x, String y) {
+	public RResult<Boolean> ancestor2(String x, String y) {
 		if (x.equals(y)) {
-			return new RetResult<Boolean>(true, null);
+			return new RResult<Boolean>(true, null);
 		}
 
-		RetResult<Event> exr = Store.GetEvent(x);
+		RResult<Event> exr = Store.getEvent(x);
 		Event ex = exr.result;
 		error err = exr.err;
 		if (err != null) {
-			RetResult<Map<String,Root>> rbySelf = Store.RootsBySelfParent();
+			RResult<Map<String,Root>> rbySelf = Store.rootsBySelfParent();
 			Map<String, Root> roots = rbySelf.result;
 			error err2 = rbySelf.err;
 			if (err2 != null) {
-				return new RetResult<Boolean>(false, err2);
+				return new RResult<Boolean>(false, err2);
 			}
 			for (Root root: roots.values()) {
 				RootEvent other = root.Others.get(y);
 				if ( other != null) {
-					return new RetResult<Boolean>(other.Hash == x, null);
+					return new RResult<Boolean>(other.Hash == x, null);
 				}
 			}
-			return new RetResult<Boolean>(false, null);
+			return new RResult<Boolean>(false, null);
 		}
 
-		RetResult<Long> lamportTimestampDiff = lamportTimestampDiff(x, y);
+		RResult<Long> lamportTimestampDiff = lamportTimestampDiff(x, y);
 		Long lamportDiff = lamportTimestampDiff.result;
 		err = lamportTimestampDiff.err;
 		if ( err != null || lamportDiff > 0) {
-			return new RetResult<Boolean>(false, err);
+			return new RResult<Boolean>(false, err);
 		}
 
-		RetResult<Event> getEventY = Store.GetEvent(y);
+		RResult<Event> getEventY = Store.getEvent(y);
 		Event ey = getEventY.result;
 		err = getEventY.err;
 		if (err != null) {
 			// check y roots
-			RetResult<Map<String, Root>> rootsBySelfParent = Store.RootsBySelfParent();
+			RResult<Map<String, Root>> rootsBySelfParent = Store.rootsBySelfParent();
 			Map<String, Root> roots = rootsBySelfParent.result;
 			error err2 = rootsBySelfParent.err;
 			if (err2 != null) {
-				return new RetResult<Boolean>(false, err2);
+				return new RResult<Boolean>(false, err2);
 			}
 			Root root = roots.get(y);
 			if (root != null) {
 				String yCreator = Participants.getById().get(root.SelfParent.CreatorID).getPubKeyHex();
 				if (ex.creator().equals(yCreator)) {
-					return new RetResult<Boolean>(ex.index() >= root.SelfParent.Index, null);
+					return new RResult<Boolean>(ex.index() >= root.SelfParent.Index, null);
 				}
 			} else {
-				return new RetResult<Boolean>(false, null);
+				return new RResult<Boolean>(false, null);
 			}
 		} else {
 			// check if creators are equals and check indexes
 			if (ex.creator().equals(ey.creator())){
-				return new RetResult<Boolean>(ex.index() >= ey.index(), null);
+				return new RResult<Boolean>(ex.index() >= ey.index(), null);
 			}
 		}
 
-		RetResult<Boolean> ancestorCall = ancestor(ex.selfParent(), y);
+		RResult<Boolean> ancestorCall = ancestor(ex.selfParent(), y);
 		Boolean res = ancestorCall.result;
 		err = ancestorCall.err;
 		if (err != null) {
-			return new RetResult<Boolean>(false, err);
+			return new RResult<Boolean>(false, err);
 		}
 
 		if (res) {
-			return new RetResult<Boolean>(true, null);
+			return new RResult<Boolean>(true, null);
 		}
 
 		return ancestor(ex.otherParent(), y);
 	}
 
 	//true if y is a self-ancestor of x
-	public RetResult<Boolean> selfAncestor(String x, String y) {
+	public RResult<Boolean> selfAncestor(String x, String y) {
 		Boolean c = selfAncestorCache.get(Key(x, y));
 		if (c != null) {
-			return new RetResult<Boolean>(c, null);
+			return new RResult<Boolean>(c, null);
 		}
 		if (x.length() == 0 || y.length() == 0) {
-			return new  RetResult<Boolean>(false, null);
+			return new  RResult<Boolean>(false, null);
 		}
-		RetResult<Boolean> selfAncestor2 = selfAncestor2(x, y);
+		RResult<Boolean> selfAncestor2 = selfAncestor2(x, y);
 		boolean a = selfAncestor2.result;
 		error err = selfAncestor2.err;
 		if ( err != null) {
-			return new  RetResult<Boolean>( false, err);
+			return new  RResult<Boolean>( false, err);
 		}
 		selfAncestorCache.put(Key(x, y), a);
-		return new  RetResult<Boolean>(a, null);
+		return new  RResult<Boolean>(a, null);
 	}
 
-	public RetResult<Boolean> selfAncestor2(String x, String y) {
+	public RResult<Boolean> selfAncestor2(String x, String y) {
 		if (x == y) {
-			return new RetResult<Boolean>(true, null);
+			return new RResult<Boolean>(true, null);
 		}
-		RetResult<Event> getEventX = Store.GetEvent(x);
+		RResult<Event> getEventX = Store.getEvent(x);
 		Event ex = getEventX.result;
 		error err = getEventX.err;
 		if (err != null) {
-			RetResult<Map<String, Root>> rootsBySelfParent = Store.RootsBySelfParent();
+			RResult<Map<String, Root>> rootsBySelfParent = Store.rootsBySelfParent();
 			Map<String, Root> roots = rootsBySelfParent.result;
 			err = rootsBySelfParent.err;
 			if (err != null) {
-				return new RetResult<Boolean>(false, err);
+				return new RResult<Boolean>(false, err);
 			}
 
 			Root root = roots.get(x);
 			if (root != null) {
 				if (root.SelfParent.Hash.equals(y)) {
-					return new RetResult<Boolean>(true, null);
+					return new RResult<Boolean>(true, null);
 				}
 			}
-			return new RetResult<Boolean>(false, err);
+			return new RResult<Boolean>(false, err);
 		}
 
-		RetResult<Event> getEventY = Store.GetEvent(y);
+		RResult<Event> getEventY = Store.getEvent(y);
 		Event ey = getEventY.result;
 		err = getEventY.err;
 		if (err != null) {
-			RetResult<Map<String, Root>> rootsBySelfParent = Store.RootsBySelfParent();
+			RResult<Map<String, Root>> rootsBySelfParent = Store.rootsBySelfParent();
 			Map<String, Root> roots = rootsBySelfParent.result;
 			error err2 = rootsBySelfParent.err;
 			if (err2 != null) {
-				return new RetResult<Boolean>(false, err2);
+				return new RResult<Boolean>(false, err2);
 			}
 			Root root = roots.get(y);
 			if (root != null) {
 				String yCreator = Participants.getById().get(root.SelfParent.CreatorID).getPubKeyHex();
 				if (ex.creator().equals(yCreator)) {
-					return new RetResult<Boolean>(ex.index() >= root.SelfParent.Index, null);
+					return new RResult<Boolean>(ex.index() >= root.SelfParent.Index, null);
 				}
 			}
 		} else {
 			if (ex.creator().equals(ey.creator())) {
-				return new RetResult<Boolean>(ex.index() >= ey.index(), null);
+				return new RResult<Boolean>(ex.index() >= ey.index(), null);
 			}
 		}
 
-		return new RetResult<Boolean>(false, null);
+		return new RResult<Boolean>(false, null);
 	}
 
 	//true if x sees y
-	public RetResult<Boolean> see(String x, String y) {
+	public RResult<Boolean> see(String x, String y) {
 		return ancestor(x, y);
 		//it is not necessary to detect forks because we assume that the InsertEvent
 		//function makes it impossible to insert two Events at the same height for
@@ -307,37 +307,37 @@ public class Poset {
 	}
 
 	//true if x strongly sees y
-	public RetResult<Boolean> stronglySee(String x, String y) {
+	public RResult<Boolean> stronglySee(String x, String y) {
 		if (x.isEmpty() || y.isEmpty()) {
-			return new RetResult<Boolean>(false, null);
+			return new RResult<Boolean>(false, null);
 		}
 
 		Boolean c = stronglySeeCache.get( Key(x, y));
 		if (c != null) {
-			return new RetResult<Boolean>(c, null);
+			return new RResult<Boolean>(c, null);
 		}
 
-		RetResult<Boolean> stronglySee2 = stronglySee2(x, y);
+		RResult<Boolean> stronglySee2 = stronglySee2(x, y);
 		Boolean ss = stronglySee2.result;
 		error err = stronglySee2.err;
 		if (err != null) {
-			return new RetResult<Boolean>(false, err);
+			return new RResult<Boolean>(false, err);
 		}
 		stronglySeeCache.put(Key(x, y), ss);
-		return new RetResult<Boolean>(ss, null);
+		return new RResult<Boolean>(ss, null);
 	}
 
 	// Possible improvement: Populate the cache for upper and downer events
 	// that also stronglySee y
-	public RetResult<Boolean> stronglySee2(String x, String y) {
+	public RResult<Boolean> stronglySee2(String x, String y) {
 		Map<String,Boolean> sentinels = new HashMap<String,Boolean>();
 
 		error err = MapSentinels(x, y, sentinels);
 		if  (err != null) {
-			return new RetResult<Boolean>(false, err);
+			return new RResult<Boolean>(false, err);
 		}
 
-		return new RetResult<Boolean>(sentinels.size()>= superMajority, null);
+		return new RResult<Boolean>(sentinels.size()>= superMajority, null);
 	}
 
 	// participants in x's ancestry that see y
@@ -346,18 +346,18 @@ public class Poset {
 			return null;
 		}
 
-		RetResult<Boolean> seeXY = see(x, y);
+		RResult<Boolean> seeXY = see(x, y);
 		Boolean see = seeXY.result;
 		error err = seeXY.err;
 		if (err != null || !see) {
 			return err;
 		}
 
-		RetResult<Event> getEventX = Store.GetEvent(x);
+		RResult<Event> getEventX = Store.getEvent(x);
 		Event ex = getEventX.result;
 		err = getEventX.err;
 		if (err != null) {
-			RetResult<Map<String, Root>> rootsBySelfParent = Store.RootsBySelfParent();
+			RResult<Map<String, Root>> rootsBySelfParent = Store.rootsBySelfParent();
 			Map<String, Root> roots = rootsBySelfParent.result;
 			error err2 = rootsBySelfParent.err;
 
@@ -389,45 +389,45 @@ public class Poset {
 		return MapSentinels(ex.selfParent(), y, sentinels);
 	}
 
-	public RetResult<Long> round(String x) {
+	public RResult<Long> round(String x) {
 		Long c = roundCache.get(x);
 		boolean ok = c != null;
 		if (ok) {
-			return new RetResult<Long>( (long) c, null);
+			return new RResult<Long>( (long) c, null);
 		}
-		RetResult<Long> round2 = round2(x);
+		RResult<Long> round2 = round2(x);
 		Long r = round2.result;
 		error err = round2.err;
 		if (err != null) {
-			return new RetResult<Long>( (long) -1, err);
+			return new RResult<Long>( (long) -1, err);
 		}
 		roundCache.put(x, r);
-		return new RetResult<Long>(r, null);
+		return new RResult<Long>(r, null);
 	}
 
-	public RetResult<Long>  round2(String x) {
+	public RResult<Long>  round2(String x) {
 		/*
 			x is the Root
 			Use Root.SelfParent.Round
 		*/
-		Map<String, Root> rootsBySelfParent = Store.RootsBySelfParent().result;
+		Map<String, Root> rootsBySelfParent = Store.rootsBySelfParent().result;
 		Root r = rootsBySelfParent.get(x);
 		if  (r != null) {
-			return new RetResult<Long>(r.SelfParent.Round, null);
+			return new RResult<Long>(r.SelfParent.Round, null);
 		}
 
-		RetResult<Event> getEventX = Store.GetEvent(x);
+		RResult<Event> getEventX = Store.getEvent(x);
 		Event ex = getEventX.result;
 		error err = getEventX.err;
 		if (err != null) {
-			return new RetResult<Long>(Long.MIN_VALUE, err);
+			return new RResult<Long>(Long.MIN_VALUE, err);
 		}
 
-		RetResult<Root> getRoot = Store.GetRoot(ex.creator());
+		RResult<Root> getRoot = Store.getRoot(ex.creator());
 		Root root = getRoot.result;
 		err = getRoot.err;
 		if (err != null) {
-			return new RetResult<Long>(Long.MIN_VALUE, err);
+			return new RResult<Long>(Long.MIN_VALUE, err);
 		}
 
 		/*
@@ -440,7 +440,7 @@ public class Poset {
 			if  (ex.otherParent().isEmpty() ||
 				(ok && other.Hash.equals(ex.otherParent()))) {
 
-				return new RetResult<Long>(root.NextRound, null);
+				return new RResult<Long>(root.NextRound, null);
 			}
 		}
 
@@ -448,11 +448,11 @@ public class Poset {
 			The Event's parents are "normal" Events.
 			Use the whitepaper formula: parentRound + roundInc
 		*/
-		RetResult<Long> roundCall = round(ex.selfParent());
+		RResult<Long> roundCall = round(ex.selfParent());
 		long spRound = roundCall.result;
 		err = roundCall.err;
 		if ( err != null) {
-			return new RetResult<Long> (Long.MIN_VALUE, err);
+			return new RResult<Long> (Long.MIN_VALUE, err);
 		}
 
 		long parentRound = spRound;
@@ -466,11 +466,11 @@ public class Poset {
 			if (ok && other.Hash.equals(ex.otherParent())) {
 				opRound = root.NextRound;
 			} else {
-				RetResult<Long> roundCall2 = round(ex.otherParent());
+				RResult<Long> roundCall2 = round(ex.otherParent());
 				opRound = roundCall2.result;
 				err = roundCall2.err;
 				if (err != null) {
-					return new RetResult<Long>(Long.MIN_VALUE, err);
+					return new RResult<Long>(Long.MIN_VALUE, err);
 				}
 			}
 
@@ -480,17 +480,17 @@ public class Poset {
 
 				// if in a flag table there are witnesses of the current round, then
 				// current round is other parent round.
-				String[] ws = Store.RoundWitnesses(opRound);
-				RetResult<Map<String, Long>> getFlagTable = ex.getFlagTable();
+				String[] ws = Store.roundWitnesses(opRound);
+				RResult<Map<String, Long>> getFlagTable = ex.getFlagTable();
 				Map<String, Long> ft = getFlagTable.result;
 				for (String k : ft.keySet()) {
 					for (String w : ws) {
 						if (w.equals(k) && !w.equals(ex.hex())) {
-							RetResult<Boolean> seeCall = see(ex.hex(), w);
+							RResult<Boolean> seeCall = see(ex.hex(), w);
 							Boolean see = seeCall.result;
 							err = seeCall.err;
 							if ( err != null) {
-								return new RetResult<Long>(Long.MIN_VALUE, err);
+								return new RResult<Long>(Long.MIN_VALUE, err);
 							}
 
 							if (see) {
@@ -504,24 +504,24 @@ public class Poset {
 				}
 
 				if (seeOpRoundRoots >= (long)(superMajority)) {
-					return new RetResult<Long>(opRound + 1, null);
+					return new RResult<Long>(opRound + 1, null);
 				}
 
 				if (found) {
-					return new RetResult<Long>(opRound, null);
+					return new RResult<Long>(opRound, null);
 				}
 
 				parentRound = opRound;
 			}
 		}
 
-		String[] ws = Store.RoundWitnesses(parentRound);
+		String[] ws = Store.roundWitnesses(parentRound);
 
 		IsSee isSee = new IsSee() {
 			public boolean isSee(Poset poset, String string, String[] witnesses)  {
 				for (String w : ws) {
 					if (w.equals(root) && !w.equals(ex.hex())) {
-						RetResult<Boolean> seeCall = poset.see(ex.hex(), w);
+						RResult<Boolean> seeCall = poset.see(ex.hex(), w);
 						boolean see = seeCall.result;
 						error err = seeCall.err;
 						if (err != null) {
@@ -564,7 +564,7 @@ public class Poset {
 			}
 
 			if (count >= superMajority){
-				return new RetResult<Long>(parentRound + 1, err);
+				return new RResult<Long>(parentRound + 1, err);
 			}
 		}
 
@@ -580,11 +580,11 @@ public class Poset {
 			}
 
 			if (count >= superMajority) {
-				return new RetResult<Long>(parentRound + 1, err);
+				return new RResult<Long>(parentRound + 1, err);
 			}
 		}
 
-		return new RetResult<Long>(parentRound, null);
+		return new RResult<Long>(parentRound, null);
 	}
 
 	interface IsSee {
@@ -592,37 +592,37 @@ public class Poset {
 	}
 
 	// witness if is true then x is a witness (first event of a round for the owner)
-	public RetResult<Boolean>  witness(String x) {
-		RetResult<Event> getEvent = Store.GetEvent(x);
+	public RResult<Boolean>  witness(String x) {
+		RResult<Event> getEvent = Store.getEvent(x);
 		Event ex = getEvent.result;
 		error err = getEvent.err;
 		if ( err != null) {
-			return new RetResult<Boolean>(false, err);
+			return new RResult<Boolean>(false, err);
 		}
 
-		RetResult<Long> roundCall = round(x);
+		RResult<Long> roundCall = round(x);
 		long xRound = roundCall.result;
 		err = roundCall.err;
 		if ( err != null) {
-			return new RetResult<Boolean>(false, err);
+			return new RResult<Boolean>(false, err);
 		}
 
-		RetResult<Long> roundCall2 = round(ex.selfParent());
+		RResult<Long> roundCall2 = round(ex.selfParent());
 		long spRound = roundCall2.result;
 		err = roundCall2.err;
 		if ( err != null) {
-			return new RetResult<Boolean>(false, err);
+			return new RResult<Boolean>(false, err);
 		}
-		return new RetResult<Boolean>(xRound > spRound, null);
+		return new RResult<Boolean>(xRound > spRound, null);
 	}
 
-	public RetResult<Long> roundReceived(String x){
+	public RResult<Long> roundReceived(String x){
 
-		RetResult<Event> getEvent = Store.GetEvent(x);
+		RResult<Event> getEvent = Store.getEvent(x);
 		Event ex = getEvent.result;
 		error err = getEvent.err;
 		if (err != null) {
-			return new RetResult<Long>( (long) -1, err);
+			return new RResult<Long>( (long) -1, err);
 		}
 
 		long res = -1;
@@ -630,50 +630,50 @@ public class Poset {
 			res = ex.roundReceived;
 		}
 
-		return new RetResult<Long>(res, null);
+		return new RResult<Long>(res, null);
 	}
 
-	public RetResult<Long> lamportTimestamp(String x) {
+	public RResult<Long> lamportTimestamp(String x) {
 		Long c = timestampCache.get(x);
 		if (c != null) {
-			return new RetResult<Long>(c, null);
+			return new RResult<Long>(c, null);
 		}
-		RetResult<Long> lamportTimestamp = lamportTimestamp2(x);
+		RResult<Long> lamportTimestamp = lamportTimestamp2(x);
 		long r = lamportTimestamp.result;
 		error err = lamportTimestamp.err;
 		if (err != null) {
-			return new RetResult<Long> ( (long) -1, err);
+			return new RResult<Long> ( (long) -1, err);
 		}
 		timestampCache.put(x, r);
-		return new RetResult<Long> (r, null);
+		return new RResult<Long> (r, null);
 	}
 
-	public RetResult<Long> lamportTimestamp2(String x) {
+	public RResult<Long> lamportTimestamp2(String x) {
 		/*
 			x is the Root
 			User Root.SelfParent.LamportTimestamp
 		*/
-		Map<String, Root> rootsBySelfParent = Store.RootsBySelfParent().result;
+		Map<String, Root> rootsBySelfParent = Store.rootsBySelfParent().result;
 		Root r = rootsBySelfParent.get(x);
 		boolean ok = r != null;
 
 		if (ok) {
-			return new RetResult<Long>(r.SelfParent.LamportTimestamp, null);
+			return new RResult<Long>(r.SelfParent.LamportTimestamp, null);
 		}
 
-		RetResult<Event> getEvent = Store.GetEvent(x);
+		RResult<Event> getEvent = Store.getEvent(x);
 		Event ex = getEvent.result;
 		error err = getEvent.err;
 		if ( err != null) {
-			return new RetResult<Long>(Long.MIN_VALUE, err);
+			return new RResult<Long>(Long.MIN_VALUE, err);
 		}
 
 		//We are going to need the Root later
-		RetResult<Root> getRoot = Store.GetRoot(ex.creator());
+		RResult<Root> getRoot = Store.getRoot(ex.creator());
 		Root root = getRoot.result;
 		err = getRoot.err;
 		if ( err != null) {
-			return new RetResult<Long>(Long.MIN_VALUE, err);
+			return new RResult<Long>(Long.MIN_VALUE, err);
 		}
 
 		long plt = Long.MIN_VALUE; //:= int64(Long.MIN_VALUE);
@@ -681,25 +681,25 @@ public class Poset {
 		if (ex.selfParent().equals(root.SelfParent.Hash)) {
 			plt = root.SelfParent.LamportTimestamp;
 		} else {
-			RetResult<Long> lamportTimestampCall = lamportTimestamp(ex.selfParent());
+			RResult<Long> lamportTimestampCall = lamportTimestamp(ex.selfParent());
 			long t = lamportTimestampCall.result;
 			err = lamportTimestampCall.err;
 			if (err != null) {
-				return new RetResult<Long>(Long.MIN_VALUE, err);
+				return new RResult<Long>(Long.MIN_VALUE, err);
 			}
 			plt = t;
 		}
 
 		if (ex.otherParent() != "") {
 			long opLT = Long.MIN_VALUE;
-			err = Store.GetEvent(ex.otherParent()).err;
+			err = Store.getEvent(ex.otherParent()).err;
 			if (err == null) {
 				//if we know the other-parent, fetch its Round directly
-				RetResult<Long> lamportTimestamp = lamportTimestamp(ex.otherParent());
+				RResult<Long> lamportTimestamp = lamportTimestamp(ex.otherParent());
 				Long t = lamportTimestamp.result;
 				err = lamportTimestamp.err;
 				if (err != null) {
-					return new RetResult<Long>(Long.MIN_VALUE, err);
+					return new RResult<Long>(Long.MIN_VALUE, err);
 				}
 				opLT = t;
 			} else {
@@ -717,50 +717,50 @@ public class Poset {
 			}
 		}
 
-		return new RetResult<Long>(plt + 1, null);
+		return new RResult<Long>(plt + 1, null);
 	}
 
 	// lamport(y) - lamport(x)
-	public RetResult<Long>  lamportTimestampDiff(String x, String y) {
-		RetResult<Long> lamportTimestamp = lamportTimestamp(x);
+	public RResult<Long>  lamportTimestampDiff(String x, String y) {
+		RResult<Long> lamportTimestamp = lamportTimestamp(x);
 		long xlt = lamportTimestamp.result;
 		error err = lamportTimestamp.err;
 		if ( err != null) {
-			return new RetResult<Long>( (long) 0, err);
+			return new RResult<Long>( (long) 0, err);
 		}
-		RetResult<Long> lamportTimestamp2 = lamportTimestamp(y);
+		RResult<Long> lamportTimestamp2 = lamportTimestamp(y);
 		Long ylt = lamportTimestamp2.result;
 		err = lamportTimestamp2.err;
 		if ( err != null) {
-			return new RetResult<Long>((long) 0, err);
+			return new RResult<Long>((long) 0, err);
 		}
-		return new RetResult<Long>(ylt - xlt, null);
+		return new RResult<Long>(ylt - xlt, null);
 	}
 
 	//round(x) - round(y)
-	public RetResult<Long>  roundDiff(String x, String y) {
-		RetResult<Long> roundXCall = round(x);
+	public RResult<Long>  roundDiff(String x, String y) {
+		RResult<Long> roundXCall = round(x);
 		long xRound = roundXCall.result;
 		error err = roundXCall.err;
 		if (err != null) {
-			return new RetResult<Long>(Long.MIN_VALUE, error.Errorf(String.format("event %s has negative round", x)));
+			return new RResult<Long>(Long.MIN_VALUE, error.Errorf(String.format("event %s has negative round", x)));
 		}
 
-		RetResult<Long> roundYCall = round(y);
+		RResult<Long> roundYCall = round(y);
 		long yRound = roundYCall.result;
 		err = roundYCall.err;
 		if ( err != null) {
-			return new RetResult<Long>(Long.MIN_VALUE, error.Errorf(String.format("event %s has negative round", y)));
+			return new RResult<Long>(Long.MIN_VALUE, error.Errorf(String.format("event %s has negative round", y)));
 		}
 
-		return new RetResult<Long>(xRound - yRound, null);
+		return new RResult<Long>(xRound - yRound, null);
 	}
 
 	//Check the SelfParent is the Creator's last known Event
 	public error checkSelfParent(Event event ) {
 		String selfParent = event.selfParent();
 		String creator = event.creator();
-		RetResult3<String, Boolean> lastEventFromCall = Store.LastEventFrom(creator);
+		RResult3<String, Boolean> lastEventFromCall = Store.lastEventFrom(creator);
 		String creatorLastKnown = lastEventFromCall.result1;
 		error err = lastEventFromCall.err;
 
@@ -789,11 +789,11 @@ public class Poset {
 		if (!otherParent.isEmpty()) {
 			//Check if we have it
 
-			RetResult<Event> getEvent = Store.GetEvent(otherParent);
+			RResult<Event> getEvent = Store.getEvent(otherParent);
 			error err = getEvent.err;
 			if ( err != null) {
 				//it might still be in the Root
-				RetResult<Root> getRoot = Store.GetRoot(event.creator());
+				RResult<Root> getRoot = Store.getRoot(event.creator());
 				Root root = getRoot.result;
 				err = getRoot.err;
 				if ( err != null) {
@@ -811,19 +811,19 @@ public class Poset {
 		return null;
 	}
 
-	public RetResult<RootEvent>  createSelfParentRootEvent(Event ev) {
+	public RResult<RootEvent>  createSelfParentRootEvent(Event ev) {
 		String sp = ev.selfParent();
-		RetResult<Long> lamportTimestampCall = lamportTimestamp(sp);
+		RResult<Long> lamportTimestampCall = lamportTimestamp(sp);
 		long spLT = lamportTimestampCall.result;
 		error err = lamportTimestampCall.err;
 		if ( err != null) {
-			return new RetResult<RootEvent>(new RootEvent(), err);
+			return new RResult<RootEvent>(new RootEvent(), err);
 		}
-		RetResult<Long> roundCall = round(sp);
+		RResult<Long> roundCall = round(sp);
 		long spRound = roundCall.result;
 		err = roundCall.err;
 		if ( err != null) {
-			return new RetResult<RootEvent>(new RootEvent(), err);
+			return new RResult<RootEvent>(new RootEvent(), err);
 		}
 
 		RootEvent selfParentRootEvent = new RootEvent(
@@ -835,45 +835,45 @@ public class Poset {
 			//FlagTable:ev.FlagTable,
 			//flags:ev.flags,
 		);
-		return new RetResult<RootEvent>(selfParentRootEvent, null);
+		return new RResult<RootEvent>(selfParentRootEvent, null);
 	}
 
-	public RetResult<RootEvent> createOtherParentRootEvent(Event ev) {
+	public RResult<RootEvent> createOtherParentRootEvent(Event ev) {
 		String op = ev.otherParent();
 
 		//it might still be in the Root
-		RetResult<Root> getRootCall = Store.GetRoot(ev.creator());
+		RResult<Root> getRootCall = Store.getRoot(ev.creator());
 		Root root = getRootCall.result;
 		error err = getRootCall.err;
 		if ( err != null) {
-			return new RetResult<RootEvent>(new RootEvent(), err);
+			return new RResult<RootEvent>(new RootEvent(), err);
 		}
 
 		RootEvent other = root.Others.get(ev.hex());
 		boolean ok = other != null;
 		if (ok && other.Hash.equals(op)) {
-			return new RetResult<RootEvent> (other, null);
+			return new RResult<RootEvent> (other, null);
 		}
 
-		RetResult<Event> getEvent = Store.GetEvent(op);
+		RResult<Event> getEvent = Store.getEvent(op);
 		Event otherParent = getEvent.result;
 		err = getEvent.err;
 		if ( err != null) {
-			return new RetResult<RootEvent> (new RootEvent(), err);
+			return new RResult<RootEvent> (new RootEvent(), err);
 		}
 
-		RetResult<Long> lamportTimestampCall = lamportTimestamp(op);
+		RResult<Long> lamportTimestampCall = lamportTimestamp(op);
 		long opLT = lamportTimestampCall.result;
 		err = lamportTimestampCall.err;
 		if ( err != null) {
-			return new RetResult<RootEvent> (new RootEvent(), err);
+			return new RResult<RootEvent> (new RootEvent(), err);
 		}
 
-		RetResult<Long> roundCall = round(op);
+		RResult<Long> roundCall = round(op);
 		long opRound = roundCall.result;
 		err = roundCall.err;
 		if ( err != null) {
-			return new RetResult<RootEvent> (new RootEvent(), err);
+			return new RResult<RootEvent> (new RootEvent(), err);
 		}
 		RootEvent otherParentRootEvent = new RootEvent(
 			op,
@@ -882,27 +882,27 @@ public class Poset {
 			opLT,
 			opRound
 		);
-		return new RetResult<RootEvent> (otherParentRootEvent, null);
+		return new RResult<RootEvent> (otherParentRootEvent, null);
 
 	}
 
-	public RetResult<Root> createRoot(Event ev) {
-		RetResult<Long> round = round(ev.hex());
+	public RResult<Root> createRoot(Event ev) {
+		RResult<Long> round = round(ev.hex());
 		long evRound = round.result;
 		error err = round.err;
 
 		if ( err != null) {
-			return new RetResult<Root>(new Root(), err);
+			return new RResult<Root>(new Root(), err);
 		}
 
 		/*
 			SelfParent
 		*/
-		RetResult<RootEvent>  selfParentRootEventCall= createSelfParentRootEvent(ev);
+		RResult<RootEvent>  selfParentRootEventCall= createSelfParentRootEvent(ev);
 		RootEvent selfParentRootEvent = selfParentRootEventCall.result;
 		err = selfParentRootEventCall.err;
 		if ( err != null) {
-			return new RetResult<Root>(new Root(), err);
+			return new RResult<Root>(new Root(), err);
 		}
 
 		/*
@@ -910,11 +910,11 @@ public class Poset {
 		*/
 		RootEvent otherParentRootEvent = null;
 		if (!ev.otherParent().isEmpty()) {
-			RetResult<RootEvent> createOtherParentRootEvent = createOtherParentRootEvent(ev);
+			RResult<RootEvent> createOtherParentRootEvent = createOtherParentRootEvent(ev);
 			RootEvent opre = createOtherParentRootEvent.result;
 			err = createOtherParentRootEvent.err;
 			if (err != null) {
-				return new RetResult<Root>(new Root(), err);
+				return new RResult<Root>(new Root(), err);
 			}
 			otherParentRootEvent = opre;
 		}
@@ -928,7 +928,7 @@ public class Poset {
 			root.Others.put(ev.hex(), otherParentRootEvent);
 		}
 
-		return new RetResult<Root>(root, null);
+		return new RResult<Root>(root, null);
 	}
 
 	public error SetWireInfo(Event event) {
@@ -949,12 +949,12 @@ public class Poset {
 		long otherParentIndex = -1;
 
 		//could be the first Event inserted for this creator. In this case, use Root
-		RetResult3<String, Boolean> lastEventFrom = Store.LastEventFrom(event.creator());
+		RResult3<String, Boolean> lastEventFrom = Store.lastEventFrom(event.creator());
 		String lf = lastEventFrom.result1;
 		boolean isRoot = lastEventFrom.result2;
 		error err;
 		if  (isRoot && lf.equals(event.selfParent())) {
-			RetResult<Root> getRoot = Store.GetRoot(event.creator());
+			RResult<Root> getRoot = Store.getRoot(event.creator());
 			Root root = getRoot.result;
 			err = getRoot.err;
 			if (err != null) {
@@ -962,7 +962,7 @@ public class Poset {
 			}
 			selfParentIndex = root.SelfParent.Index;
 		} else {
-			RetResult<Event> getEvent = Store.GetEvent(event.selfParent());
+			RResult<Event> getEvent = Store.getEvent(event.selfParent());
 			Event selfParent = getEvent.result;
 			err = getEvent.err;
 			if (err != null ){
@@ -973,7 +973,7 @@ public class Poset {
 
 		if (!event.otherParent().isEmpty()) {
 			//Check Root then regular Events
-			RetResult<Root> getRoot = Store.GetRoot(event.creator());
+			RResult<Root> getRoot = Store.getRoot(event.creator());
 			Root root = getRoot.result;
 			err = getRoot.err;
 			if (err != null) {
@@ -986,7 +986,7 @@ public class Poset {
 				otherParentCreatorID = other.CreatorID;
 				otherParentIndex = other.Index;
 			} else {
-				RetResult<Event> getEvent = Store.GetEvent(event.otherParent());
+				RResult<Event> getEvent = Store.getEvent(event.otherParent());
 				Event otherParent = getEvent.result;
 				err = getEvent.err;
 				if (err != null) {
@@ -1038,7 +1038,7 @@ public class Poset {
 	//checks the ancestors are known, and prevents the introduction of forks.
 	public error InsertEvent(Event event, boolean setWireInfo) {
 		//verify signature
-		RetResult<Boolean> verify = event.verify();
+		RResult<Boolean> verify = event.verify();
 		Boolean ok = verify.result;
 		error err = verify.err;
 		if  (!ok) {
@@ -1074,7 +1074,7 @@ public class Poset {
 			}
 		}
 
-		err = Store.SetEvent(event);
+		err = Store.setEvent(event);
 		if  (err != null) {
 			return error.Errorf(String.format("SetEvent: %s", err));
 		}
@@ -1112,7 +1112,7 @@ public class Poset {
 		for (int i =0; i < UndeterminedEvents.size(); ++i) {
 			String hash = UndeterminedEvents.get(i);
 //		for (String h : UndeterminedEvents) {
-			RetResult<Event> getEvent = Store.GetEvent(hash);
+			RResult<Event> getEvent = Store.getEvent(hash);
 			Event ev = getEvent.result;
 			error err = getEvent.err;
 			if (err != null) {
@@ -1128,7 +1128,7 @@ public class Poset {
 			// TODO java code can't check if a long is null
 //			if (ev.round == null) {
 			if (ev.round < 0) {
-				RetResult<Long> roundCall = round(hash);
+				RResult<Long> roundCall = round(hash);
 				long roundNumber = roundCall.result;
 				err = roundCall.err;
 				if ( err != null) {
@@ -1138,7 +1138,7 @@ public class Poset {
 				ev.setRound(roundNumber);
 				updateEvent = true;
 
-				RetResult<RoundInfo> getRound = Store.GetRound(roundNumber);
+				RResult<RoundInfo> getRound = Store.getRound(roundNumber);
 				RoundInfo roundInfo = getRound.result;
 				err = getRound.err;
 				if (err != null && !StoreErr.Is(err, StoreErrType.KeyNotFound)) {
@@ -1170,7 +1170,7 @@ public class Poset {
 					roundInfo.queued = true;
 				}
 
-				RetResult<Boolean> witnessCall = witness(hash);
+				RResult<Boolean> witnessCall = witness(hash);
 				Boolean witness = witnessCall.result;
 				err = witnessCall.err;
 				if (err != null) {
@@ -1178,7 +1178,7 @@ public class Poset {
 				}
 				roundInfo.AddEvent(hash, witness);
 
-				err = Store.SetRound(roundNumber, roundInfo);
+				err = Store.setRound(roundNumber, roundInfo);
 				if (err != null) {
 					return err;
 				}
@@ -1200,7 +1200,7 @@ public class Poset {
 						// special case
 						if (ev.getRound() == 0) {
 							replaceFlagTable(ev, 0);
-							RetResult<Root> getRoot = Store.GetRoot(ev.creator());
+							RResult<Root> getRoot = Store.getRoot(ev.creator());
 							Root root = getRoot.result;
 							err = getRoot.err;
 							if ( err != null) {
@@ -1209,7 +1209,7 @@ public class Poset {
 							ev.message.WitnessProof = new String[]{root.SelfParent.Hash};
 						} else {
 							replaceFlagTable(ev, ev.getRound());
-							String[] roots = Store.RoundWitnesses(ev.getRound() - 1);
+							String[] roots = Store.roundWitnesses(ev.getRound() - 1);
 							ev.message.WitnessProof = roots;
 						}
 					}
@@ -1221,7 +1221,7 @@ public class Poset {
 			*/
 			if (ev.lamportTimestamp < 0) {
 
-				RetResult<Long> lamportTimestampCall = lamportTimestamp(hash);
+				RResult<Long> lamportTimestampCall = lamportTimestamp(hash);
 				long lamportTimestamp = lamportTimestampCall.result;
 				err = lamportTimestampCall.err;
 				if (err != null) {
@@ -1236,7 +1236,7 @@ public class Poset {
 				if (ev.creatorID() == 0) {
 					setWireInfo(ev);
 				}
-				Store.SetEvent(ev);
+				Store.setEvent(ev);
 			}
 		}
 
@@ -1246,7 +1246,7 @@ public class Poset {
 
 	private void replaceFlagTable(Event event, long round) {
 		HashMap<String, Long> ft = new HashMap<String, Long>();
-		String[] ws = Store.RoundWitnesses(round);
+		String[] ws = Store.roundWitnesses(round);
 		for (String v : ws) {
 			ft.put(v, (long) 1);
 		}
@@ -1274,7 +1274,7 @@ public class Poset {
 		for (int pos = 0; pos < PendingRounds.size(); ++pos ) {
 			pendingRound r = PendingRounds.get(pos);
 			long roundIndex = r.Index;
-			RetResult<RoundInfo> getRound = Store.GetRound(roundIndex);
+			RResult<RoundInfo> getRound = Store.getRound(roundIndex);
 			RoundInfo roundInfo = getRound.result;
 			error err = getRound.err;
 
@@ -1308,8 +1308,8 @@ public class Poset {
 					continue;
 				}
 			VOTE_LOOP:
-				for (long j = roundIndex + 1; j <= Store.LastRound(); j++) {
-					for (String y : Store.RoundWitnesses(j)) {
+				for (long j = roundIndex + 1; j <= Store.lastRound(); j++) {
+					for (String y : Store.roundWitnesses(j)) {
 						long diff = j - roundIndex;
 
 //						logger.WithFields(logrus.Fields{
@@ -1321,7 +1321,7 @@ public class Poset {
 //						}).debug("DecideFame() in VOTE_LOOP");
 
 						if (diff == 1) {
-							RetResult<Boolean> seeCall = see(y, x);
+							RResult<Boolean> seeCall = see(y, x);
 							Boolean ycx = seeCall.result;
 							err = seeCall.err;
 
@@ -1337,8 +1337,8 @@ public class Poset {
 						} else {
 							//count votes
 							List<String> ssWitnesses = new ArrayList<String>();
-							for (String w1 : Store.RoundWitnesses(j - 1)) {
-								RetResult<Boolean> stronglySeeCall = stronglySee(y, w1);
+							for (String w1 : Store.roundWitnesses(j - 1)) {
+								RResult<Boolean> stronglySeeCall = stronglySee(y, w1);
 								boolean ss = stronglySeeCall.result;
 								err = stronglySeeCall.err;
 
@@ -1432,7 +1432,7 @@ public class Poset {
 			}
 
 
-			err = Store.SetRound(roundIndex, roundInfo);
+			err = Store.setRound(roundIndex, roundInfo);
 
 //			logger.WithFields(logrus.Fields{
 //				"roundInfo": roundInfo,
@@ -1493,7 +1493,7 @@ public class Poset {
 		for (String x :  UndeterminedEvents) {
 
 			boolean received = false;
-			RetResult<Long> roundCall = round(x);
+			RResult<Long> roundCall = round(x);
 			long r = roundCall.result;
 			error err = roundCall.err;
 			if (err != null) {
@@ -1501,8 +1501,8 @@ public class Poset {
 			}
 
 			RoundInfo tr;
-			for (long i = r + 1; i <= Store.LastRound(); i++) {
-				RetResult<RoundInfo> getRound = Store.GetRound(i);
+			for (long i = r + 1; i <= Store.lastRound(); i++) {
+				RResult<RoundInfo> getRound = Store.getRound(i);
 				tr = getRound.result;
 				err = getRound.err;
 				if ( err != null) {
@@ -1526,7 +1526,7 @@ public class Poset {
 				//set of famous witnesses that see x
 				List<String> s = new ArrayList<String>();
 				for (String w : fws) {
-					RetResult<Boolean> seeCall = see(w, x);
+					RResult<Boolean> seeCall = see(w, x);
 					boolean see = seeCall.result;
 					err = seeCall.err;
 					if ( err != null) {
@@ -1541,7 +1541,7 @@ public class Poset {
 
 					received = true;
 
-					RetResult<Event> getEvent = Store.GetEvent(x);
+					RResult<Event> getEvent = Store.getEvent(x);
 					Event ex = getEvent.result;
 					err = getEvent.err;
 					if ( err != null) {
@@ -1549,13 +1549,13 @@ public class Poset {
 					}
 					ex.setRoundReceived(i);
 
-					err = Store.SetEvent(ex);
+					err = Store.setEvent(ex);
 					if ( err != null) {
 						return err;
 					}
 
 					tr.SetConsensusEvent(x);
-					err = Store.SetRound(i, tr);
+					err = Store.setRound(i, tr);
 					if ( err != null) {
 						return err;
 					}
@@ -1623,7 +1623,7 @@ public class Poset {
 				continue;
 			}
 
-			RetResult<Frame> getFrameCall = GetFrame(r.Index);
+			RResult<Frame> getFrameCall = GetFrame(r.Index);
 			Frame frame = getFrameCall.result;
 			error err = getFrameCall.err;
 			if ( err != null) {
@@ -1631,7 +1631,7 @@ public class Poset {
 						String.format("getting Frame %d: %v", r.Index, err));
 			}
 
-			RetResult<RoundInfo> getRoundCall = Store.GetRound(r.Index);
+			RResult<RoundInfo> getRoundCall = Store.getRound(r.Index);
 			RoundInfo round = getRoundCall.result;
 			err = getRoundCall.err;
 			if ( err != null) {
@@ -1647,7 +1647,7 @@ public class Poset {
 			if (frame.Events.length > 0) {
 				for (EventMessage e : frame.Events) {
 					Event ev = e.ToEvent();
-					err = Store.AddConsensusEvent(ev);
+					err = Store.addConsensusEvent(ev);
 					if (err != null) {
 						return err;
 					}
@@ -1657,8 +1657,8 @@ public class Poset {
 					}
 				}
 
-				long lastBlockIndex = Store.LastBlockIndex();
-				RetResult<Block> newBlockFromFrame = Block.newBlockFromFrame(lastBlockIndex+1, frame);
+				long lastBlockIndex = Store.lastBlockIndex();
+				RResult<Block> newBlockFromFrame = Block.newBlockFromFrame(lastBlockIndex+1, frame);
 				Block block = newBlockFromFrame.result;
 				err = newBlockFromFrame.err;
 				if ( err != null) {
@@ -1666,7 +1666,7 @@ public class Poset {
 				}
 
 				if (block.transactions().length > 0) {
-					err = Store.SetBlock(block);
+					err = Store.setBlock(block);
 					if (err != null){
 						return err;
 					}
@@ -1694,26 +1694,26 @@ public class Poset {
 	}
 
 	//GetFrame computes the Frame corresponding to a RoundReceived.
-	public RetResult<Frame> GetFrame(long roundReceived) {
+	public RResult<Frame> GetFrame(long roundReceived) {
 
 		logger.field("roundReceived", roundReceived).debug("GetFrame() getting frame");
 
 		//Try to get it from the Store first
-		RetResult<Frame> getFrame = Store.GetFrame(roundReceived);
+		RResult<Frame> getFrame = Store.getFrame(roundReceived);
 		Frame frame = getFrame.result;
 		error err = getFrame.err;
 		if (err == null || !StoreErr.Is(err, common.StoreErrType.KeyNotFound)) {
-			return new RetResult<Frame>(frame, err);
+			return new RResult<Frame>(frame, err);
 		}
 
 		logger.field("frame", frame).debug("GetFrame() found frame");
 
 		//Get the Round and corresponding consensus Events
-		RetResult<RoundInfo> getRound = Store.GetRound(roundReceived);
+		RResult<RoundInfo> getRound = Store.getRound(roundReceived);
 		RoundInfo round = getRound.result;
 		err = getRound.err;
 		if ( err != null) {
-			return new RetResult<Frame>(new Frame(), err);
+			return new RResult<Frame>(new Frame(), err);
 		}
 
 		logger.field("round", round)
@@ -1722,11 +1722,11 @@ public class Poset {
 
 		List<Event> events = new ArrayList<Event>();
 		for (String eh : round.ConsensusEvents()) {
-			RetResult<Event> getEvent = Store.GetEvent(eh);
+			RResult<Event> getEvent = Store.getEvent(eh);
 			Event e = getEvent.result;
 			err = getEvent.err;
 			if ( err != null) {
-				new RetResult<Frame>(new Frame(), err);
+				new RResult<Frame>(new Frame(), err);
 			}
 			events.add(e);
 		}
@@ -1746,11 +1746,11 @@ public class Poset {
 		for (Event ev : events) {
 			String c = ev.creator();
 			if (roots.get(c) == null) {
-				RetResult<Root> createRoot = createRoot(ev);
+				RResult<Root> createRoot = createRoot(ev);
 				Root root = createRoot.result;
 				err = createRoot.err;
 				if ( err != null) {
-					new RetResult<Frame>(new Frame(), err);
+					new RResult<Frame>(new Frame(), err);
 				}
 				roots.put(ev.creator(), root);
 			}
@@ -1762,27 +1762,27 @@ public class Poset {
 		for (String peer : Participants.toPubKeySlice()) {
 			if (roots.get(peer) == null) {
 				Root root;
-				RetResult3<String,Boolean> lastConsensusCall = Store.LastConsensusEventFrom(peer);
+				RResult3<String,Boolean> lastConsensusCall = Store.lastConsensusEventFrom(peer);
 				String lastConsensusEventHash = lastConsensusCall.result1;
 				boolean isRoot = lastConsensusCall.result2;
 				err = lastConsensusCall.err;
 				if ( err != null) {
-					return new RetResult<Frame>(new Frame(), err);
+					return new RResult<Frame>(new Frame(), err);
 				}
 				if (isRoot) {
-					root = Store.GetRoot(peer).result;
+					root = Store.getRoot(peer).result;
 				} else {
-					RetResult<Event> lastConsensusEventCall = Store.GetEvent(lastConsensusEventHash);
+					RResult<Event> lastConsensusEventCall = Store.getEvent(lastConsensusEventHash);
 					Event lastConsensusEvent = lastConsensusEventCall.result;
 					err = lastConsensusEventCall.err;
 					if ( err != null) {
-						return new RetResult<Frame>(new Frame(), err);
+						return new RResult<Frame>(new Frame(), err);
 					}
-					RetResult<Root> createRootCall = createRoot(lastConsensusEvent);
+					RResult<Root> createRootCall = createRoot(lastConsensusEvent);
 					root = createRootCall.result;
 					err = createRootCall.err;
 					if ( err != null) {
-						new RetResult<Frame>(new Frame(), err);
+						new RResult<Frame>(new Frame(), err);
 					}
 				}
 				roots.put(peer,  root);
@@ -1804,11 +1804,11 @@ public class Poset {
 				Boolean opt = treated.get(otherParent);
 				if (opt == null || !opt) {
 					if (ev.selfParent() != roots.get(ev.creator()).SelfParent.Hash) {
-						RetResult<RootEvent> createOtherParentRootEvent = createOtherParentRootEvent(ev);
+						RResult<RootEvent> createOtherParentRootEvent = createOtherParentRootEvent(ev);
 						RootEvent other = createOtherParentRootEvent.result;
 						err = createOtherParentRootEvent.err;
 						if ( err != null) {
-							new RetResult<Frame>(new Frame(), err);
+							new RResult<Frame>(new Frame(), err);
 						}
 						roots.get(ev.creator()).Others.put(ev.hex(), other);
 					}
@@ -1826,12 +1826,12 @@ public class Poset {
 
 		Frame res = new Frame (roundReceived, orderedRoots, eventMessages);
 
-		err = Store.SetFrame(res);
+		err = Store.setFrame(res);
 		if (err != null) {
-			new RetResult<Frame>(new Frame(), err);
+			new RResult<Frame>(new Frame(), err);
 		}
 
-		return new RetResult<Frame>(res, null);
+		return new RResult<Frame>(res, null);
 	}
 
 	//ProcessSigPool runs through the SignaturePool and tries to map a Signature to
@@ -1857,7 +1857,7 @@ public class Poset {
 			//only check if bs is greater than AnchorBlock, otherwise simply remove
 			if (AnchorBlock < 0 ||
 				bs.index > AnchorBlock) {
-				RetResult<Block> getBlock = Store.GetBlock(bs.index);
+				RResult<Block> getBlock = Store.getBlock(bs.index);
 				Block block = getBlock.result;
 				error err = getBlock.err;
 				if (err != null) {
@@ -1867,7 +1867,7 @@ public class Poset {
 						.warn("Verifying Block signature. Could not fetch Block");
 					continue;
 				}
-				RetResult<Boolean> verify = block.verify(bs);
+				RResult<Boolean> verify = block.verify(bs);
 				Boolean valid = verify.result;
 				err = verify.err;
 				if ( err != null) {
@@ -1888,7 +1888,7 @@ public class Poset {
 
 				block.setSignature(bs);
 
-				err = Store.SetBlock(block);
+				err = Store.setBlock(block);
 				if ( err != null) {
 					logger
 						.field("index", bs.index)
@@ -1918,27 +1918,27 @@ public class Poset {
 
 	//GetAnchorBlockWithFrame returns the AnchorBlock and the corresponding Frame.
 	//This can be used as a base to Reset a Poset
-	public RetResult3<Block,Frame> GetAnchorBlockWithFrame() {
+	public RResult3<Block,Frame> GetAnchorBlockWithFrame() {
 
 		if (AnchorBlock < 0) {
-			return new RetResult3<Block,Frame>(null, null, error.Errorf("no Anchor Block"));
+			return new RResult3<Block,Frame>(null, null, error.Errorf("no Anchor Block"));
 		}
 
-		RetResult<Block> getBlock = Store.GetBlock(AnchorBlock);
+		RResult<Block> getBlock = Store.getBlock(AnchorBlock);
 		Block block = getBlock.result;
 		error err = getBlock.err;
 		if (err != null) {
-			return new RetResult3<Block,Frame>(null, null, err);
+			return new RResult3<Block,Frame>(null, null, err);
 		}
 
-		RetResult<Frame> getFrame = GetFrame(block.roundReceived());
+		RResult<Frame> getFrame = GetFrame(block.roundReceived());
 		Frame frame = getFrame.result;
 		err = getFrame.err;
 		if ( err != null) {
-			return new RetResult3<Block,Frame>(null, null, err);
+			return new RResult3<Block,Frame>(null, null, err);
 		}
 
-		return new RetResult3<Block,Frame>(block, frame, null);
+		return new RResult3<Block,Frame>(block, frame, null);
 	}
 
 	//Reset clears the Poset and resets it from a new base.
@@ -1955,28 +1955,28 @@ public class Poset {
 		PendingLoadedEvents = 0;
 		topologicalIndex = 0;
 
-		int cacheSize = Store.CacheSize();
-		RetResult<LRUCache<String,Boolean>> ancestorCacheCall = LRUCache.New(cacheSize);
+		int cacheSize = Store.cacheSize();
+		RResult<LRUCache<String,Boolean>> ancestorCacheCall = LRUCache.New(cacheSize);
 		LRUCache<String,Boolean> ancestorCache = ancestorCacheCall.result;
 		error err = ancestorCacheCall.err;
 		if ( err != null) {
 			logger.fatal("Unable to reset Poset.ancestorCache");
 		}
 
-		RetResult<LRUCache<String,Boolean>> selfAncestorCacheCall = LRUCache.New(cacheSize);
+		RResult<LRUCache<String,Boolean>> selfAncestorCacheCall = LRUCache.New(cacheSize);
 		LRUCache<String,Boolean> selfAncestorCache = selfAncestorCacheCall.result;
 		err = selfAncestorCacheCall.err;
 		if ( err != null) {
 			logger.fatal("Unable to reset Poset.selfAncestorCache");
 		}
-		RetResult<LRUCache<String,Boolean>> stronglySeeCacheCall = LRUCache.New(cacheSize);
+		RResult<LRUCache<String,Boolean>> stronglySeeCacheCall = LRUCache.New(cacheSize);
 		LRUCache<String,Boolean> stronglySeeCache = stronglySeeCacheCall.result;
 		err = stronglySeeCacheCall.err;
 		if ( err != null) {
 			logger.fatal("Unable to reset Poset.stronglySeeCache");
 		}
 
-		RetResult<LRUCache<String,Long>> roundCacheCall = LRUCache.New(cacheSize);
+		RResult<LRUCache<String,Long>> roundCacheCall = LRUCache.New(cacheSize);
 		LRUCache<String,Long> roundCache = roundCacheCall.result;
 		err = roundCacheCall.err;
 		if (err != null) {
@@ -1997,13 +1997,13 @@ public class Poset {
 			Peer p = participants[id];
 			rootMap.put(p.getPubKeyHex(), root);
 		}
-		err = Store.Reset(rootMap);
+		err = Store.reset(rootMap);
 		if (err != null) {
 			return err;
 		}
 
 		//Insert Block
-		err = Store.SetBlock(block);
+		err = Store.setBlock(block);
 		if (err != null) {
 			return err;
 		}
@@ -2029,7 +2029,7 @@ public class Poset {
 			BadgerStore badgerStore = (BadgerStore) Store;
 
 			//Retrieve the Events from the underlying DB. They come out in topological order
-			RetResult<Event[]> dbTopologicalEventsCall = badgerStore.dbTopologicalEvents();
+			RResult<Event[]> dbTopologicalEventsCall = badgerStore.dbTopologicalEvents();
 			Event[] topologicalEvents = dbTopologicalEventsCall.result;
 			error err = dbTopologicalEventsCall.err;
 			if (err != null) {
@@ -2074,7 +2074,7 @@ public class Poset {
 
 	//ReadWireInfo converts a WireEvent to an Event by replacing int IDs with the
 	//corresponding public keys.
-	public RetResult<Event> ReadWireInfo(WireEvent wevent) {
+	public RResult<Event> ReadWireInfo(WireEvent wevent) {
 		String selfParent = Event.rootSelfParent(wevent.Body.CreatorID);
 		String otherParent = "";
 		error err;
@@ -2082,29 +2082,29 @@ public class Poset {
 		Peer creator = Participants.byId(wevent.Body.CreatorID);
 		// FIXIT: creator can be null when wevent.Body.CreatorID == 0
 		if (creator == null) {
-			return new RetResult<Event>(null, error.Errorf(
+			return new RResult<Event>(null, error.Errorf(
 					String.format("unknown wevent.Body.CreatorID=%v", wevent.Body.CreatorID)));
 		}
 
-		RetResult<byte[]> decodeString = crypto.Utils.decodeString(creator.getPubKeyHex().substring(2, creator.getPubKeyHex().length()));
+		RResult<byte[]> decodeString = crypto.Utils.decodeString(creator.getPubKeyHex().substring(2, creator.getPubKeyHex().length()));
 		byte[] creatorBytes = decodeString.result;
 		err = decodeString.err;
 		if (err != null) {
-			return new RetResult<Event>(null, err);
+			return new RResult<Event>(null, err);
 		}
 
 		if (wevent.Body.SelfParentIndex >= 0) {
-			RetResult<String> ParticipantEventCall = Store.ParticipantEvent(creator.getPubKeyHex(), wevent.Body.SelfParentIndex);
+			RResult<String> ParticipantEventCall = Store.participantEvent(creator.getPubKeyHex(), wevent.Body.SelfParentIndex);
 			selfParent = ParticipantEventCall.result;
 			err = ParticipantEventCall.err;
 			if ( err != null) {
-				return new RetResult<Event>(null, err);
+				return new RResult<Event>(null, err);
 			}
 		}
 		if (wevent.Body.OtherParentIndex >= 0) {
 			Peer otherParentCreator = Participants.byId(wevent.Body.OtherParentCreatorID);
 			if (otherParentCreator != null) {
-				RetResult<String> participantEventCall = Store.ParticipantEvent(otherParentCreator.getPubKeyHex(), wevent.Body.OtherParentIndex);
+				RResult<String> participantEventCall = Store.participantEvent(otherParentCreator.getPubKeyHex(), wevent.Body.OtherParentIndex);
 				otherParent = participantEventCall.result;
 				err = participantEventCall.err;
 
@@ -2112,11 +2112,11 @@ public class Poset {
 					//PROBLEM Check if other parent can be found in the root
 					//problem, we do not known the WireEvent's EventHash, and
 					//we do not know the creators of the roots RootEvents
-					RetResult<Root> getRoot = Store.GetRoot(creator.getPubKeyHex());
+					RResult<Root> getRoot = Store.getRoot(creator.getPubKeyHex());
 					Root root = getRoot.result;
 					err = getRoot.err;
 					if ( err != null) {
-						return new RetResult<Event>(null, err);
+						return new RResult<Event>(null, err);
 					}
 					//loop through others
 					boolean found = false;
@@ -2130,18 +2130,18 @@ public class Poset {
 					}
 
 					if (!found) {
-						return new RetResult<Event>(null, error.Errorf("OtherParent not found"));
+						return new RResult<Event>(null, error.Errorf("OtherParent not found"));
 					}
 				}
 			} else {
 				// unknown participant
 				// TODO: we should handle this nicely
-				return new RetResult<Event>(null, error.Errorf("unknown participant"));
+				return new RResult<Event>(null, error.Errorf("unknown participant"));
 			}
 		}
 
 		if (wevent.FlagTable.length == 0) {
-			return new RetResult<Event>(null, error.Errorf("flag table is null"));
+			return new RResult<Event>(null, error.Errorf("flag table is null"));
 		}
 
 		InternalTransaction[] transactions = Utils.copyOf(wevent.Body.InternalTransactions);
@@ -2177,7 +2177,7 @@ public class Poset {
 			.field("wevent.Signature", wevent.Signature)
 			.debug("Return Event from ReadFromWire");
 
-		return new RetResult<Event>(event, null);
+		return new RResult<Event>(event, null);
 	}
 
 	//CheckBlock returns an error if the Block does not contain valid signatures
@@ -2217,7 +2217,7 @@ public class Poset {
 
 	/*
 	*/
-	public RetResult<Map<String,Long>> GetFlagTableOfRandomUndeterminedEvent() {
+	public RResult<Map<String,Long>> GetFlagTableOfRandomUndeterminedEvent() {
 		// FIXME: possible data race: UndeterminedEvents can be modified by other goroutine
 		// TODO the java conversion is ok?
 		//		perm := rand.Perm(UndeterminedEvents.length);
@@ -2226,21 +2226,21 @@ public class Poset {
 		error err = null;
 		for (int i = 0; i< perm.size(); ++i) {
 			String hash = UndeterminedEvents.get(perm.get(i));
-			RetResult<Event> getEvent = Store.GetEvent(hash);
+			RResult<Event> getEvent = Store.getEvent(hash);
 			Event ev = getEvent.result;
 			err = getEvent.err;
 			if (err != null) {
 				continue;
 			}
-			RetResult<Map<String, Long>> getFlagTable = ev.getFlagTable();
+			RResult<Map<String, Long>> getFlagTable = ev.getFlagTable();
 			Map<String, Long> ft = getFlagTable.result;
 			err = getFlagTable.err;
 			if (err != null) {
 				continue;
 			}
-			return new RetResult<Map<String,Long>>(ft, null);
+			return new RResult<Map<String,Long>>(ft, null);
 		}
-		return new RetResult<Map<String,Long>>(null, err);
+		return new RResult<Map<String,Long>>(null, err);
 	}
 
 	/*******************************************************************************
@@ -2278,7 +2278,7 @@ public class Poset {
 	   Helpers
 	*******************************************************************************/
 	public boolean middleBit(String ehex) {
-		RetResult<byte[]> decodeString = crypto.Utils.decodeString(ehex.substring(2, ehex.length()));
+		RResult<byte[]> decodeString = crypto.Utils.decodeString(ehex.substring(2, ehex.length()));
 
 		byte[] hash = decodeString.result;
 		error err = decodeString.err;
@@ -2294,8 +2294,8 @@ public class Poset {
 
 	public void PrintStat(Logger logger) {
 		logger.warn("****Known events:");
-		for (long pid_id : Store.KnownEvents().keySet()) {
-			long index = Store.KnownEvents().get(pid_id);
+		for (long pid_id : Store.knownEvents().keySet()) {
+			long index = Store.knownEvents().get(pid_id);
 			logger.warn("    index=" + index +
 				" peer=" + Participants.byId(pid_id).getNetAddr() +
 				" pubKeyHex=" + Participants.byId(pid_id).getPubKeyHex());

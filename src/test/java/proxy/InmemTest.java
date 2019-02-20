@@ -3,7 +3,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
-import org.jcsp.lang.CSTimer;
 import org.junit.Test;
 
 import autils.Appender;
@@ -11,7 +10,7 @@ import autils.Logger;
 import autils.time;
 import channel.ExecService;
 import channel.Selectors;
-import common.RetResult;
+import common.RResult;
 import common.TestUtils;
 import common.error;
 import poset.Block;
@@ -39,8 +38,6 @@ public class InmemTest {
 
 		//"#1 Send tx"
 		byte[] tx_origin = "the test transaction".getBytes();
-		CSTimer tim = new CSTimer();
-		tim.setAlarm(tim.read() + timeout * 1000);
 		ExecService.go(() -> {
 			new Selectors<byte[]>(proxy.SubmitCh()) {
 				public void onEvent() {
@@ -49,7 +46,7 @@ public class InmemTest {
 					assertArrayEquals("read result submitCh should match", tx_origin, tx);
 				}
 				public void onTimeOut() {
-					tim.setAlarm(tim.read() + timeout * 1000);
+					tim.setAlarm(tim.read() + timeout);
 					fail(errTimeout);
 				}
 			}.run();
@@ -59,7 +56,7 @@ public class InmemTest {
 
 
 		//"#2 Commit block"
-		RetResult<byte[]> commitBlock = proxy.CommitBlock(block);
+		RResult<byte[]> commitBlock = proxy.CommitBlock(block);
 		byte[] stateHash = commitBlock.result;
 		error err = commitBlock.err;
 
@@ -68,7 +65,7 @@ public class InmemTest {
 		assertArrayEquals("transactions should match", transactions, proxy.transactions);
 
 		//"#3 Get snapshot"
-		RetResult<byte[]> getSnapshot = proxy.GetSnapshot(block.Index());
+		RResult<byte[]> getSnapshot = proxy.GetSnapshot(block.Index());
 		byte[] snapshot = getSnapshot.result;
 		err = getSnapshot.err;
 
@@ -94,20 +91,20 @@ public class InmemTest {
 			return p;
 		}
 
-		public RetResult<byte[]> CommitHandler(Block block) {
+		public RResult<byte[]> CommitHandler(Block block) {
 			logger.debug("CommitBlock");
 			transactions = Appender.append(transactions, block.transactions());
-			return new RetResult<>(goldStateHash(), null);
+			return new RResult<>(goldStateHash(), null);
 		}
 
-		public RetResult<byte[]> SnapshotHandler(long blockIndex) {
+		public RResult<byte[]> SnapshotHandler(long blockIndex) {
 			logger.debug("GetSnapshot");
-			return new RetResult<>(goldSnapshot(), null);
+			return new RResult<>(goldSnapshot(), null);
 		}
 
-		public RetResult<byte[]> RestoreHandler(byte[] snapshot) {
+		public RResult<byte[]> RestoreHandler(byte[] snapshot) {
 			logger.debug("RestoreSnapshot");
-			return new RetResult<>(goldStateHash(), null);
+			return new RResult<>(goldStateHash(), null);
 		}
 	}
 

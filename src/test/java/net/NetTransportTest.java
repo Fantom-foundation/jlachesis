@@ -1,19 +1,17 @@
 package net;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
 
 import java.time.Duration;
 import java.util.HashMap;
 
 import org.jcsp.lang.One2OneChannel;
-import org.junit.Test;
 
 import autils.Logger;
 import autils.time;
 import channel.ExecService;
-import channel.Selectors;
-import common.RetResult;
+import common.RResult;
+import common.TimedOutEventSelectors;
 import common.error;
 import node.WaitGroup;
 import poset.Block;
@@ -31,17 +29,6 @@ public class NetTransportTest {
 	static final long timeout = 1200 * time.Millisecond;
 	static final String errTimeout = "time is over";
 	int maxPool = 3;
-
-	static class TimedOutEventSelectors<T> extends Selectors<T> {
-		public TimedOutEventSelectors(One2OneChannel<T> ch) {
-			super(ch);
-		}
-
-		public void onTimeOut() {
-			tim.setAlarm(tim.read() + timeout);
-			fail(errTimeout);
-		}
-	}
 
 	protected SyncRequest getExpectedSyncRequest() {
 		HashMap<Long,Long> map = new HashMap<Long,Long>();
@@ -75,7 +62,7 @@ public class NetTransportTest {
 					assertEquals("Response rpc should match", expectedReq, req);
 					rpc.Respond(expectedResp, null);
 				}
-			}.run();
+			}.setTimeout(timeout, errTimeout).run();
 		});
 
 		SyncResponse resp = new SyncResponse();
@@ -98,7 +85,7 @@ public class NetTransportTest {
 					assertEquals("Response rpc should match", expectedReq, req);
 					rpc.Respond(expectedResp, null);
 				}
-			}.run();
+			}.setTimeout(timeout, errTimeout).run();
 		});
 
 		EagerSyncResponse resp = new EagerSyncResponse();
@@ -111,7 +98,7 @@ public class NetTransportTest {
 		FastForwardRequest expectedReq = new FastForwardRequest(0);
 
 		Frame frame = new Frame();
-		RetResult<Block> newBlockFromFrame = Block.newBlockFromFrame(1, frame);
+		RResult<Block> newBlockFromFrame = Block.newBlockFromFrame(1, frame);
 		Block block = newBlockFromFrame.result;
 		error err = newBlockFromFrame.err;
 
@@ -126,7 +113,7 @@ public class NetTransportTest {
 					assertEquals("Response rpc should match", expectedReq, req);
 					rpc.Respond(expectedResp, null);
 				}
-			}.run();
+			}.setTimeout(timeout, errTimeout).run();
 		});
 
 		FastForwardResponse resp = new FastForwardResponse();
@@ -153,7 +140,7 @@ public class NetTransportTest {
 						assertEquals("Response rpc should match", expectedReq, req);
 						rpc.Respond(expectedResp, null);
 					}
-				}.run();
+				}.setTimeout(timeout, errTimeout).run();
 			}
 		});
 
@@ -185,7 +172,7 @@ public class NetTransportTest {
 	//@Test
 	public void TestNetworkTransport() {
 		// Transport 1 is consumer
-		RetResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport("127.0.0.1:0", null, 2 , Duration.ofSeconds(time.Second), logger);
+		RResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport("127.0.0.1:0", null, 2 , Duration.ofSeconds(time.Second), logger);
 		NetworkTransport trans1 = newTCPTransport.result;
 		error err = newTCPTransport.err;
 		assertNull("No error", err);
@@ -193,7 +180,7 @@ public class NetTransportTest {
 		One2OneChannel<RPC> rpcCh = trans1.getConsumer();
 
 		// Transport 2 makes outbound request
-		RetResult<NetworkTransport> newTCPTransport2 = TCPTransport.NewTCPTransport("127.0.0.1:0", null, maxPool, Duration.ofSeconds(1), logger);
+		RResult<NetworkTransport> newTCPTransport2 = TCPTransport.NewTCPTransport("127.0.0.1:0", null, maxPool, Duration.ofSeconds(1), logger);
 		NetworkTransport trans2 = newTCPTransport2.result;
 		err = newTCPTransport2.err;
 		assertNull("No error", err);

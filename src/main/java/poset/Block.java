@@ -11,8 +11,8 @@ import com.google.protobuf.ByteString;
 
 import autils.Appender;
 import common.IProto;
-import common.RetResult;
-import common.RetResult3;
+import common.RResult;
+import common.RResult3;
 import common.error;
 
 public class Block {
@@ -90,12 +90,12 @@ public class Block {
 		return null;
 	}
 
-	public static RetResult<Block> newBlockFromFrame(long blockIndex, Frame frame) {
-		RetResult<byte[]> hash2 = frame.Hash();
+	public static RResult<Block> newBlockFromFrame(long blockIndex, Frame frame) {
+		RResult<byte[]> hash2 = frame.Hash();
 		byte[] frameHash = hash2.result;
 		error err = hash2.err;
 		if (err != null) {
-			return new RetResult<Block>(null, err);
+			return new RResult<Block>(null, err);
 		}
 
 		byte[][] transactions = null;
@@ -106,7 +106,7 @@ public class Block {
 			}
 		}
 
-		return new RetResult<Block>(new Block(blockIndex, frame.Round, frameHash, transactions), null);
+		return new RResult<Block>(new Block(blockIndex, frame.Round, frameHash, transactions), null);
 	}
 
 //	public boolean equals(Block that) {
@@ -144,15 +144,15 @@ public class Block {
 		return res;
 	}
 
-	public RetResult<BlockSignature> getSignature(String validator) {
+	public RResult<BlockSignature> getSignature(String validator) {
 		String sig = signatures.get(validator);
 		BlockSignature res = null;
 		if (sig == null) {
-			return new RetResult<BlockSignature>(res, error.Errorf("signature not found"));
+			return new RResult<BlockSignature>(res, error.Errorf("signature not found"));
 		}
 
 		byte[] validatorBytes = crypto.Utils.decodeString(validator.substring(2, validator.length())).result;
-		return new RetResult<BlockSignature>(
+		return new RResult<BlockSignature>(
 				new BlockSignature(validatorBytes, Index(), sig), null);
 	}
 
@@ -210,20 +210,20 @@ public class Block {
 		};
 	}
 
-	public RetResult<BlockSignature> sign(KeyPair keyPair) {
-		RetResult<byte[]> hash2 = body.hash();
+	public RResult<BlockSignature> sign(KeyPair keyPair) {
+		RResult<byte[]> hash2 = body.hash();
 		byte[] signBytes = hash2.result;
 		error err = hash2.err;
 		BlockSignature bs = null;
 		if (err != null) {
-			return new RetResult<BlockSignature>(bs, err);
+			return new RResult<BlockSignature>(bs, err);
 		}
-		RetResult3<BigInteger, BigInteger> sign = crypto.Utils.Sign(keyPair.getPrivate(), signBytes);
+		RResult3<BigInteger, BigInteger> sign = crypto.Utils.Sign(keyPair.getPrivate(), signBytes);
 		BigInteger R = sign.result1;
 		BigInteger S = sign.result2;
 		err = sign.err;
 		if (err != null) {
-			return new RetResult<BlockSignature>(bs, err);
+			return new RResult<BlockSignature>(bs, err);
 		}
 
 		bs = new BlockSignature(
@@ -231,7 +231,7 @@ public class Block {
 			Index(),
 			crypto.Utils.encodeSignature(R, S));
 
-		return new RetResult<BlockSignature>(bs, null);
+		return new RResult<BlockSignature>(bs, null);
 	}
 
 	public error setSignature(BlockSignature bs) {
@@ -239,25 +239,25 @@ public class Block {
 		return null;
 	}
 
-	public RetResult<Boolean> verify(BlockSignature sig) {
-		RetResult<byte[]> hash2 = body.hash();
+	public RResult<Boolean> verify(BlockSignature sig) {
+		RResult<byte[]> hash2 = body.hash();
 		byte[] signBytes = hash2.result;
 		error err = hash2.err;
 		if (err != null) {
-			return new RetResult<Boolean>(false, err);
+			return new RResult<Boolean>(false, err);
 		}
 
 		PublicKey pubKey = crypto.Utils.ToECDSAPub(sig.validator);
 
-		RetResult3<BigInteger, BigInteger> decodeSignature = crypto.Utils.DecodeSignature(sig.signature);
+		RResult3<BigInteger, BigInteger> decodeSignature = crypto.Utils.DecodeSignature(sig.signature);
 		BigInteger r = decodeSignature.result1;
 		BigInteger s = decodeSignature.result2;
 		err = decodeSignature.err;
 		if (err != null) {
-			return new RetResult<Boolean>(false, err);
+			return new RResult<Boolean>(false, err);
 		}
 
-		return new RetResult<Boolean>(crypto.Utils.Verify(pubKey, signBytes, r, s), null);
+		return new RResult<Boolean>(crypto.Utils.Verify(pubKey, signBytes, r, s), null);
 	}
 
 	@Override

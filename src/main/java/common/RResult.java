@@ -5,17 +5,17 @@ package common;
  *
  * @param <T>
  */
-public class RetResult<T> {
+public class RResult<T> {
 	/** these fields are made public for faster access */
 	public T result;
 	public error err;
 
-	public RetResult() {
+	public RResult() {
 		this.result = null;
 		this.err = null;
 	}
 
-	public RetResult(T result, error err) {
+	public RResult(T result, error err) {
 		this.result = result;
 		this.err = err;
 	}
