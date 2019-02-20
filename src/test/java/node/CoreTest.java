@@ -78,7 +78,7 @@ public class CoreTest {
 
 	}
 
-	//@Test
+	@Test
 	public void TestSync() {
 		initCores(3);
 
@@ -148,17 +148,18 @@ public class CoreTest {
 		checkHeights(cores, expectedHeights);
 
 		Map<Long,Long> knownBy0 = cores[0].knownEvents();
-		long k = knownBy0.get(Hash32.Hash32(cores[0].pubKey));
+
+		long k = knownBy0.get((long) Hash32.Hash32(cores[0].pubKey));
 		assertEquals("core 0 should have last-index 1 for core 0, not %d", 1, k);
 
-		k = knownBy0.get(Hash32.Hash32(cores[1].pubKey));
+		k = knownBy0.get((long) Hash32.Hash32(cores[1].pubKey));
 		assertEquals("core 0 should have last-index 0 for core 1, not %d", 0, k);
 
-		k = knownBy0.get(Hash32.Hash32(cores[2].pubKey));
+		k = knownBy0.get((long) Hash32.Hash32(cores[2].pubKey));
 		assertEquals("core 0 should have last-index -1 for core 2, not %d", -1, k);
 
 		Event core0Head = cores[0].getHead().result;
-		assertEquals("core 0 head self-parent should be e0", core0Head.selfParent(), cores[0].getHead());
+		assertEquals("core 0 head self-parent should be e0", core0Head.selfParent(), index.get("e0"));
 
 		assertEquals("core 0 head other-parent should be e1", core0Head.otherParent(), index.get("e1"));
 
@@ -198,20 +199,20 @@ public class CoreTest {
 		temp = new HashMap<String,Long>();
 		temp.put(cores[0].hexID, 2L);
 		temp.put(cores[1].hexID, 1L);
-		temp.put(cores[2].hexID, 1L);
+		temp.put(cores[2].hexID, 2L);
 		expectedHeights[2] = temp;
 
 		checkHeights(cores, expectedHeights);
 
 		Map<Long, Long> knownBy2 = cores[2].knownEvents();
 
-		k = knownBy2.get(Hash32.Hash32(cores[0].pubKey));
+		k = knownBy2.get((long) Hash32.Hash32(cores[0].pubKey));
 		assertEquals("core 2 should have last-index 1 for core 0, not %d", 1, k);
 
-		k = knownBy2.get(Hash32.Hash32(cores[1].pubKey));
+		k = knownBy2.get((long) Hash32.Hash32(cores[1].pubKey));
 		assertEquals("core 2 should have last-index 0 core 1, not %d", 0, k);
 
-		k = knownBy2.get(Hash32.Hash32(cores[2].pubKey));
+		k = knownBy2.get((long) Hash32.Hash32(cores[2].pubKey));
 		assertEquals("core 2 should have last-index 1 for core 2, not %d", 1, k);
 
 		Event core2Head = cores[2].getHead().result;
@@ -262,13 +263,13 @@ public class CoreTest {
 		checkHeights(cores, expectedHeights);
 
 		Map<Long, Long> knownBy1 = cores[1].knownEvents();
-		k = knownBy1.get(Hash32.Hash32(cores[0].pubKey));
+		k = knownBy1.get((long) Hash32.Hash32(cores[0].pubKey));
 		assertEquals("core 1 should have last-index 1 for core 0, not %d", 1, k);
 
-		k = knownBy1.get(Hash32.Hash32(cores[1].pubKey));
+		k = knownBy1.get((long) Hash32.Hash32(cores[1].pubKey));
 		assertEquals("core 1 should have last-index 1 for core 1, not %d", 1, k);
 
-		k = knownBy1.get(Hash32.Hash32(cores[2].pubKey));
+		k = knownBy1.get((long) Hash32.Hash32(cores[2].pubKey));
 		assertEquals("core 1 should have last-index 1 for core 2, not %d", 1, k);
 
 		Event core1Head = cores[1].getHead().result;
@@ -451,7 +452,7 @@ public class CoreTest {
 		}
 	}
 
-	//@Test
+	@Test
 	public void testInDegrees() {
 		initCores(3);
 
@@ -674,19 +675,19 @@ public class CoreTest {
 		temp.put(cores[0].hexID, 0L);
 		temp.put(cores[1].hexID, 1L);
 		temp.put(cores[2].hexID, 0L);
-		expectedHeights[0] = temp;
+		expectedInDegree[0] = temp;
 
 		temp = new HashMap<String,Long>();
 		temp.put(cores[0].hexID, 1L);
 		temp.put(cores[1].hexID, 0L);
 		temp.put(cores[2].hexID, 1L);
-		expectedHeights[1] = temp;
+		expectedInDegree[1] = temp;
 
 		temp = new HashMap<String,Long>();
 		temp.put(cores[0].hexID, 1L);
 		temp.put(cores[1].hexID, 2L);
 		temp.put(cores[2].hexID, 0L);
-		expectedHeights[2] = temp;
+		expectedInDegree[2] = temp;
 
 		checkInDegree(cores, expectedInDegree);
 	}
@@ -793,7 +794,7 @@ public class CoreTest {
 		}
 	}
 
-	//@Test
+	@Test
 	public void testOverSyncLimit() {
 		cores = initConsensusPoset();
 
@@ -815,7 +816,7 @@ public class CoreTest {
 		known.put((long) Hash32.Hash32(cores[2].pubKey), 6L);
 
 		overSyncLimit = cores[0].overSyncLimit(known, syncLimit);
-		assertFalse(String.format("OverSyncLimit(%v, %v) should return false", known, syncLimit), overSyncLimit);
+		assertFalse(String.format("OverSyncLimit(%s, %s) should return false", known, syncLimit), overSyncLimit);
 
 		// edge
 		known = new HashMap<Long,Long>();
@@ -824,7 +825,7 @@ public class CoreTest {
 		known.put((long) Hash32.Hash32(cores[2].pubKey), 3L);
 
 		overSyncLimit = cores[0].overSyncLimit(known, syncLimit);
-		assertFalse(String.format("OverSyncLimit(%v, %v) should return false", known, syncLimit), overSyncLimit);
+		assertFalse(String.format("OverSyncLimit(%s, %s) should return false", known, syncLimit), overSyncLimit);
 	}
 
 	/*
@@ -895,13 +896,7 @@ public class CoreTest {
 		initFFPoset(cores);
 
 		long r = cores[1].getLastConsensusRoundIndex();
-		if  (r < 0 || r != 2) {
-			String disp = "null";
-			if (r >=0) {
-				disp = Long.toString(r,  10);
-			}
-			assertEquals(String.format("Cores[1] last consensus Round should be 1, not %s", disp), 1, r);
-		}
+		assertEquals("Cores[1] last consensus Round should be 1", 1, r);
 
 		int l = cores[1].getConsensusEvents().length;
 		assertEquals("Node 1 should have 7 consensus eventts", 7, l);
@@ -1007,10 +1002,10 @@ public class CoreTest {
 		assertEquals("Cores[0].Known should match", expectedKnown, knownBy0);
 
 		long r = cores[0].getLastConsensusRoundIndex();
-		assertEquals("Cores[0] last consensus Round should be 1, not %v", 1, r);
+		assertEquals("Cores[0] last consensus Round should be 1", 1, r);
 
 		long lbi = cores[0].poset.Store.lastBlockIndex();
-		assertEquals("Cores[0].poset.LastBlockIndex should be 0, not %d", 0, lbi);
+		assertEquals("Cores[0].poset.LastBlockIndex should be 0", 0, lbi);
 
 		RResult<Block> getBlock2 = cores[0].poset.Store.getBlock(block.Index());
 		Block sBlock = getBlock2.result;

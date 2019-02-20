@@ -79,10 +79,7 @@ public class Event implements FlagtableContainer {
 	}
 
 	public Event(EventMessage eventMessage) {
-		// TBD add stub
-		this.message = new EventMessage();
-		this.message.Body = eventMessage.Body;
-		this.message.FlagTable = eventMessage.FlagTable;
+		this.message = new EventMessage(eventMessage);
 
 		// TODO I added these init
 		this.round = -1;

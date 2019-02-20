@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Level;
 import org.jcsp.lang.One2OneChannel;
@@ -54,7 +55,7 @@ public class Core {
 		}
 		logger = logger.field("id", id);
 
-		Map<String,Long> inDegrees = new HashMap<String,Long>();
+		Map<String,Long> inDegrees = new ConcurrentHashMap<String,Long>();
 		for (String pubKey : participants.getByPubKey().keySet()) {
 			inDegrees.put(pubKey, (long) 0);
 		}
@@ -354,10 +355,6 @@ public class Core {
 				return err;
 			}
 
-//			if (!myKnownEvents.containsKey(ev.CreatorID())) {
-//				logger.field("ev.CreatorID()", ev.CreatorID()).error("Sync");
-//				return error.Errorf("ev.CreatorID() not known");
-//			}
 			if (ev.index() > myKnownEvents.get(ev.creatorID())) {
 				err = insertEvent(ev, false);
 				if (err != null) {
