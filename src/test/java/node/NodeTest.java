@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import org.jcsp.lang.Alternative;
 import org.jcsp.lang.CSTimer;
@@ -68,7 +69,6 @@ public class NodeTest {
 			KeyPair key = crypto.Utils.GenerateECDSAKeyPair().result;
 			keys = Appender.append(keys, key);
 
-//			String pub = String.format("0x%X", crypto.Utils.FromECDSAPub(keys[i].getPublic()));
 			String pub = crypto.Utils.keyToHexString(key.getPublic());
 			ps.addPeer(new Peer(
 				pub,
@@ -80,7 +80,7 @@ public class NodeTest {
 	}
 
 	//@Test
-	public void TestProcessSync() {
+	public void testProcessSync() {
 		RResult2<KeyPair[], Peers> initPeers = initPeers(2);
 		KeyPair[] keys = initPeers.result1;
 		Peers p = initPeers.result2;
@@ -167,7 +167,7 @@ public class NodeTest {
 	}
 
 	//@Test
-	public void TestProcessEagerSync() {
+	public void testProcessEagerSync() {
 		RResult2<KeyPair[], Peers> initPeers = initPeers(2);
 		KeyPair[] keys = initPeers.result1;
 		Peers p = initPeers.result2;
@@ -243,13 +243,13 @@ public class NodeTest {
 	}
 
 	//@Test
-	public void TestAddTransaction() {
+	public void testAddTransaction() {
 		// Start two nodes
 		RResult2<KeyPair[], Peers> initPeers = initPeers(2);
 		KeyPair[] keys = initPeers.result1;
 		Peers p = initPeers.result2;
-		Logger testLogger = TestUtils.NewTestLogger(this.getClass());
-		Config config = TestUtils.TestConfig(this.getClass());
+		Logger testLogger = Logger.getLogger(getClass());
+		Config config = TestUtils.TestConfig(getClass());
 
 		Peer[] ps = p.toPeerSlice();
 
@@ -291,6 +291,7 @@ public class NodeTest {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+
 		String message = "Hello World!";
 		peer0Proxy.SubmitCh().out().write(message.getBytes()); // <- byte[](message);
 
@@ -351,7 +352,6 @@ public class NodeTest {
 		Node[] nodes = null;
 
 		for (KeyPair k : keys) {
-//			key := fmt.Sprintf("0x%X", crypto.FromECDSAPub(k.getPublic());
 			String key = crypto.Utils.keyToHexString(k.getPublic());
 			Peer peer = peers.byPubKey(key);
 			long id = peer.getID();
@@ -832,7 +832,7 @@ public class NodeTest {
 		return null;
 	}
 
-	private void BenchmarkGossip() {
+	private void benchmarkGossip() {
 		int N = 5;
 		for (int n = 0; n < N; n++) {
 			RResult2<KeyPair[], Peers> initPeers = initPeers(4);

@@ -68,10 +68,9 @@ public class NetworkTransport implements Transport {
 	 * @param logger
 	 */
 	public NetworkTransport(StreamLayer stream, int maxPool, Duration timeout, Logger logger) {
-		if (logger == null) {
+		//if (logger == null) {
 			logger = Logger.getLogger(this.getClass());
-			logger.setLevel(Level.DEBUG);
-		}
+		//}
 		this.connPool = new ConcurrentHashMap<String, Stack<netConn>>();
 		this.consumeCh = Channel.one2one(); // make(chan RPC),
 		this.logger = logger;
@@ -80,10 +79,6 @@ public class NetworkTransport implements Transport {
 		this.shutdownLock = new ReentrantLock();
 		this.stream = stream;
 		this.timeout = timeout;
-
-		if (logger == null) {
-			logger = Logger.getLogger(NetworkTransport.class);
-		}
 		this.logger = logger;
 
 		logger.debug("NetworkTransport()");
@@ -356,6 +351,7 @@ public class NetworkTransport implements Transport {
 		logger.field("resp", resp)
 			.field("rpcError", rpcError)
 			.field("err", err).debug("decodeResponse() here");
+		new Exception().printStackTrace();
 
 		if (err != null) {
 			conn.Release();
@@ -402,6 +398,7 @@ public class NetworkTransport implements Transport {
 	 * @param conn
 	 */
 	public void handleConn(Socket conn) {
+		logger.error("handleConn() conn=" + conn);
 		try {
 			BufferedReader r = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 			PrintWriter w = new PrintWriter(conn.getOutputStream(), true);
@@ -409,6 +406,7 @@ public class NetworkTransport implements Transport {
 			jsonEncoder enc = new jsonEncoder(w);
 
 			while (true) {
+				logger.error("handleConn() LOOPING conn=" + conn);
 				error err = handleCommand(r, dec, enc);
 				logger.field("err", err).error("handleConn() handleCommand finished");
 
@@ -502,7 +500,7 @@ public class NetworkTransport implements Transport {
 
 		logger.debug("handleCommand() dispatching the RPC");
 
-		final Alternative alt = new Alternative(new Guard[] {consumeCh.in(), shutdownCh.in()});
+		final Alternative alt = new Alternative(new Guard[] {shutdownCh.in()});
 		final int CONSUME = 0, SHUTDOWN = 1;
 
 		switch (alt.priSelect()) {
@@ -547,15 +545,18 @@ public class NetworkTransport implements Transport {
 		error respErr;
 		switch (alt2.priSelect()) {
 		case RESPONSE:
+			logger.debug("Reading response channel");
 			resp = respCh.in().read();
 			// Send the error first
-			respErr = error.Errorf("");
+			respErr = null;
 			if (resp.Error != null) {
 				respErr = resp.Error;
 			}
-			err = enc.Encode(respErr);
-			if (err != null) {
-				return err;
+			if (respErr != null) {
+				err = enc.Encode(respErr);
+				if (err != null) {
+					return err;
+				}
 			}
 
 			// Send the response

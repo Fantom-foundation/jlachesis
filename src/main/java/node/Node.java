@@ -472,7 +472,6 @@ public class Node extends NodeState {
 		RResult<net.SyncResponse> requestSyncCall = requestSync(peerAddr, knownEvents);
 		net.SyncResponse resp = requestSyncCall.result;
 		error err = requestSyncCall.err;
-		long elapsed = System.nanoTime() - start;
 		logger.field("Duration", time.Since(start)).debug("requestSync(peerAddr, knownEvents)");
 		// FIXIT: should we catch io.EOF error here and how we process it?
 		//	if err == io.EOF {
@@ -644,8 +643,7 @@ public class Node extends NodeState {
 		// Insert Events in Poset and create new Head if necessary
 		long start = System.nanoTime();
 		error err = core.Sync(events);
-		long elapsed = System.nanoTime() - start;
-//		logger.field("Duration", elapsed.Nanoseconds()).debug("core.Sync(events)");
+//		logger.field("Duration", time.Since(start)).debug("core.Sync(events)");
 		if (err != null) {
 			return err;
 		}

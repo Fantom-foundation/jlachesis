@@ -83,8 +83,8 @@ public class Logger {
 	}
 
 	private String getOutput(Object message) {
-		return message +
-				(map == null ? "" : " :: " + mapToString());
+		return "THRE" + Thread.currentThread().getId() + " >> " + message +
+				(map == null ? "" : " ::" + mapToString());
 	}
 
 	private String mapToString() {

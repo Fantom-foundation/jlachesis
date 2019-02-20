@@ -14,6 +14,7 @@ import org.jcsp.lang.Channel;
 import org.jcsp.lang.Guard;
 import org.jcsp.lang.One2OneChannel;
 
+import autils.Logger;
 import common.RResult;
 import common.error;
 
@@ -22,6 +23,7 @@ import common.error;
  * tested in-memory without going over a network.
  */
 public class InmemTransport implements Transport {
+	private static final Logger logger = Logger.getLogger(InmemTransport.class);
 
 	One2OneChannel<RPC> consumerCh; // chan RPC;
 	String localAddr;
@@ -87,6 +89,7 @@ public class InmemTransport implements Transport {
 
 	// Sync implements the Transport interface.
 	public error sync(String target, SyncRequest args, SyncResponse resp)  {
+		logger.debug("sync()");
 		RResult<RPCResponse> makeRPC = makeRPC(target, args, null, timeout);
 		RPCResponse rpcResp = makeRPC.result;
 		error err = makeRPC.err;
@@ -101,6 +104,7 @@ public class InmemTransport implements Transport {
 
 	// Sync implements the Transport interface.
 	public error eagerSync(String target, EagerSyncRequest args, EagerSyncResponse resp) {
+		logger.debug("eagerSync()");
 		RResult<RPCResponse> makeRPC = makeRPC(target, args, null, timeout);
 		RPCResponse rpcResp = makeRPC.result;
 		error err = makeRPC.err;
@@ -116,6 +120,7 @@ public class InmemTransport implements Transport {
 
 	// FastForward implements the Transport interface.
 	public error fastForward(String target, FastForwardRequest args, FastForwardResponse res)  {
+		logger.debug("fastForward()");
 		RResult<RPCResponse> makeRPC = makeRPC(target, args, null, timeout);
 		RPCResponse rpcResp = makeRPC.result;
 		error err = makeRPC.err;
@@ -130,6 +135,8 @@ public class InmemTransport implements Transport {
 	}
 
 	public <T> RResult<RPCResponse> makeRPC(String target, T args, Reader r, Duration timeout ) {
+		logger.debug("makeRPC()");
+
 		inmemMediumSync.readLock().lock();
 		InmemTransport peer= inmemMedium.get(target);
 		boolean ok = peer != null;
@@ -161,6 +168,7 @@ public class InmemTransport implements Transport {
 
 		switch (alt.priSelect ()) {
 			case EVENT:
+				logger.debug("Reading response event");
 				rpcResp =respCh.in().read(); // <-respCh:
 				if (rpcResp.Error != null) {
 					err = rpcResp.Error;

@@ -1585,11 +1585,6 @@ public class Poset {
 		//Defer removing processed Rounds from the PendingRounds Queue
 		int processedIndex = 0;
 
-		// TBD transform this defer statement, and put that at the end
-//		defer public() {
-//			PendingRounds = PendingRounds[processedIndex:];
-//		}()
-
 		logger.field("PendingRounds", PendingRounds.size())
 			.field("LastConsensusRound", LastConsensusRound)
 			.debug("ProcessDecidedRounds() gets PendingRounds");
@@ -1689,7 +1684,6 @@ public class Poset {
 		}
 
 		PendingRounds = PendingRounds.subList(processedIndex, PendingRounds.size());
-
 		return null;
 	}
 
