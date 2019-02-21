@@ -43,7 +43,7 @@ public class Event implements FlagtableContainer {
 		}
 
 		BlockSignature[] blockSignaturePointers = null;
-		if (blockSignaturePointers != null) {
+		if (blockSignatures != null) {
 			blockSignaturePointers = new BlockSignature[blockSignatures.length];
 			for (int i = 0; i< blockSignatures.length; ++i) {
 				blockSignaturePointers[i] = new BlockSignature (blockSignatures[i]);
@@ -103,7 +103,15 @@ public class Event implements FlagtableContainer {
 	}
 
 	public Event(Event ev) {
-		// TODO Auto-generated constructor stub
+		this.message = new EventMessage(ev.message);
+
+		// TODO I added these init
+		this.round = ev.round;
+		this.lamportTimestamp = ev.lamportTimestamp;
+		this.roundReceived = ev.roundReceived;
+		this.creator = ev.creator;
+		this.hash = ev.hash;
+		this.hex = ev.hex;
 	}
 
 	// Round returns round of event.

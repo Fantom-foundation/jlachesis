@@ -394,8 +394,7 @@ public class Poset {
 
 	public RResult<Long> round(String x) {
 		Long c = roundCache.get(x);
-		boolean ok = c != null;
-		if (ok) {
+		if (c != null) {
 			return new RResult<Long>( (long) c, null);
 		}
 		RResult<Long> round2 = round2(x);
@@ -465,8 +464,7 @@ public class Poset {
 		if (ex.otherParent() != null && !ex.otherParent().isEmpty()) {
 			//XXX
 			RootEvent other = root.Others.get(ex.hex());
-			boolean ok = other != null;
-			if (ok && other.Hash.equals(ex.otherParent())) {
+			if (other != null && other.Hash.equals(ex.otherParent())) {
 				opRound = root.NextRound;
 			} else {
 				RResult<Long> roundCall2 = round(ex.otherParent());

@@ -812,196 +812,165 @@ public class PosetTest {
 				exp.ancestor), exp.val, s);
 		}
 	}
-//
-//	@Test
-//	public void TestRound() {
-//		p, index, _ := initRoundPoset();
-//
-//		round0Witnesses := make(map[string]*RoundEvent)
-//		round0Witnesses[index.get(e0)] = &RoundEvent{
-//			Witness: true, Famous: Trilean_UNDEFINED}
-//		round0Witnesses[index.get(e1)] = &RoundEvent{
-//			Witness: true, Famous: Trilean_UNDEFINED}
-//		round0Witnesses[index.get(e2)] = &RoundEvent{
-//			Witness: true, Famous: Trilean_UNDEFINED}
-//		poset.Store.SetRound(0, RoundInfo{Message: RoundInfoMessage{
-//			Events: round0Witnesses}})
-//
-//		round1Witnesses := make(map[string]*RoundEvent)
-//		round1Witnesses[index.get(e21)] = &RoundEvent{
-//			Witness: true, Famous: Trilean_UNDEFINED}
-//		round1Witnesses[index.get(e02)] = &RoundEvent{
-//			Witness: true, Famous: Trilean_UNDEFINED}
-//		round1Witnesses[index.get(f1)] = &RoundEvent{
-//			Witness: true, Famous: Trilean_UNDEFINED}
-//		poset.Store.SetRound(1, RoundInfo{
-//			Message: RoundInfoMessage{Events: round1Witnesses}})
-//
-//		expected := []roundItem{
-//			{e0, 0),
-//			{e1, 0),
-//			{e2, 0),
-//			{s00, 0),
-//			{e10, 0),
-//			{s20, 0),
-//			{e21, 1),
-//			{e02, 1),
-//			{s10, 0),
-//			{f1, 1),
-//			{s11, 2),
-//		}
-//
-//		for _, exp := range expected {
-//			r, err := poset.round(index.get(exp.event))
-//			if err != null {
-//				t.Fatalf("Error computing round(%s)", exp.event, err)
-//			}
-//			if r != exp.round {
-//				t.Fatalf("round(%s) should be %v, not %v", exp.event, exp.round, r)
-//			}
-//		}
-//	}
-//
-//	//@Test
-//	public void TestRoundDiff() {
-//		p, index, _ := initRoundPoset();
-//
-//		round0Witnesses := make(map[string]*RoundEvent)
-//		round0Witnesses[index.get(e0)] = &RoundEvent{
-//			Witness: true, Famous: Trilean_UNDEFINED}
-//		round0Witnesses[index.get(e1)] = &RoundEvent{
-//			Witness: true, Famous: Trilean_UNDEFINED}
-//		round0Witnesses[index.get(e2)] = &RoundEvent{
-//			Witness: true, Famous: Trilean_UNDEFINED}
-//		poset.Store.SetRound(0, RoundInfo{
-//			Message: RoundInfoMessage{Events: round0Witnesses}})
-//
-//		round1Witnesses := make(map[string]*RoundEvent)
-//		round1Witnesses[index.get(e21)] = &RoundEvent{
-//			Witness: true, Famous: Trilean_UNDEFINED}
-//		round1Witnesses[index.get(e02)] = &RoundEvent{
-//			Witness: true, Famous: Trilean_UNDEFINED}
-//		round1Witnesses[index.get(f1)] = &RoundEvent{
-//			Witness: true, Famous: Trilean_UNDEFINED}
-//		poset.Store.SetRound(1,
-//			RoundInfo{Message: RoundInfoMessage{Events: round1Witnesses}})
-//
-//		if d, err := poset.roundDiff(index.get(s11), index.get(e21)); d != 1 {
-//			if err != null {
-//				t.Fatalf("RoundDiff(%s, %s) returned an error: %s", s11, e02, err)
-//			}
-//			t.Fatalf("RoundDiff(%s, %s) should be 1 not %d", s11, e02, d)
-//		}
-//
-//		if d, err := poset.roundDiff(index.get(f1), index.get(s11)); d != -1 {
-//			if err != null {
-//				t.Fatalf("RoundDiff(%s, %s) returned an error: %s", s11, f1, err)
-//			}
-//			t.Fatalf("RoundDiff(%s, %s) should be -1 not %d", s11, f1, d)
-//		}
-//		if d, err := poset.roundDiff(index.get(e02), index.get(e21)); d != 0 {
-//			if err != null {
-//				t.Fatalf("RoundDiff(%s, %s) returned an error: %s", e20, e21, err)
-//			}
-//			t.Fatalf("RoundDiff(%s, %s) should be 0 not %d", e20, e21, d)
-//		}
-//	}
-//
-//  @Test
-//	public void TestDivideRounds() {
-//		p, index, _ := initRoundPoset(t)
-//
-//		if err := poset.DivideRounds(); err != null {
-//			t.Fatal(err)
-//		}
-//
-//		if l := poset.Store.LastRound(); l != 2 {
-//			t.Fatalf("last round should be 2 not %d", l)
-//		}
-//
-//		round0, err := poset.Store.GetRound(0)
-//		if err != null {
-//			t.Fatal(err)
-//		}
-//		if l := len(round0.Witnesses()); l != 3 {
-//			t.Fatalf("round 0 should have 3 witnesses, not %d", l)
-//		}
-//		if !contains(round0.Witnesses(), index.get(e0)) {
-//			t.Fatalf("round 0 witnesses should contain %s", e0)
-//		}
-//		if !contains(round0.Witnesses(), index.get(e1)) {
-//			t.Fatalf("round 0 witnesses should contain %s", e1)
-//		}
-//		if !contains(round0.Witnesses(), index.get(e2)) {
-//			t.Fatalf("round 0 witnesses should contain %s", e2)
-//		}
-//
-//		round1, err := poset.Store.GetRound(1)
-//		assertNull("No error", err);
-//		if l := len(round1.Witnesses()); l != 3 {
-//			t.Fatalf("round 1 should have 1 witness, not %d", l)
-//		}
-//		if !contains(round1.Witnesses(), index.get(f1)) {
-//			t.Fatalf("round 1 witnesses should contain %s", f1)
-//		}
-//
-//		round2, err := poset.Store.GetRound(2)
-//		assertNull("No error", err);
-//
-//		if l := len(round2.Witnesses()); l != 1 {
-//			t.Fatalf("round 1 should have 1 witness, not %d", l)
-//		}
-//
-//		expectedPendingRounds := []pendingRound{
-//			{
-//				Index:   0,
-//				Decided: false,
-//			),
-//			{
-//				Index:   1,
-//				Decided: false,
-//			), {
-//				Index:   2,
-//				Decided: false,
-//			),
-//		}
-//		for i, pd := range poset.PendingRounds {
-//			if !reflect.DeepEqual(*pd, expectedPendingRounds[i]) {
-//				t.Fatalf("pendingRounds[%d] should be %v, not %v",
-//					i, expectedPendingRounds[i], *pd)
-//			}
-//		}
-//
-//
-//		expectedTimestamps := map[string]tr{
-//			e0, new tr(0, 0),
-//			e1, new tr(0, 0),
-//			e2, new tr(0, 0),
-//			s00, new tr(1, 0),
-//			e10, new tr(1, 0),
-//			s20, new tr(1, 0),
-//			e21, new tr(2, 1),
-//			e02, new tr(3, 1),
-//			s10, new tr(2, 0),
-//			f1, new tr(4, 1),
-//			s11, new tr(5, 2),
-//		}
-//
-//		for e, et := range expectedTimestamps {
-//			ev, err := poset.Store.GetEvent(index.get(e))
-//			if err != null {
-//				t.Fatal(err)
-//			}
-//			if r := ev.round; r == null || *r != et.r {
-//				t.Fatalf("%s round should be %d, not %d", e, et.r, *r)
-//			}
-//			if ts := ev.lamportTimestamp; ts == null || *ts != et.t {
-//				t.Fatalf("%s lamportTimestamp should be %d, not %d", e, et.t, *ts)
-//			}
-//		}
-//
-//	}
-//
+
+	//@Test
+	public void testRound() {
+		initRoundPoset();
+
+		HashMap<String,RoundEvent> round0Witnesses = new HashMap<String,RoundEvent>();
+		round0Witnesses.put(index.get(e0), new RoundEvent(true, Trilean.UNDEFINED));
+		round0Witnesses.put(index.get(e1), new RoundEvent(true, Trilean.UNDEFINED));
+		round0Witnesses.put(index.get(e2), new RoundEvent(true, Trilean.UNDEFINED));
+
+		poset.Store.setRound(0, new RoundInfo(new RoundInfoMessage (round0Witnesses)));
+
+		HashMap<String,RoundEvent> round1Witnesses = new HashMap<String,RoundEvent>();
+		round1Witnesses.put(index.get(e21), new RoundEvent(true, Trilean.UNDEFINED));
+		round1Witnesses.put(index.get(e02), new RoundEvent(true, Trilean.UNDEFINED));
+		round1Witnesses.put(index.get(f1), new RoundEvent(true, Trilean.UNDEFINED));
+		poset.Store.setRound(1, new RoundInfo(new RoundInfoMessage(round1Witnesses)));
+
+		roundItem[] expected = new roundItem[]{
+			new roundItem(e0, 0),
+			new roundItem(e1, 0),
+			new roundItem(e2, 0),
+			new roundItem(s00, 0),
+			new roundItem(e10, 0),
+			new roundItem(s20, 0),
+			new roundItem(e21, 1),
+			new roundItem(e02, 1),
+			new roundItem(s10, 0),
+			new roundItem(f1, 1),
+			new roundItem(s11, 2),
+		};
+
+		for (roundItem exp : expected) {
+			RResult<Long> roundCall = poset.round(index.get(exp.event));
+			long r = roundCall.result;
+			error err = roundCall.err;
+			assertNull(String.format("Error computing round(%s)", exp.event), err);
+			assertEquals(String.format("round(%s) should match", exp.event), exp.round, r);
+		}
+	}
+
+	//@Test
+	public void testRoundDiff() {
+		initRoundPoset();
+
+		HashMap<String,RoundEvent> round0Witnesses = new HashMap<String,RoundEvent>();
+		round0Witnesses.put(index.get(e0), new RoundEvent(true, Trilean.UNDEFINED));
+		round0Witnesses.put(index.get(e1), new RoundEvent(true, Trilean.UNDEFINED));
+		round0Witnesses.put(index.get(e2), new RoundEvent(true, Trilean.UNDEFINED));
+		poset.Store.setRound(0, new RoundInfo(new RoundInfoMessage(round0Witnesses)));
+
+		HashMap<String,RoundEvent> round1Witnesses = new HashMap<String,RoundEvent>();
+		round1Witnesses.put(index.get(e21), new RoundEvent(true, Trilean.UNDEFINED));
+		round1Witnesses.put(index.get(e02), new RoundEvent(true, Trilean.UNDEFINED));
+		round1Witnesses.put(index.get(f1), new RoundEvent(true, Trilean.UNDEFINED));
+		poset.Store.setRound(1, new RoundInfo(new RoundInfoMessage(round1Witnesses)));
+
+		RResult<Long> roundDiff = poset.roundDiff(index.get(s11), index.get(e21));
+		long d = roundDiff.result;
+		error err = roundDiff.err;
+		assertNull(String.format("No error in RoundDiff(%s, %s)", s11, e02), err);
+		assertEquals(String.format("RoundDiff(%s, %s) should be 1", s11, e02), 1, d);
+
+		roundDiff = poset.roundDiff(index.get(f1), index.get(s11));
+		d = roundDiff.result;
+		err = roundDiff.err;
+		assertNull(String.format("No error RoundDiff(%s, %s)", s11, f1), err);
+		assertEquals(String.format("RoundDiff(%s, %s) should be -1", s11, f1), -1, d);
+
+		roundDiff = poset.roundDiff(index.get(e02), index.get(e21));
+		d = roundDiff.result;
+		err = roundDiff.err;
+		assertNull(String.format("No error RoundDiff(%s, %s)", e20, e21), err);
+		assertEquals(String.format("RoundDiff(%s, %s) should be 0", e20, e21), 0, d);
+	}
+
+	//@Test
+	public void testDivideRounds() {
+		initRoundPoset();
+		error err = poset.DivideRounds();
+		assertNull("No error", err);
+
+		long l = poset.Store.lastRound();
+		assertEquals("last round should be 2", 2, l);
+
+		RResult<RoundInfo> roundCall = poset.Store.getRound(0);
+		RoundInfo round0 = roundCall.result;
+		err = roundCall.err;
+		assertNull("No error", err);
+		l = round0.Witnesses().length;
+		assertEquals("round 0 should have 3 witnesses", 3, l);
+
+		if (!contains(round0.Witnesses(), index.get(e0))) {
+			fail(String.format("round 0 witnesses should contain %s", e0));
+		}
+		if (!contains(round0.Witnesses(), index.get(e1))) {
+			fail(String.format("round 0 witnesses should contain %s", e1));
+		}
+		if (!contains(round0.Witnesses(), index.get(e2))) {
+			fail(String.format("round 0 witnesses should contain %s", e2));
+		}
+
+		roundCall = poset.Store.getRound(1);
+		RoundInfo round1 = roundCall.result;
+		err = roundCall.err;
+		assertNull("No error", err);
+		l = round1.Witnesses().length;
+		assertEquals("round 1 should have 3 witness", 3, l);
+
+		if (!contains(round1.Witnesses(), index.get(f1))) {
+			fail(String.format("round 1 witnesses should contain %s", f1));
+		}
+
+		roundCall= poset.Store.getRound(2);
+		RoundInfo round2 = roundCall.result;
+		err = roundCall.err;
+		assertNull("No error", err);
+
+		l = round2.Witnesses().length;
+		assertEquals(String.format("round 1 should have 1 witness", 1), l);
+
+		pendingRound[] expectedPendingRounds = new pendingRound[]{
+			new pendingRound(0, false),
+			new pendingRound(1, false),
+			new pendingRound(2, false)
+		};
+
+		for (int i = 0; i < poset.PendingRounds.size(); ++i) {
+			pendingRound pd = poset.PendingRounds.get(i);
+			assertEquals(String.format("pendingRounds[%d] should match",i),
+					expectedPendingRounds[i], pd);
+		}
+
+		HashMap<String,tr> expectedTimestamps = new HashMap<String,tr>();
+		HashMap<String,tr> m = expectedTimestamps;
+		m.put(e0, new tr(0, 0));
+		m.put(e1, new tr(0, 0));
+		m.put(e2, new tr(0, 0));
+		m.put(s00, new tr(1, 0));
+		m.put(e10, new tr(1, 0));
+		m.put(s20, new tr(1, 0));
+		m.put(e21, new tr(2, 1));
+		m.put(e02, new tr(3, 1));
+		m.put(s10, new tr(2, 0));
+		m.put(f1, new tr(4, 1));
+		m.put(s11, new tr(5, 2));
+
+		expectedTimestamps.forEach((e, et) -> {
+			RResult<Event> eventCall = poset.Store.getEvent(index.get(e));
+			Event ev = eventCall.result;
+			error err1 = eventCall.err;
+			assertNull("No error", err1);
+			long r = ev.round;
+			assertEquals(String.format("%s round should match", e), et.r, r);
+			long ts = ev.lamportTimestamp;
+			assertEquals(String.format("%s lamportTimestamp should be %d, not %d", e), et.t, ts);
+		});
+	}
+
 //	@Test
 //	public void TestCreateRoot() {
 //		p, index, _ := initRoundPoset(t)
@@ -1358,93 +1327,92 @@ public class PosetTest {
 //		   [e0][e1][e2]
 //			0   1    2
 //	*/
-//	public void initConsensusPoset(boolean db) {
-//		play[] plays = new play[]{
-//			new play(1, 1, e1, e0, e10, null, null, new String[]{e0, e1}),
-//			new play(2, 1, e2, e10, f2, new byte[][]{[]byte(f2)}, null, new String[]{e0, e1, e2}),
-//			new play(2, 2, f2, "", f2b, null, null, new String[]{f2}),
-//			new play(0, 1, e0, f2b, f0, null, null, new String[]{e0, f2}),
-//			new play(1, 2, e10, f0, f1, null, null, new String[]{f2, f0, e1}}),
-//			new play(1, 3, f1, "", g1, new byte[][]{[]byte(g1)}, null, new String[]{f2, f0, f1}),
-//			new play(0, 2, f0, g1, g0, null, null, new String[]{g1, f0}),
-//			new play(2, 3, f2b, g1, g2, null, null, new String[]{g1, f2}),
-//			new play(1, 4, g1, g0, g10, null, null, new String[]{g1, f0}),
-//			new play(0, 3, g0, f2, g0x, null, null, new String[]{g0, g1, f2b}),
-//			new play(2, 4, g2, g10, h2, null, null, new String[]{g1, g0, g2}),
-//			new play(0, 4, g0x, h2, h0, null, null, new String[]{h2, g0, g1}),
-//			new play(0, 5, h0, "", h0b, new byte[][]{[]byte(h0b)), null, new String[]{h0, h2}),
-//			new play(1, 5, g10, h0b, h10, null, null, new String[]{h0, h2, g1}),
-//			new play(0, 6, h0b, h10, i0, null, null, new String[]{h10, h0, h2}),
-//			new play(2, 5, h2, h10, i2, null, null, new String[]{h10, h0, h2}),
-//			new play(1, 6, h10, i0, i1, new byte[][]{[]byte(i1)), null, new String[]{i0, h10, h0, h2}),
-//			new play(2, 6, i2, i1, j2, null, null, new String[]{i1, i0, i2}),
-//			new play(0, 7, i0, j2, j0, new byte[][]{[]byte(j0)), null, new String[]{i0, j2}),
-//			new play(1, 7, i1, j0, j1, null, null, new String[]{i1, i0, j0, j2}),
-//			new play(0, 8, j0, j1, k0, null, null, new String[]{j1, j0, j2}),
-//			new play(2, 7, j2, j1, k2, null, null, new String[]{j1, j0, j2}),
-//			new play(1, 8, j1, k0, k10, null, null, new String[]{j1, j0, j2, k0}),
-//			new play(2, 8, k2, k10, l2, null, null, new String[]{k0, k10, k2}),
-//			new play(0, 9, k0, l2, l0, null, null, new String[]{k0, l2}),
-//			new play(1, 9, k10, l0, l1, null, null, new String[]{l0, l2, k10, k0}),
-//			new play(0, 10, l0, l1, m0, null, null, new String[]{l1, l0, l2}),
-//			new play(2, 9, l2, l1, m2, null, null, new String[]{l1, l0, l2}),
-//		};
-//
-//		initPosetFull(plays, db, n, testLogger());
-//	}
-//
-//	@Test
-//	public void TestDivideRoundsBis() {
-//		initConsensusPoset(false);
-//
-//		error err = poset.DivideRounds();
-//		assertNull("No error", err);
-//
-//		Map<String,tr> m = new HashMap<String,tr>();
-//		m.put(e0,  new tr(0, 0)),
-//		m.put(e1, new tr(0, 0)),
-//		m.put(e2, new tr(0, 0)),
-//		m.put(e10, new tr(1, 0)),
-//		m.put(f2, new tr(2, 1)),
-//		m.put(f2b, new tr(3, 1)),
-//		m.put(f0, new tr(4, 1)),
-//		m.put(f1, new tr(5, 1)),
-//		m.put(g1, new tr(6, 2)),
-//		m.put(g0, new tr(7, 2)),
-//		m.put(g2, new tr(7, 2)),
-//		m.put(g10, new tr(8, 2)),
-//		m.put(g0x, new tr(8, 2)),
-//		m.put(h2, new tr(9, 3)),
-//		m.put(h0, new tr(10, 3)),
-//		m.put(h0b, new tr(11, 3)),
-//		m.put(h10, new tr(12, 3)),
-//		m.put(i0, new tr(13, 4)),
-//		m.put(i2, new tr(13, 4)),
-//		m.put(i1, new tr(14, 4)),
-//		m.put(j2, new tr(15, 5)),
-//		m.put(j0, new tr(16, 5)),
-//		m.put(j1, new tr(17, 5)),
-//		m.put(k0, new tr(18, 6)),
-//		m.put(k2, new tr(18, 6)),
-//		m.put(k10, new tr(19, 6)),
-//		m.put(l2, new tr(20, 7)),
-//		m.put(l0, new tr(21, 7)),
-//		m.put(l1, new tr(22, 7)),
-//		m.put(m0, new tr(23, 8)),
-//		m.put(m2, new tr(23, 8))
-//		Map<String,tr> expectedTimestamps = m;
-//
-//		error err;
-//		expectedTimestamps.forEach( (e, et) -> {
-//			RetResult<Event> getEvent = poset.Store.GetEvent(index.get(e));
-//			Event ev = getEvent.result;
-//			err = getEvent.err;
-//			assertNull("No error", err);
-//			assertEquals(String.format("%s round should match", e), et.r, ev.round);
-//			assertEquals(String.format("%s lamportTimestamp should match", e), et.t, ev.lamportTimestamp);
-//		}
-//	}
-//
+	public void initConsensusPoset(boolean db) {
+		play[] plays = new play[]{
+			new play(1, 1, e1, e0, e10, null, null, new String[]{e0, e1}),
+			new play(2, 1, e2, e10, f2, new byte[][]{f2.getBytes()}, null, new String[]{e0, e1, e2}),
+			new play(2, 2, f2, "", f2b, null, null, new String[]{f2}),
+			new play(0, 1, e0, f2b, f0, null, null, new String[]{e0, f2}),
+			new play(1, 2, e10, f0, f1, null, null, new String[]{f2, f0, e1}),
+			new play(1, 3, f1, "", g1, new byte[][]{g1.getBytes()}, null, new String[]{f2, f0, f1}),
+			new play(0, 2, f0, g1, g0, null, null, new String[]{g1, f0}),
+			new play(2, 3, f2b, g1, g2, null, null, new String[]{g1, f2}),
+			new play(1, 4, g1, g0, g10, null, null, new String[]{g1, f0}),
+			new play(0, 3, g0, f2, g0x, null, null, new String[]{g0, g1, f2b}),
+			new play(2, 4, g2, g10, h2, null, null, new String[]{g1, g0, g2}),
+			new play(0, 4, g0x, h2, h0, null, null, new String[]{h2, g0, g1}),
+			new play(0, 5, h0, "", h0b, new byte[][]{h0b.getBytes()}, null, new String[]{h0, h2}),
+			new play(1, 5, g10, h0b, h10, null, null, new String[]{h0, h2, g1}),
+			new play(0, 6, h0b, h10, i0, null, null, new String[]{h10, h0, h2}),
+			new play(2, 5, h2, h10, i2, null, null, new String[]{h10, h0, h2}),
+			new play(1, 6, h10, i0, i1, new byte[][]{i1.getBytes()}, null, new String[]{i0, h10, h0, h2}),
+			new play(2, 6, i2, i1, j2, null, null, new String[]{i1, i0, i2}),
+			new play(0, 7, i0, j2, j0, new byte[][]{j0.getBytes()}, null, new String[]{i0, j2}),
+			new play(1, 7, i1, j0, j1, null, null, new String[]{i1, i0, j0, j2}),
+			new play(0, 8, j0, j1, k0, null, null, new String[]{j1, j0, j2}),
+			new play(2, 7, j2, j1, k2, null, null, new String[]{j1, j0, j2}),
+			new play(1, 8, j1, k0, k10, null, null, new String[]{j1, j0, j2, k0}),
+			new play(2, 8, k2, k10, l2, null, null, new String[]{k0, k10, k2}),
+			new play(0, 9, k0, l2, l0, null, null, new String[]{k0, l2}),
+			new play(1, 9, k10, l0, l1, null, null, new String[]{l0, l2, k10, k0}),
+			new play(0, 10, l0, l1, m0, null, null, new String[]{l1, l0, l2}),
+			new play(2, 9, l2, l1, m2, null, null, new String[]{l1, l0, l2}),
+		};
+
+		initPosetFull(plays, db, n);
+	}
+
+	//@Test
+	public void testDivideRoundsBis() {
+		initConsensusPoset(false);
+
+		error err = poset.DivideRounds();
+		assertNull("No error", err);
+
+		Map<String,tr> m = new HashMap<String,tr>();
+		m.put(e0,  new tr(0, 0));
+		m.put(e1, new tr(0, 0));
+		m.put(e2, new tr(0, 0));
+		m.put(e10, new tr(1, 0));
+		m.put(f2, new tr(2, 1));
+		m.put(f2b, new tr(3, 1));
+		m.put(f0, new tr(4, 1));
+		m.put(f1, new tr(5, 1));
+		m.put(g1, new tr(6, 2));
+		m.put(g0, new tr(7, 2));
+		m.put(g2, new tr(7, 2));
+		m.put(g10, new tr(8, 2));
+		m.put(g0x, new tr(8, 2));
+		m.put(h2, new tr(9, 3));
+		m.put(h0, new tr(10, 3));
+		m.put(h0b, new tr(11, 3));
+		m.put(h10, new tr(12, 3));
+		m.put(i0, new tr(13, 4));
+		m.put(i2, new tr(13, 4));
+		m.put(i1, new tr(14, 4));
+		m.put(j2, new tr(15, 5));
+		m.put(j0, new tr(16, 5));
+		m.put(j1, new tr(17, 5));
+		m.put(k0, new tr(18, 6));
+		m.put(k2, new tr(18, 6));
+		m.put(k10, new tr(19, 6));
+		m.put(l2, new tr(20, 7));
+		m.put(l0, new tr(21, 7));
+		m.put(l1, new tr(22, 7));
+		m.put(m0, new tr(23, 8));
+		m.put(m2, new tr(23, 8));
+		Map<String,tr> expectedTimestamps = m;
+
+		expectedTimestamps.forEach( (e, et) -> {
+			RResult<Event> getEvent = poset.Store.getEvent(index.get(e));
+			Event ev = getEvent.result;
+			error err1 = getEvent.err;
+			assertNull("No error", err1);
+			assertEquals(String.format("%s round should match", e), et.r, ev.round);
+			assertEquals(String.format("%s lamportTimestamp should match", e), et.t, ev.lamportTimestamp);
+		});
+	}
+
 //	@Test
 //	public void TestDecideFame() {
 //		initConsensusPoset(false);
@@ -1555,6 +1523,7 @@ public class PosetTest {
 //		}
 //	}
 //
+//	@Test
 //	public TestDecideRoundReceived() {
 //		p, index := initConsensusPoset(false, t)
 //
