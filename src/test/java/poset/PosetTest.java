@@ -30,6 +30,8 @@ import poset.proto.Trilean;
  */
 public class PosetTest {
 
+	private static Logger logger = Logger.getLogger(PosetTest.class);
+
 	private static String
 		e0  = "e0",
 		e1  = "e1",
@@ -118,10 +120,6 @@ public class PosetTest {
 	int	n         = 3;
 	String	badgerDir = currentDirectory.getAbsolutePath() + "test_data/badger";
 
-	private String getTestDir() {
-		return currentDirectory.getAbsolutePath() + "test_data";
-	}
-
 	class TestNode {
 		int ID;
 		byte[] Pub;
@@ -132,21 +130,17 @@ public class PosetTest {
 		public TestNode(KeyPair key, int id)  {
 			Pub = crypto.Utils.FromECDSAPub(key.getPublic());
 			ID = common.Hash32.Hash32(Pub);
-			Key =   key;
-//			PubHex = fmt.Sprintf("0x%X", Pub);
+			Key = key;
 			PubHex = crypto.Utils.toHexString(Pub);
 			Events = new Event[] {};
 		}
 
-		public void signAndAddEvent(Event event, String name,
-				HashMap<String,String> index , Event[] orderedEvents) {
-				event.sign(Key.getPrivate());
-				Events = Appender.append(Events, event);
-				index.put(name, event.hex());
-
-				// TODO orderedEvents cant be appended
-				orderedEvents = Appender.append(orderedEvents, event);
-			}
+		public void signAndAddEvent(Event event, String name, HashMap<String,String> index) {
+			event.sign(Key.getPrivate());
+			Events = Appender.append(Events, event);
+			index.put(name, event.hex());
+			orderedEvents = Appender.append(orderedEvents, event);
+		}
 	}
 
 
@@ -218,10 +212,6 @@ public class PosetTest {
 		}
 	}
 
-	public Logger testLogger() {
-		return Logger.getLogger(getClass()).field("id", "test");
-	}
-
 	/* Initialisation publictions */
 	TestNode[] nodes;
 	HashMap<String,String> index;
@@ -252,7 +242,7 @@ public class PosetTest {
 		}
 	}
 
-	public void playEvents(play[] plays, TestNode[] nodes, HashMap<String,String> index, Event[] orderedEvents) {
+	public void playEvents(play[] plays, TestNode[] nodes, HashMap<String,String> index) {
 		for (play p : plays) {
 			HashMap<String, Long> ft = new HashMap<String,Long>();
 			for (String root : p.knownRoots) {
@@ -264,7 +254,7 @@ public class PosetTest {
 				new String[]{index.get(p.selfParent), index.get(p.otherParent)},
 				nodes[p.to].Pub, p.index, ft);
 
-			nodes[p.to].signAndAddEvent(e, p.name, index, orderedEvents);
+			nodes[p.to].signAndAddEvent(e, p.name, index);
 		}
 	}
 
@@ -292,7 +282,7 @@ public class PosetTest {
 		return poset;
 	}
 
-	public void  initPosetFull(play[] plays, boolean db, int n, Logger logger) {
+	public void  initPosetFull(play[] plays, boolean db, int n) {
 		initPosetNodes(n);
 
 		// Needed to have sorted nodes based on participants hash32
@@ -305,11 +295,10 @@ public class PosetTest {
 			map.put(rootSelfParent(peer.getID()), 1L);
 			Event event = new Event(null, null, null, new String[]{rootSelfParent(peer.getID()), ""},
 				nodes[i].Pub, 0, map);
-			nodes[i].signAndAddEvent(event, String.format("e%d", i),
-				index, orderedEvents);
+			nodes[i].signAndAddEvent(event, String.format("e%d", i), index);
 		}
 
-		playEvents(plays, nodes, index, orderedEvents);
+		playEvents(plays, nodes, index);
 
 		poset = createPoset(db, orderedEvents, participants, logger);
 
@@ -353,7 +342,7 @@ public class PosetTest {
 			new play(1, 2, s10, e20, e12, null, null, new String[]{e0, e1, e2}),
 		};
 
-		initPosetFull(plays, false, n, testLogger());
+		initPosetFull(plays, false, n);
 
 		for (int i = 0; i< orderedEvents.length; ++i) {
 			Event ev = orderedEvents[i];
@@ -362,8 +351,8 @@ public class PosetTest {
 		}
 	}
 
-//	@Test
-	public void TestAncestor() {
+	@Test
+	public void testAncestor() {
 		initPoset();
 
 		ancestryItem[] expected = new  ancestryItem[]{
@@ -416,8 +405,8 @@ public class PosetTest {
 		}
 	}
 
-//	@Test
-	public void TestSelfAncestor() {
+	@Test
+	public void testSelfAncestor() {
 		initPoset();
 
 		ancestryItem[] expected = new ancestryItem[]{
@@ -454,8 +443,8 @@ public class PosetTest {
 		}
 	}
 
-//	@Test
-	public void TestSee() {
+	@Test
+	public void testSee() {
 		initPoset();
 
 		ancestryItem[] expected = new ancestryItem[]{
@@ -480,8 +469,8 @@ public class PosetTest {
 		}
 	}
 
-//	@Test
-	public void TestLamportTimestamp() {
+	@Test
+	public void testLamportTimestamp() {
 		initPoset();
 
 		HashMap<String,Long> expectedTimestamps = new HashMap<String,Long>();
@@ -524,7 +513,7 @@ public class PosetTest {
 	*/
 
 	@Test
-	public void TestFork() {
+	public void testFork() {
 		this.index = new HashMap<String,String>();
 		this.nodes = null;
 		this.participants = new Peers();
@@ -537,7 +526,7 @@ public class PosetTest {
 		}
 
 		InmemStore store = new InmemStore(participants, cacheSize);
-		poset = new Poset(participants, store, null, testLogger());
+		poset = new Poset(participants, store, null, logger);
 
 		for (int i =0; i< nodes.length; ++i) {
 			TestNode node = nodes[i];
@@ -603,11 +592,11 @@ public class PosetTest {
 			new play(1, 4, f1, "", s11, new byte[][]{"abc".getBytes()}, null,
 					new String[]{e21, e02, f1}),
 		};
-		initPosetFull(plays, false, n, testLogger());
+		initPosetFull(plays, false, n);
 	}
 
-	//@Test
-	public void TestInsertEvent() {
+	@Test
+	public void testInsertEvent() {
 		initRoundPoset();
 
 		// "Check Event Coordinates"
@@ -685,7 +674,7 @@ public class PosetTest {
 		for (int i = 0; i < expectedUndeterminedEvents.length; ++i) {
 			String eue = expectedUndeterminedEvents[i];
 			String ue = poset.UndeterminedEvents.get(i);
-			assertEquals(String.format("UndeterminedEvents[%d] should be %s, not %s",
+			assertEquals(String.format("UndeterminedEvents[%d] should match",
 				i), eue, ue);
 		}
 
@@ -703,14 +692,14 @@ public class PosetTest {
 		Event ev = getEvent.result;
 		error err = getEvent.err;
 		assertNull("No error", err);
-		return ev.selfParent() == selfAncestor && ev.otherParent() == ancestor;
+		return ev.selfParent().equals(selfAncestor) && ev.otherParent().equals(ancestor);
 	}
 
 
-//	@Test
-	public void TestReadWireInfo() {
+	//@Test
+	public void testReadWireInfo() {
 		initRoundPoset();
-
+		System.out.println(index);
 		index.forEach((k, evh) -> {
 			if (k.charAt(0) == 'r') {
 				return;
@@ -732,7 +721,7 @@ public class PosetTest {
 						evFromWire.message.Body.BlockSignatures);
 
 			assertEquals(String.format("Error converting %s.Body from light wire", k),
-				ev.message.Body,evFromWire.message.Body);
+				ev.message.Body, evFromWire.message.Body);
 			assertEquals(String.format("Error converting %s.Signature from light wire", k), ev.message.Signature,
 				evFromWire.message.Signature);
 			RResult<Boolean> verify = evFromWire.verify();
@@ -743,8 +732,8 @@ public class PosetTest {
 		});
 	}
 
-//	@Test
-	public void TestStronglySee() {
+	@Test
+	public void testStronglySee() {
 		initRoundPoset();
 
 		ancestryItem[] expected = new ancestryItem[]{
@@ -788,8 +777,8 @@ public class PosetTest {
 		}
 	}
 
-//	@Test
-	public void TestWitness() {
+	//@Test
+	public void testWitness() {
 		initRoundPoset();
 
 		Map<String,RoundEvent> round0Witnesses = new HashMap<String,RoundEvent>();
@@ -819,7 +808,7 @@ public class PosetTest {
 			error err = witnessCall.err;
 			assertNull(String.format("No Error computing witness(%s)",
 					exp.ancestor), err);
-			assertEquals(String.format("witness(%s) should be %v, not %v",
+			assertEquals(String.format("witness(%s) should match",
 				exp.ancestor), exp.val, s);
 		}
 	}
@@ -3283,7 +3272,7 @@ public class PosetTest {
 	}
 
 	public void compareRootEvents(RootEvent x, RootEvent exp, Map<String,String> index) {
-		if (x.Hash != exp.Hash || x.Index != exp.Index ||
+		if (!x.Hash.equals(exp.Hash) || x.Index != exp.Index ||
 			x.CreatorID != exp.CreatorID || x.Round != exp.Round ||
 			x.LamportTimestamp != exp.LamportTimestamp) {
 			fail(String.format("expected root event %s: %v, got %s: %v",
@@ -3319,7 +3308,6 @@ public class PosetTest {
 			!x.FlagTable.equals(exp.FlagTable) ||
 			!x.Signature.equals(exp.Signature)) {
 			byte[] hash = exp.Body.Hash().result;
-//			hex := fmt.Sprintf("0x%X", hash);
 			String hex = crypto.Utils.toHexString(hash);
 			assertEquals(String.format("message to event %s should match", getName(index, hex)), exp, x);
 		}

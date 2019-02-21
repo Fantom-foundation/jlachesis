@@ -171,7 +171,7 @@ public class Peers {
 		for (int i = 0; i < peers.length; ++i) {
 			Peer p = peers[i];
 
-			if (p.netAddr != peer && p.pubKeyHex != peer) {
+			if (!p.netAddr.equals(peer) && !p.pubKeyHex.equals(peer)) {
 				otherPeers.add(p);
 			} else {
 				index = i;

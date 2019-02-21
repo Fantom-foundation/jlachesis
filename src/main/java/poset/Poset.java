@@ -2,7 +2,6 @@ package poset;
 
 import java.security.PrivateKey;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +12,6 @@ import java.util.stream.IntStream;
 import org.apache.log4j.Level;
 import org.jcsp.lang.One2OneChannel;
 
-import autils.Appender;
 import autils.Logger;
 import common.LRUCache;
 import common.RResult;
@@ -143,7 +141,7 @@ public class Poset {
 			return new RResult<Boolean>(c, null);
 		}
 
-		if (x.isEmpty() || y.isEmpty()) {
+		if (x == null || x.isEmpty() || y == null || y.isEmpty()) {
 			return new RResult<Boolean>(false, null);
 		}
 
@@ -158,6 +156,8 @@ public class Poset {
 	}
 
 	public RResult<Boolean> ancestor2(String x, String y) {
+		logger.field("x", x).field("y", y).debug("ancestor2(x,y) starts");
+
 		if (x.equals(y)) {
 			return new RResult<Boolean>(true, null);
 		}
@@ -165,6 +165,7 @@ public class Poset {
 		RResult<Event> exr = Store.getEvent(x);
 		Event ex = exr.result;
 		error err = exr.err;
+		logger.field("ex", ex).field("err", err).debug("ancestor2()");
 		if (err != null) {
 			RResult<Map<String,Root>> rbySelf = Store.rootsBySelfParent();
 			Map<String, Root> roots = rbySelf.result;
@@ -173,9 +174,11 @@ public class Poset {
 				return new RResult<Boolean>(false, err2);
 			}
 			for (Root root: roots.values()) {
+				logger.field("root", root).debug("ancestor2()");
+
 				RootEvent other = root.Others.get(y);
 				if ( other != null) {
-					return new RResult<Boolean>(other.Hash == x, null);
+					return new RResult<Boolean>(other.Hash.equals(x), null);
 				}
 			}
 			return new RResult<Boolean>(false, null);
@@ -235,7 +238,7 @@ public class Poset {
 		if (c != null) {
 			return new RResult<Boolean>(c, null);
 		}
-		if (x.length() == 0 || y.length() == 0) {
+		if (x == null || x.length() == 0 || y == null || y.length() == 0) {
 			return new  RResult<Boolean>(false, null);
 		}
 		RResult<Boolean> selfAncestor2 = selfAncestor2(x, y);
@@ -249,7 +252,7 @@ public class Poset {
 	}
 
 	public RResult<Boolean> selfAncestor2(String x, String y) {
-		if (x == y) {
+		if (x.equals(y)) {
 			return new RResult<Boolean>(true, null);
 		}
 		RResult<Event> getEventX = Store.getEvent(x);
@@ -308,7 +311,7 @@ public class Poset {
 
 	//true if x strongly sees y
 	public RResult<Boolean> stronglySee(String x, String y) {
-		if (x.isEmpty() || y.isEmpty()) {
+		if (x == null || x.isEmpty() || y == null || y.isEmpty()) {
 			return new RResult<Boolean>(false, null);
 		}
 
@@ -342,7 +345,7 @@ public class Poset {
 
 	// participants in x's ancestry that see y
 	public error MapSentinels(String x, String y, Map<String,Boolean> sentinels) {
-		if (x.isEmpty()) {
+		if (x == null || x.isEmpty()) {
 			return null;
 		}
 
@@ -377,7 +380,7 @@ public class Poset {
 
 		sentinels.put(ex.creator(), true);
 
-		if (x == y) {
+		if (x.equals(y)) {
 			return null;
 		}
 
@@ -459,7 +462,7 @@ public class Poset {
 		long opRound;
 
 
-		if (!ex.otherParent().isEmpty()) {
+		if (ex.otherParent() != null && !ex.otherParent().isEmpty()) {
 			//XXX
 			RootEvent other = root.Others.get(ex.hex());
 			boolean ok = other != null;
@@ -690,7 +693,7 @@ public class Poset {
 			plt = t;
 		}
 
-		if (ex.otherParent() != "") {
+		if (ex.otherParent() != null && !ex.otherParent().isEmpty()) {
 			long opLT = Long.MIN_VALUE;
 			err = Store.getEvent(ex.otherParent()).err;
 			if (err == null) {
@@ -786,7 +789,7 @@ public class Poset {
 	//Check if we know the OtherParent
 	public error checkOtherParent(Event event) {
 		String otherParent = event.otherParent();
-		if (!otherParent.isEmpty()) {
+		if (otherParent != null && !otherParent.isEmpty()) {
 			//Check if we have it
 
 			RResult<Event> getEvent = Store.getEvent(otherParent);
@@ -971,7 +974,7 @@ public class Poset {
 			selfParentIndex = selfParent.index();
 		}
 
-		if (!event.otherParent().isEmpty()) {
+		if (event.otherParent() != null && !event.otherParent().isEmpty()) {
 			//Check Root then regular Events
 			RResult<Root> getRoot = Store.getRoot(event.creator());
 			Root root = getRoot.result;
@@ -1797,11 +1800,11 @@ public class Poset {
 			if (!otherParent.isEmpty()) {
 				Boolean opt = treated.get(otherParent);
 				if (opt == null || !opt) {
-					if (ev.selfParent() != roots.get(ev.creator()).SelfParent.Hash) {
+					if (!ev.selfParent().equals(roots.get(ev.creator()).SelfParent.Hash)) {
 						RResult<RootEvent> createOtherParentRootEvent = createOtherParentRootEvent(ev);
 						RootEvent other = createOtherParentRootEvent.result;
 						err = createOtherParentRootEvent.err;
-						if ( err != null) {
+						if (err != null) {
 							new RResult<Frame>(new Frame(), err);
 						}
 						roots.get(ev.creator()).Others.put(ev.hex(), other);

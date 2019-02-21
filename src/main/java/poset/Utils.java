@@ -31,6 +31,25 @@ public class Utils {
 		return Arrays.equals(a, b);
 	}
 
+	public static boolean stringArrayEquals(String[] a, String[] b) {
+		if ((a == null && b == null)
+			|| (a == null && b.length == 0)
+			|| (b == null && a.length == 0)) {
+			return true;
+		}
+
+		for (int i=0; i< a.length; i++) {
+            boolean c = (a[i] == null && b[i] == null) ||
+            	(a[i] == null && b[i].isEmpty()) ||
+            	(a[i].isEmpty() && b[i] == null) ||
+            	a[i].equals(b[i]);
+            if (!c) {
+                return false;
+            }
+        }
+		return true;
+	}
+
 	public static boolean bytesEquals(byte[] thisByte, byte[] thatByte)  {
 		return Arrays.equals(thisByte, thatByte);
 	}

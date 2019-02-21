@@ -179,7 +179,7 @@ public class EventBody {
 			return false;
 		if (!Utils.protoEquals(InternalTransactions, other.InternalTransactions))
 			return false;
-		if (!Utils.protoEquals(Parents, other.Parents))
+		if (!Utils.stringArrayEquals(Parents, other.Parents))
 			return false;
 		if (!Arrays.deepEquals(Transactions, other.Transactions))
 			return false;

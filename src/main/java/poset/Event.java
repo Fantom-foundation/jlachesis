@@ -149,7 +149,7 @@ public class Event implements FlagtableContainer {
 
 		boolean hasTransactions = message.Body.Transactions != null &&
 			(message.Body.Transactions.length > 0 ||
-					(message.Body.InternalTransactions != null && message.Body.InternalTransactions.length > 0));
+			(message.Body.InternalTransactions != null && message.Body.InternalTransactions.length > 0));
 
 		return hasTransactions;
 	}
@@ -213,7 +213,6 @@ public class Event implements FlagtableContainer {
 	public String hex() {
 		if (hex == null || hex.isEmpty()) {
 			byte[] hash = hash().result;
-//			hex = String.format("0x%X", hash);
 			hex = crypto.Utils.toHexString(hash);
 		}
 		return hex;
@@ -252,10 +251,13 @@ public class Event implements FlagtableContainer {
 	}
 
 	public WireEvent toWire()  {
-		InternalTransaction[] transactions = new InternalTransaction[message.Body.InternalTransactions.length];
+		InternalTransaction[] transactions = null;
 
-		for (int i = 0; i <message.Body.InternalTransactions.length; ++i) {
-			transactions[i] = message.Body.InternalTransactions[i];
+		if (message.Body != null && message.Body.InternalTransactions != null) {
+			transactions = new InternalTransaction[message.Body.InternalTransactions.length];
+			for (int i = 0; i <message.Body.InternalTransactions.length; ++i) {
+				transactions[i] = message.Body.InternalTransactions[i];
+			}
 		}
 
 		WireBody wireBody = new WireBody(
@@ -278,9 +280,7 @@ public class Event implements FlagtableContainer {
 
 	// ReplaceFlagTable replaces flag tabl
 	public error replaceFlagTable(Map<String,Long> flagTable) {
-		FlagTableWrapper ftw = new FlagTableWrapper(flagTable);
-
-		RResult<byte[]> byteArrayCall = ftw.marshaller().protoMarshal();
+		RResult<byte[]> byteArrayCall = new FlagTableWrapper(flagTable).marshaller().protoMarshal();
 		message.FlagTable = byteArrayCall.result;
 		error err = byteArrayCall.err;
 		return err;

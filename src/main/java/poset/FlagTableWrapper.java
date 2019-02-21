@@ -13,7 +13,11 @@ public class FlagTableWrapper {
 	 * @param body
 	 */
 	public FlagTableWrapper(Map<String, Long> body) {
-		Body = new HashMap<String,Long>(body);
+		if (body != null) {
+			Body = new HashMap<String,Long>(body);
+		} else {
+			Body = new HashMap<String,Long>();
+		}
 	}
 
 	public FlagTableWrapper() {
