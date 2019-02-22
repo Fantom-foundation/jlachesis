@@ -45,7 +45,7 @@ public class NetworkTransport implements Transport {
 
 	Logger logger;
 
-	ConcurrentMap<String, Stack<netConn>> connPool; // map[string][]*netConn
+	ConcurrentMap<String, Stack<NetConn>> connPool; // map[string][]*netConn
 	int maxPool;
 
 	One2OneChannel<RPC> consumeCh; // chan RPC
@@ -71,7 +71,7 @@ public class NetworkTransport implements Transport {
 		//if (logger == null) {
 			logger = Logger.getLogger(this.getClass());
 		//}
-		this.connPool = new ConcurrentHashMap<String, Stack<netConn>>();
+		this.connPool = new ConcurrentHashMap<String, Stack<NetConn>>();
 		this.consumeCh = Channel.one2one(); // make(chan RPC),
 		this.logger = logger;
 		this.maxPool = maxPool;
@@ -146,14 +146,14 @@ public class NetworkTransport implements Transport {
 	 * @param target
 	 * @return
 	 */
-	public netConn getPooledConn(String target) {
-		Stack<netConn> conns = connPool.get(target);
+	public NetConn getPooledConn(String target) {
+		Stack<NetConn> conns = connPool.get(target);
 		if (conns == null || conns.size() == 0) {
 			connPool.put(target, new Stack<>());
 			return null;
 		}
 
-		netConn conn = conns.pop();
+		NetConn conn = conns.pop();
 		connPool.put(target, conns);
 		return conn;
 	}
@@ -164,54 +164,56 @@ public class NetworkTransport implements Transport {
 	 * @param timeout
 	 * @return
 	 */
-	public RResult<netConn> getConn(String target, Duration timeout) {
+	public RResult<NetConn> getConn(String target, Duration timeout) {
 		// Check for a pooled conn
-		netConn conn = getPooledConn(target);
+		NetConn conn = getPooledConn(target);
 		if (conn != null) {
-			return new RResult<netConn>(conn, null);
+			return new RResult<NetConn>(conn, null);
 		}
+		logger.field("conn", conn).debug("after pooled connection");
 
 		// Dial a new connection
 		logger.field("target", target)
 			.field("timeout", timeout.toMillis()).debug("Dialing");
 
+
 		RResult<Socket> dialCall = stream.dial(target, timeout);
 		Socket conn2 = dialCall.result;
 		error err = dialCall.err;
 		if (err != null) {
-			return new RResult<netConn>(null, err);
+			return new RResult<NetConn>(null, err);
 		}
 
 		// Wrap the conn
-		netConn netConn;
+		NetConn netConn;
 		try {
 			BufferedReader r = new BufferedReader(new InputStreamReader(conn2.getInputStream()));
 			PrintWriter w = new PrintWriter(conn2.getOutputStream(), true);
-			netConn = new netConn(target, conn2, r, w);
+			netConn = new NetConn(target, conn2, r, w);
 
 			// Setup encoder/decoders
-			netConn.dec = new jsonDecoder(r);
-			netConn.enc = new jsonEncoder(w);
+			netConn.dec = new JsonDecoder(r);
+			netConn.enc = new JsonEncoder(w);
 		} catch (IOException e) {
-			return new RResult<netConn>(null, error.Errorf(e.getMessage()));
+			return new RResult<NetConn>(null, error.Errorf(e.getMessage()));
 		}
 
 		// Done
-		return new RResult<netConn>(netConn, null);
+		return new RResult<NetConn>(netConn, null);
 	}
 
 	/**
 	 * Returns a connection back to the pool.
 	 * @param conn
 	 */
-	public void returnConn(netConn conn) {
+	public void returnConn(NetConn conn) {
 		String key = conn.target;
-		Stack<netConn> conns = connPool.get(key);
+		Stack<NetConn> conns = connPool.get(key);
 
 		if (!IsShutdown() && conns != null && conns.size() < maxPool) {
 			conns.add(conn);
 		} else {
-			conn.Release();
+			conn.release();
 		}
 	}
 
@@ -242,8 +244,8 @@ public class NetworkTransport implements Transport {
 		logger.field("target", target).field("rpcType", rpcType).debug("genericRPC");
 
 		// Get a conn
-		RResult<netConn> connCall = getConn(target, timeout);
-		netConn conn = connCall.result;
+		RResult<NetConn> connCall = getConn(target, timeout);
+		NetConn conn = connCall.result;
 		error err = connCall.err;
 		if (err != null) {
 			return err;
@@ -269,6 +271,7 @@ public class NetworkTransport implements Transport {
 		}
 
 		// Decode the response
+		logger.field("conn", conn).debug("sendRPC decoding response from conn");
 		RResult<Boolean> decodeResponse = decodeResponse(conn, resp);
 		boolean canReturn = decodeResponse.result;
 		err = decodeResponse.err;
@@ -288,7 +291,7 @@ public class NetworkTransport implements Transport {
 	 * @param args
 	 * @return
 	 */
-	public error sendRPC(netConn conn, int rpcType, ParsableMessage args) {
+	public error sendRPC(NetConn conn, int rpcType, ParsableMessage args) {
 		logger.field("conn", conn)
 			.field("rpcType", rpcType)
 			.field("args", args).debug("sendRPC()");
@@ -298,17 +301,17 @@ public class NetworkTransport implements Transport {
 			conn.w.write(rpcType);
 		} catch (IOException e) {
 			e.printStackTrace();
-			conn.Release();
+			conn.release();
 			logger.debug("sendRPC() writing request error =" + e.getMessage());
 			return error.Errorf(e.getMessage());
 		}
 
 		// Send the request
-		error err = conn.enc.Encode(args);
+		error err = conn.enc.encode(args);
 		logger.field("err",  err).debug("sendRPC() Encoding finished");
 
 		if (err != null) {
-			conn.Release();
+			conn.release();
 			return err;
 		}
 
@@ -319,7 +322,7 @@ public class NetworkTransport implements Transport {
 		} catch (IOException e) {
 			logger.field("err", err).debug("sendRPC() flushing error");
 			e.printStackTrace();
-			conn.Release();
+			conn.release();
 			return error.Errorf(e.getMessage());
 		}
 		return null;
@@ -331,30 +334,30 @@ public class NetworkTransport implements Transport {
 	 * @param resp
 	 * @return
 	 */
-	public RResult<Boolean> decodeResponse(netConn conn, ParsableMessage resp) {
+	public RResult<Boolean> decodeResponse(NetConn conn, ParsableMessage resp) {
 		logger.field("resp", resp).debug("decodeResponse() start");
 
 		// Decode the error if any
 		error rpcError = new error(null);
-		error err = conn.dec.Decode(rpcError);
+		error err = conn.dec.decode(rpcError);
 
 		logger.field("rpcError", rpcError)
-			.field("err", err).debug("decodeResponse() decoding error");
+			.field("err", err).debug("decodeResponse() decoded the error");
 
 		if (err != null) {
-			conn.Release();
+			conn.release();
 			return new RResult<Boolean>(false, err);
 		}
 
 		// Decode the response
-		err = conn.dec.Decode(resp);
+		err = conn.dec.decode(resp);
 		logger.field("resp", resp)
 			.field("rpcError", rpcError)
-			.field("err", err).debug("decodeResponse() here");
-		new Exception().printStackTrace();
+			.field("err", err).debug("decodeResponse() decoded resp");
+		//new Exception().printStackTrace();
 
 		if (err != null) {
-			conn.Release();
+			conn.release();
 			return new RResult<Boolean>(false, err);
 		}
 
@@ -386,7 +389,7 @@ public class NetworkTransport implements Transport {
 			}
 			logger.field("node", conn.getLocalAddress())
 					.field("from", conn.getRemoteSocketAddress())
-			.info("accepted connection");
+					.info("accepted connection");
 
 			// Handle the connection in dedicated routine
 			ExecService.go(() -> handleConn(conn));
@@ -402,8 +405,8 @@ public class NetworkTransport implements Transport {
 		try {
 			BufferedReader r = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 			PrintWriter w = new PrintWriter(conn.getOutputStream(), true);
-			jsonDecoder dec = new jsonDecoder(r);
-			jsonEncoder enc = new jsonEncoder(w);
+			JsonDecoder dec = new JsonDecoder(r);
+			JsonEncoder enc = new JsonEncoder(w);
 
 			while (true) {
 				logger.error("handleConn() LOOPING conn=" + conn);
@@ -446,7 +449,7 @@ public class NetworkTransport implements Transport {
 	 * @param enc
 	 * @return
 	 */
-	public error handleCommand(Reader r, jsonDecoder dec, jsonEncoder enc) {
+	public error handleCommand(Reader r, JsonDecoder dec, JsonEncoder enc) {
 		// Get the rpc type
 		RResult<Integer> readRpc = dec.readRpc();
 		int rpcType = readRpc.result;
@@ -464,7 +467,7 @@ public class NetworkTransport implements Transport {
 		switch (retrievedRpc) {
 		case rpcSync:
 			SyncRequest sreq = new SyncRequest();
-			err = dec.Decode(sreq);
+			err = dec.decode(sreq);
 			if (err != null) {
 				return err;
 			}
@@ -472,7 +475,7 @@ public class NetworkTransport implements Transport {
 			break;
 		case rpcEagerSync:
 			EagerSyncRequest esreq = new EagerSyncRequest();
-			err = dec.Decode(esreq);
+			err = dec.decode(esreq);
 			if (err != null) {
 				return err;
 			}
@@ -480,7 +483,7 @@ public class NetworkTransport implements Transport {
 			break;
 		case rpcFastForward:
 			FastForwardRequest ffreq = new FastForwardRequest();
-			err = dec.Decode(ffreq);
+			err = dec.decode(ffreq);
 			if (err != null) {
 				return err;
 			}
@@ -553,14 +556,14 @@ public class NetworkTransport implements Transport {
 				respErr = resp.Error;
 			}
 			if (respErr != null) {
-				err = enc.Encode(respErr);
+				err = enc.encode(respErr);
 				if (err != null) {
 					return err;
 				}
 			}
 
 			// Send the response
-			err = enc.Encode(resp.Response);
+			err = enc.encode(resp.Response);
 			if (err != null) {
 				return err;
 			}

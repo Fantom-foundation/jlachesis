@@ -85,6 +85,43 @@ public class FastForwardResponse implements ParsableMessage {
 	}
 
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((Block == null) ? 0 : Block.hashCode());
+		result = prime * result + ((Frame == null) ? 0 : Frame.hashCode());
+		result = prime * result + (int) (FromID ^ (FromID >>> 32));
+		result = prime * result + Arrays.hashCode(Snapshot);
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		FastForwardResponse other = (FastForwardResponse) obj;
+		if (Block == null) {
+			if (other.Block != null)
+				return false;
+		} else if (!Block.equals(other.Block))
+			return false;
+		if (Frame == null) {
+			if (other.Frame != null)
+				return false;
+		} else if (!Frame.equals(other.Frame))
+			return false;
+		if (FromID != other.FromID)
+			return false;
+		if (!Arrays.equals(Snapshot, other.Snapshot))
+			return false;
+		return true;
+	}
+
+	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("FastForwardResponse [FromID=").append(FromID).append(", Block=").append(Block)

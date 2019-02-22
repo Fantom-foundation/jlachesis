@@ -141,6 +141,9 @@ public class InmemTransport implements Transport {
 		InmemTransport peer= inmemMedium.get(target);
 		boolean ok = peer != null;
 		inmemMediumSync.readLock().unlock();
+
+		logger.field("peer", peer).debug("makeRPC()");
+
 		error err = null;
 		if (!ok) {
 			err = error.Errorf(String.format("failed to connect to peer: %v", target));
@@ -150,6 +153,8 @@ public class InmemTransport implements Transport {
 		// Send the RPC over
 		One2OneChannel<RPCResponse> respCh = Channel.one2one(); // make(chan RPCResponse);
 		peer.consumerCh.out().write(new RPC(args, r, respCh));
+
+		logger.debug("makeRPC() after write the RPC");
 
 		// Wait for a response
 //		select {
@@ -175,7 +180,8 @@ public class InmemTransport implements Transport {
 				}
 			case TIM:
 				tim.setAlarm(tim.read() + timeout.toMillis());
-				err = error.Errorf("command timed out");
+				// TBD: visit this error later
+				//err = error.Errorf("command timed out");
 				break;
 		}
 

@@ -7,16 +7,16 @@ import autils.JsonUtils;
 import autils.Logger;
 import common.error;
 
-public class jsonEncoder {
+public class JsonEncoder {
 	//private static Logger logger = Logger.getLogger(jsonEncoder.class);
 
 	Writer w;
 
-	public jsonEncoder(Writer w) {
+	public JsonEncoder(Writer w) {
 		this.w = w;
 	}
 
-	public error Encode(error respErr) {
+	public error encode(error respErr) {
 		//logger.field("respErr", respErr).debug("Encode(err) starts");
 		try {
 			w.write(JsonUtils.ObjectToString(respErr));
@@ -28,7 +28,7 @@ public class jsonEncoder {
 		return null;
 	}
 
-	public error Encode(ParsableMessage o) {
+	public error encode(ParsableMessage o) {
 		//logger.field("o", o).debug("Encode(o) starts");
 		try {
 			String s = o.getString();

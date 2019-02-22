@@ -13,7 +13,6 @@ import autils.time;
 import channel.ExecService;
 import channel.Selectors;
 import common.RResult;
-import common.TestUtils;
 import common.error;
 import crypto.hash;
 import poset.Block;
@@ -28,13 +27,13 @@ import proxy.GrpcLachesisProxy;
  */
 public class ClientTest {
 
+	Logger logger = Logger.getLogger(getClass());
+
 	@Test
 	public void TestSocketProxyServer() {
 		long timeout = 2 * time.Second;
 		String errTimeout = "time is over";
 		String addr = "127.0.0.1:9990";
-
-		Logger logger = null; //Logger.getLogger(getClass());
 
 		byte[] txOrigin = "the test transaction".getBytes();
 
@@ -66,8 +65,6 @@ public class ClientTest {
 	public void TestDummySocketClient() {
 		long timeout    = 2 * time.Second;
 		String	addr       = "127.0.0.1:9992";
-
-		Logger logger = TestUtils.NewTestLogger(this.getClass());
 
 		// server
 		GrpcAppProxy appProxy = new GrpcAppProxy(addr, Duration.ofSeconds(2), logger);

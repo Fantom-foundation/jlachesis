@@ -5,20 +5,19 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.SocketTimeoutException;
-import java.util.Arrays;
 
 import autils.JsonUtils;
 import autils.Logger;
 import common.RResult;
 import common.error;
 
-public class jsonDecoder {
-	private static Logger logger = Logger.getLogger(jsonDecoder.class);
+public class JsonDecoder {
+	private static Logger logger = Logger.getLogger(JsonDecoder.class);
 
 	Reader r;
 	final char[] buf = new char[8192];
 
-	public jsonDecoder(Reader r) {
+	public JsonDecoder(Reader r) {
 		this.r = r;
 	}
 
@@ -33,12 +32,12 @@ public class jsonDecoder {
 		return new RResult<>(rpcType, err);
 	}
 
-	public error Decode(error rpcError) {
-		logger.field("rpcError", rpcError).debug("Decode(err) starts");
+	public error decode(error rpcError) {
+		logger.field("rpcError", rpcError).debug("decode(err) starts");
 		try {
 			String s = readError();
 			error parsedErr = JsonUtils.StringToObject(s, error.class);
-		    logger.field("parsedErr", parsedErr).debug("Decode(err)");
+		    logger.field("parsedErr", parsedErr).debug("decode(err)");
 		    if (parsedErr != null) {
 		    	rpcError.setErrMessage(parsedErr.Error());
 		    }
@@ -53,16 +52,16 @@ public class jsonDecoder {
 		return null;
 	}
 
-	public <T extends ParsableMessage> error Decode(T resp) {
-		logger.field("resp", resp).debug("Decode(T) starts");
+	public <T extends ParsableMessage> error decode(T resp) {
+		logger.field("resp", resp).debug("decode(T) starts");
 
 		RResult<String> readString = read();
 	    String s = readString.result;
 	    error err = readString.err;
-	    logger.field("s", s).field("err", err).debug("Decode(T)");
+	    logger.field("s", s).field("err", err).debug("decode(T)");
 	    resp.parseFrom(s);
 
-	    logger.field("s", s).field("resp", resp).debug("Decode(T)");
+	    logger.field("s", s).field("resp", resp).debug("decode(T)");
 
 	    if (err != null) {
 	    	return err;

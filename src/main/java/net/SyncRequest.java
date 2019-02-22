@@ -43,6 +43,34 @@ public class SyncRequest implements ParsableMessage {
 	}
 
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (FromID ^ (FromID >>> 32));
+		result = prime * result + ((Known == null) ? 0 : Known.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		SyncRequest other = (SyncRequest) obj;
+		if (FromID != other.FromID)
+			return false;
+		if (Known == null) {
+			if (other.Known != null)
+				return false;
+		} else if (!Known.equals(other.Known))
+			return false;
+		return true;
+	}
+
+	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("SyncRequest [FromID=").append(FromID).append(", Known=").append(Known).append("]");

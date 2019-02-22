@@ -13,8 +13,8 @@ public class InmemTransportTest extends NetTransportTest {
 	long timeout = 200 * time.Millisecond;
 
 
-	//@Test
-	public void TestInmemTransport() {
+	@Test
+	public void testInmemTransport() {
 		// Transport 1 is consumer
 		InmemTransport trans1 = new InmemTransport("");
 

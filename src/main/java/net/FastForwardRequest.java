@@ -37,6 +37,28 @@ public class FastForwardRequest implements ParsableMessage {
 	}
 
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (FromID ^ (FromID >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		FastForwardRequest other = (FastForwardRequest) obj;
+		if (FromID != other.FromID)
+			return false;
+		return true;
+	}
+
+	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("FastForwardRequest [FromID=").append(FromID).append("]");
