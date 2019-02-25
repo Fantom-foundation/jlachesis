@@ -308,7 +308,7 @@ public class NetworkTransport implements Transport {
 
 		// Send the request
 		error err = conn.enc.encode(args);
-		logger.field("err",  err).debug("sendRPC() Encoding finished");
+		logger.field("err", err).debug("sendRPC() Encoding finished");
 
 		if (err != null) {
 			conn.release();
@@ -352,9 +352,7 @@ public class NetworkTransport implements Transport {
 		// Decode the response
 		err = conn.dec.decode(resp);
 		logger.field("resp", resp)
-			.field("rpcError", rpcError)
 			.field("err", err).debug("decodeResponse() decoded resp");
-		//new Exception().printStackTrace();
 
 		if (err != null) {
 			conn.release();
@@ -363,7 +361,7 @@ public class NetworkTransport implements Transport {
 
 		// Format an error if any
 		if (rpcError.Error() != null) {
-			return new RResult<Boolean>(true, rpcError);
+			return new RResult<Boolean>(false, rpcError);
 		}
 
 		return new RResult<Boolean>(true, null);
@@ -389,7 +387,8 @@ public class NetworkTransport implements Transport {
 			}
 			logger.field("node", conn.getLocalAddress())
 					.field("from", conn.getRemoteSocketAddress())
-					.info("accepted connection");
+					.field("conn", conn)
+					.info("connection accepted. server socket");
 
 			// Handle the connection in dedicated routine
 			ExecService.go(() -> handleConn(conn));
@@ -463,6 +462,8 @@ public class NetworkTransport implements Transport {
 		RPC rpc = new RPC(respCh);
 
 		NetworkTransportType retrievedRpc = NetworkTransportType.values[rpcType];
+		logger.field("retrievedRpc", retrievedRpc).debug("handleCommand()");
+
 		// Decode the command
 		switch (retrievedRpc) {
 		case rpcSync:
@@ -503,11 +504,11 @@ public class NetworkTransport implements Transport {
 
 		logger.debug("handleCommand() dispatching the RPC");
 
-		final Alternative alt = new Alternative(new Guard[] {shutdownCh.in()});
+		final Alternative alt = new Alternative(new Guard[] {consumeCh.in(), shutdownCh.in()});
 		final int CONSUME = 0, SHUTDOWN = 1;
 
 		switch (alt.priSelect()) {
-		case CONSUME:
+		default:
 			logger.debug("handleCommand() consuming");
 			consumeCh.out().write(rpc);
 			break;

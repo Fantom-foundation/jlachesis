@@ -29,9 +29,9 @@ class TCPStreamLayer implements StreamLayer {
 
 		Socket socket;
 		try {
-			logger.debug("Connecting to " + address + " on port " + listener.getLocalPort());
+			logger.field("listener", listener).debug("Connecting to " + address + " on port " + listener.getLocalPort());
 			socket = new Socket(address, listener.getLocalPort());
-			logger.debug("Just connected to " + socket.getRemoteSocketAddress());
+			logger.field("client socket", socket).debug("Just connected to " + socket.getRemoteSocketAddress());
 			socket.setSoTimeout((int) timeout.toMillis());
 		} catch (IOException e) {
 			e.printStackTrace();

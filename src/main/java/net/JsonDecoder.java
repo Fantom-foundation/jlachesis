@@ -26,6 +26,8 @@ public class JsonDecoder {
 		error err = null;
 		try {
 			rpcType = r.read();
+			logger.field("rpcType", rpcType).debug("readRpc()");
+
 		} catch (IOException e) {
 			err = error.Errorf(e.getMessage());
 		}
@@ -55,20 +57,18 @@ public class JsonDecoder {
 	public <T extends ParsableMessage> error decode(T resp) {
 		logger.field("resp", resp).debug("decode(T) starts");
 
-		RResult<String> readString = read();
-	    String s = readString.result;
-	    error err = readString.err;
-	    logger.field("s", s).field("err", err).debug("decode(T)");
-	    resp.parseFrom(s);
-
-	    logger.field("s", s).field("resp", resp).debug("decode(T)");
-
-	    if (err != null) {
-	    	return err;
-	    }
-
-		err = resp.parseFrom(s);
-		return err;
+		try {
+			int length = r.read();
+			String s = read(length);
+			logger.field("length",  length).field("s", s).debug("decode(T) reads length and s");
+		    resp.parseFrom(s);
+		    logger.field("resp", resp).debug("decode(T) parsed resp");
+			error err = resp.parseFrom(s);
+			return err;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return error.Errorf(e.getMessage());
+		}
 	}
 
 	private String readError() throws IOException, SocketTimeoutException {
@@ -82,28 +82,40 @@ public class JsonDecoder {
 	    return writer.toString();
 	}
 
-	private RResult<String> read() {
-		Writer writer = new StringWriter();
-		error err = null;
-		int nrBytes;
-	    try {
-			while ((nrBytes = r.read(buf)) != -1) {
-				writer.write(buf, 0, nrBytes);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			err = error.Errorf(e.getMessage());
-		} finally {
-			try {
-			    writer.flush();
-				writer.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-				err = error.Errorf(e.getMessage());
-			}
-        }
+//	private RResult<String> read() {
+//		Writer writer = new StringWriter();
+//		error err = null;
+//		int nrBytes;
+//	    try {
+//			while ((nrBytes = r.read(buf)) != -1) {
+//				writer.write(buf, 0, nrBytes);
+//			}
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//			err = error.Errorf(e.getMessage());
+//		} finally {
+//			try {
+//			    writer.flush();
+//				writer.close();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//				err = error.Errorf(e.getMessage());
+//			}
+//        }
+//
+//	    String s = writer.toString();
+//	    return new RResult<>(s, err);
+//	}
 
-	    String s = writer.toString();
-	    return new RResult<>(s, err);
+	private String read(int bytes) throws IOException {
+		Writer writer = new StringWriter();
+		int nrBytes;
+		char[] buf = new char[bytes];
+		while ((nrBytes = r.read(buf)) != -1) {
+			writer.write(buf, 0, nrBytes);
+		}
+	    writer.flush();
+		writer.close();
+	    return writer.toString();
 	}
 }

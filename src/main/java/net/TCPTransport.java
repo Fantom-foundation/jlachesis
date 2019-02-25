@@ -41,8 +41,6 @@ public class TCPTransport {
 	public static RResult<NetworkTransport> newTCPTransport(String bindAddr, InetAddress advertise, int maxPool,
 			Duration timeout, TCPTransportCreator transportCreator) {
 		// Try to bind
-//		list, err := net.Listen("tcp", bindAddr);
-
 		RResult<ServerSocket> bind = NetUtils.bind(bindAddr);
 		ServerSocket list = bind.result;
 		error err = bind.err;
@@ -62,7 +60,7 @@ public class TCPTransport {
 				list.close();
 				return new RResult<NetworkTransport>(null, errNotTCP);
 			}
-			if (addr.getHostAddress().isEmpty()) {// .IP.IsUnspecified()) {
+			if (addr.getHostAddress().isEmpty()) {
 				list.close();
 				return new RResult<NetworkTransport>(null, errNotAdvertisable);
 			}
