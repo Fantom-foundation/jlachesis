@@ -28,7 +28,6 @@ do
 	    --store="inmem"
     docker cp $MPWD/conf/node$i node$i:.jlachesis
     docker start node$i
-    #docker start node$i /bin/sh -c "java -cp jlachesis-0.2.1.jar lachesis.KeygenMain"
 
     docker run -d --name=client$i --net=jlachesisnet --ip=182.88.8.$(($N+$i)) -it quan8/dummy:0.2.1 \
 	    /bin/sh -c \

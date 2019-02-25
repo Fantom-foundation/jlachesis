@@ -18,10 +18,6 @@ do
     dest=$DEST/node$i
     mkdir -p $dest
     echo "writing to dest = " $dest
-    #docker run --rm -it quan8/jlachesis:0.2.1  /bin/sh -c \
-    #	"/keygen.sh --pem=node/priv_key.pem --pub=node/key.pub" \
-    #	| sed -n -e "2 w $dest/pub" -e "4,+4 w $dest/priv_key.pem"
-
     echo "Generating key pair for node$i"
     docker run --rm -v $dest:/keys quan8/jlachesis:0.2.1 /bin/sh -c \
         "/keygen.sh --pem /keys/priv_key.pem --pub /keys/key.pub"
