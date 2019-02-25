@@ -14,7 +14,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.log4j.Level;
 import org.jcsp.lang.Alternative;
 import org.jcsp.lang.CSTimer;
 import org.jcsp.lang.Channel;
@@ -297,17 +296,15 @@ public class NetworkTransport implements Transport {
 			.field("args", args).debug("sendRPC()");
 
 		// Write the request type
-		try {
-			conn.w.write(rpcType);
-		} catch (IOException e) {
-			e.printStackTrace();
+		error err = conn.enc.encode(rpcType);
+		logger.field("err", err).debug("sendRPC() encoding rpctype");
+		if (err != null) {
 			conn.release();
-			logger.debug("sendRPC() writing request error =" + e.getMessage());
-			return error.Errorf(e.getMessage());
+			return err;
 		}
 
 		// Send the request
-		error err = conn.enc.encode(args);
+		err = conn.enc.encode(args);
 		logger.field("err", err).debug("sendRPC() Encoding finished");
 
 		if (err != null) {

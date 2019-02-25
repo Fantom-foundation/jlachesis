@@ -16,6 +16,17 @@ public class JsonEncoder {
 		this.w = w;
 	}
 
+	public error encode(int rpcType) {
+		try {
+			w.write(rpcType);
+			w.flush();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return error.Errorf(e.getMessage());
+		}
+		return null;
+	}
+
 	public error encode(error respErr) {
 		logger.field("respErr", respErr).debug("Encode(err) starts");
 		try {

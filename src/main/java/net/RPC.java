@@ -47,6 +47,4 @@ public class RPC {
 	public void setCommand(Object command) {
 		this.command = command;
 	}
-	
-	
 }

@@ -69,10 +69,6 @@ public class InmemTransport implements Transport {
 		inmemMediumSync.writeLock().unlock();
 	}
 
-	public One2OneChannel<RPC> getConsumerCh() {
-		return consumerCh;
-	}
-
 	public Map<String, InmemTransport> getInmemMedium() {
 		return inmemMedium;
 	}
