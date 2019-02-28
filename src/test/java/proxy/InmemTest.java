@@ -44,6 +44,7 @@ public class InmemTest {
 					byte[] tx = ch.in().read();
 					// System.out.println("transation read = " + new String(tx));
 					assertArrayEquals("read result submitCh should match", tx_origin, tx);
+					tim.setAlarm(tim.read() + timeout);
 				}
 				public void onTimeOut() {
 					tim.setAlarm(tim.read() + timeout);
@@ -52,7 +53,9 @@ public class InmemTest {
 			}.run();
 		});
 
-		proxy.SubmitTx(tx_origin);
+		ExecService.go(() -> {
+			proxy.SubmitTx(tx_origin);
+		});
 
 
 		//"#2 Commit block"

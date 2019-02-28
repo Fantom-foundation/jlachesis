@@ -166,6 +166,7 @@ public class InmemTransport implements Transport {
 		final CSTimer tim = new CSTimer ();
 		final Alternative alt = new Alternative (new Guard[] {respCh.in(), tim});
 		final int EVENT = 0, TIM = 1;
+		tim.setAlarm(tim.read() + timeout.toMillis());
 
 		switch (alt.priSelect ()) {
 			case EVENT:
@@ -177,7 +178,7 @@ public class InmemTransport implements Transport {
 			case TIM:
 				tim.setAlarm(tim.read() + timeout.toMillis());
 				// TBD: visit this error later
-				//err = error.Errorf("command timed out");
+				// err = error.Errorf("command timed out");
 				break;
 		}
 
