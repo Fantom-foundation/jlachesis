@@ -1,6 +1,5 @@
 package net;
 
-import java.io.Reader;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -86,7 +85,7 @@ public class InmemTransport implements Transport {
 	// Sync implements the Transport interface.
 	public error sync(String target, SyncRequest args, SyncResponse resp)  {
 		logger.debug("sync()");
-		RResult<RPCResponse> makeRPC = makeRPC(target, args, null, timeout);
+		RResult<RPCResponse> makeRPC = makeRPC(target, args, timeout);
 		RPCResponse rpcResp = makeRPC.result;
 		error err = makeRPC.err;
 		if (err != null) {
@@ -94,14 +93,14 @@ public class InmemTransport implements Transport {
 		}
 
 		// Copy the result back
-		resp.copy((SyncResponse) rpcResp.Response);
+		resp.copy((SyncResponse) rpcResp.response);
 		return null;
 	}
 
 	// Sync implements the Transport interface.
 	public error eagerSync(String target, EagerSyncRequest args, EagerSyncResponse resp) {
 		logger.debug("eagerSync()");
-		RResult<RPCResponse> makeRPC = makeRPC(target, args, null, timeout);
+		RResult<RPCResponse> makeRPC = makeRPC(target, args, timeout);
 		RPCResponse rpcResp = makeRPC.result;
 		error err = makeRPC.err;
 
@@ -110,14 +109,14 @@ public class InmemTransport implements Transport {
 		}
 
 		// Copy the result back
-		resp.copy((EagerSyncResponse) rpcResp.Response);
+		resp.copy((EagerSyncResponse) rpcResp.response);
 		return null;
 	}
 
 	// FastForward implements the Transport interface.
 	public error fastForward(String target, FastForwardRequest args, FastForwardResponse res)  {
 		logger.debug("fastForward()");
-		RResult<RPCResponse> makeRPC = makeRPC(target, args, null, timeout);
+		RResult<RPCResponse> makeRPC = makeRPC(target, args, timeout);
 		RPCResponse rpcResp = makeRPC.result;
 		error err = makeRPC.err;
 
@@ -126,11 +125,11 @@ public class InmemTransport implements Transport {
 		}
 
 		// Copy the result back
-		res.copy((FastForwardResponse) rpcResp.Response);
+		res.copy((FastForwardResponse) rpcResp.response);
 		return null;
 	}
 
-	public <T> RResult<RPCResponse> makeRPC(String target, T args, Reader r, Duration timeout ) {
+	public <T> RResult<RPCResponse> makeRPC(String target, T args, Duration timeout ) {
 		logger.debug("makeRPC()");
 
 		inmemMediumSync.readLock().lock();
@@ -148,7 +147,7 @@ public class InmemTransport implements Transport {
 
 		// Send the RPC over
 		One2OneChannel<RPCResponse> respCh = Channel.one2one(); // make(chan RPCResponse);
-		peer.consumerCh.out().write(new RPC(args, r, respCh));
+		peer.consumerCh.out().write(new RPC(args, respCh));
 
 		logger.debug("makeRPC() after write the RPC");
 
@@ -172,8 +171,8 @@ public class InmemTransport implements Transport {
 			case EVENT:
 				logger.debug("Reading response event");
 				rpcResp =respCh.in().read(); // <-respCh:
-				if (rpcResp.Error != null) {
-					err = rpcResp.Error;
+				if (rpcResp.error != null) {
+					err = rpcResp.error;
 				}
 			case TIM:
 				tim.setAlarm(tim.read() + timeout.toMillis());

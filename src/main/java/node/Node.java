@@ -236,7 +236,7 @@ public class Node extends NodeState {
 	}
 
 	/**
-	 * lachesis is interrupted when a gossip function, launched asynchronously, changes
+	 * Lachesis is interrupted when a gossip function, launched asynchronously, changes
 	 * the state from Gossiping to CatchingUp, or when the node is shutdown
 	 * Otherwise, it processes RPC requests, periodicaly initiates gossip while there
 	 * is something to gossip about, or waits.
@@ -300,7 +300,7 @@ public class Node extends NodeState {
 			processFastForwardRequest(rpc, (FastForwardRequest) cmd);
 		} else {
 			logger.field("cmd", rpc.getCommand()).error("Unexpected RPC command");
-			rpc.Respond(null, error.Errorf("unexpected command"));
+			rpc.respond(null, error.Errorf("unexpected command"));
 		}
 	}
 
@@ -359,7 +359,7 @@ public class Node extends NodeState {
 			.field("error",      respErr)
 			.debug("SyncRequest Received");
 
-		rpc.Respond(resp, respErr);
+		rpc.respond(resp, respErr);
 	}
 
 	public void processEagerSyncRequest(net.RPC rpc, net.EagerSyncRequest cmd) {
@@ -377,7 +377,7 @@ public class Node extends NodeState {
 		}
 
 		EagerSyncResponse resp = new net.EagerSyncResponse (id, success);
-		rpc.Respond(resp, err);
+		rpc.respond(resp, err);
 	}
 
 	public void processFastForwardRequest(net.RPC rpc, net.FastForwardRequest cmd) {
@@ -416,7 +416,7 @@ public class Node extends NodeState {
 			.field("Events", resp.getFrame().GetEvents().length)
 			.field("Error",  respErr)
 			.debug("FastForwardRequest Received");
-		rpc.Respond(resp, respErr);
+		rpc.respond(resp, respErr);
 	}
 
 	/**

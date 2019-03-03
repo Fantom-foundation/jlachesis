@@ -2,7 +2,7 @@ package net;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.ServerSocket;
+import java.nio.channels.ServerSocketChannel;
 import java.time.Duration;
 
 import autils.Logger;
@@ -41,8 +41,9 @@ public class TCPTransport {
 	public static RResult<NetworkTransport> newTCPTransport(String bindAddr, InetAddress advertise, int maxPool,
 			Duration timeout, TCPTransportCreator transportCreator) {
 		// Try to bind
-		RResult<ServerSocket> bind = NetUtils.bind(bindAddr);
-		ServerSocket list = bind.result;
+		RResult<ServerSocketChannel> bind = NetUtils.bind(bindAddr);
+		ServerSocketChannel list = bind.result;
+
 		error err = bind.err;
 		if (err != null) {
 			return new RResult<NetworkTransport>(null, err);

@@ -1,25 +1,38 @@
 package net;
 
+import autils.JsonUtils;
 import common.error;
 
 /**
  * RPCResponse captures both a response and a potential error.
  */
 public class RPCResponse {
-	ParsableMessage Response;
-	error Error;
+	ParsableMessage response;
+	error error;
 	public RPCResponse(ParsableMessage response, error error) {
 		super();
-		Response = response;
-		Error = error;
+		this.response = response;
+		this.error = error;
+	}
+
+	public error parseFrom(String s) {
+		error err = null;
+		try {
+			RPCResponse o = JsonUtils.StringToObject(s, RPCResponse.class);
+			this.response = o.response;
+			this.error = o.error;
+		} catch (Exception e) {
+			err = error.Errorf(e.getMessage());
+		}
+		return err;
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((Error == null) ? 0 : Error.hashCode());
-		result = prime * result + ((Response == null) ? 0 : Response.hashCode());
+		result = prime * result + ((error == null) ? 0 : error.hashCode());
+		result = prime * result + ((response == null) ? 0 : response.hashCode());
 		return result;
 	}
 
@@ -32,25 +45,23 @@ public class RPCResponse {
 		if (getClass() != obj.getClass())
 			return false;
 		RPCResponse other = (RPCResponse) obj;
-		if (Error == null) {
-			if (other.Error != null)
+		if (error == null) {
+			if (other.error != null)
 				return false;
-		} else if (!Error.equals(other.Error))
+		} else if (!error.equals(other.error))
 			return false;
-		if (Response == null) {
-			if (other.Response != null)
+		if (response == null) {
+			if (other.response != null)
 				return false;
-		} else if (!Response.equals(other.Response))
+		} else if (!response.equals(other.response))
 			return false;
 		return true;
 	}
 
-
-
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("RPCResponse [Response=").append(Response).append(", Error=").append(Error).append("]");
+		builder.append("RPCResponse [Response=").append(response).append(", Error=").append(error).append("]");
 		return builder.toString();
 	}
 }

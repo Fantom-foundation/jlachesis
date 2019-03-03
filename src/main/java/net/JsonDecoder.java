@@ -1,10 +1,11 @@
 package net;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.SocketTimeoutException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 
 import autils.JsonUtils;
 import autils.Logger;
@@ -14,21 +15,29 @@ import common.error;
 public class JsonDecoder {
 	private static Logger logger = Logger.getLogger(JsonDecoder.class);
 
-	Reader r;
-	final char[] buf = new char[8192];
+	SocketChannel r;
+	private static ByteBuffer buffer;
 
-	public JsonDecoder(Reader r) {
+	public JsonDecoder(SocketChannel r) {
 		this.r = r;
+		buffer = ByteBuffer.allocate(9256);
+	}
+
+	int readInt() throws IOException {
+		ByteBuffer buf = ByteBuffer.allocate(4);
+		r.read(buf);
+		return buf.getInt();
 	}
 
 	public RResult<Integer> readRpc() {
 		int rpcType = 0;
 		error err = null;
 		try {
-			rpcType = r.read();
+			rpcType = readInt();
 			logger.field("rpcType", rpcType).debug("readRpc()");
 
 		} catch (IOException e) {
+			e.printStackTrace();
 			err = error.Errorf(e.getMessage());
 		}
 		return new RResult<>(rpcType, err);
@@ -38,6 +47,10 @@ public class JsonDecoder {
 		logger.field("rpcError", rpcError).debug("decode(err) starts");
 		try {
 			String s = readError();
+			logger.field("s", s).debug("decode(err) read raw error msg");
+			if (s == null || s.isEmpty()) {
+				return null;
+			}
 			error parsedErr = JsonUtils.StringToObject(s, error.class);
 		    logger.field("parsedErr", parsedErr).debug("decode(err)");
 		    if (parsedErr != null) {
@@ -58,12 +71,13 @@ public class JsonDecoder {
 		logger.field("resp", resp).debug("decode(T) starts");
 
 		try {
-			int length = r.read();
-			String s = read(length);
-			logger.field("length",  length).field("s", s).debug("decode(T) reads length and s");
-		    resp.parseFrom(s);
+			String s = read();
+			logger.field("s", s)
+				.debug("decode(T) parsed resp");
+
+		    error err = resp.parseFrom(s);
 		    logger.field("resp", resp).debug("decode(T) parsed resp");
-			error err = resp.parseFrom(s);
+
 			return err;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -71,49 +85,42 @@ public class JsonDecoder {
 		}
 	}
 
-	private String readError() throws IOException, SocketTimeoutException {
-		Writer writer = new StringWriter();
-		int nrBytes;
-		while ((nrBytes = r.read(buf)) != -1) {
-			writer.write(buf, 0, nrBytes);
+	private String readError() throws IOException {
+		buffer.clear();
+		int nrBytes = r.read(buffer);
+		if (nrBytes > 0) {
+			byte[] bytes = new byte[buffer.remaining()];
+			buffer.get(bytes);
+			return new String(bytes);
 		}
-	    writer.flush();
-		writer.close();
-	    return writer.toString();
+		return null;
 	}
 
-//	private RResult<String> read() {
+//	private String read(int bytes) throws IOException {
 //		Writer writer = new StringWriter();
-//		error err = null;
-//		int nrBytes;
-//	    try {
-//			while ((nrBytes = r.read(buf)) != -1) {
-//				writer.write(buf, 0, nrBytes);
-//			}
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//			err = error.Errorf(e.getMessage());
-//		} finally {
-//			try {
-//			    writer.flush();
-//				writer.close();
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//				err = error.Errorf(e.getMessage());
-//			}
+//		int totalReadBytes = 0;
+//		int nrBytes;;
+//        while ((nrBytes = r.read(buffer)) != -1 && totalReadBytes < bytes) {
+//            if (totalReadBytes + nrBytes >= bytes) {
+//            	buffer.clear();
+//                writer.write(new String(buffer.array()));
+//                totalReadBytes += nrBytes;
+//                buffer.compact();
+//            	break;
+//            }
 //        }
-//
-//	    String s = writer.toString();
-//	    return new RResult<>(s, err);
+//	    writer.flush();
+//		writer.close();
+//	    return writer.toString();
 //	}
 
-	private String read(int bytes) throws IOException {
+	private String read() throws IOException {
 		Writer writer = new StringWriter();
-		int nrBytes;
-		char[] buf = new char[bytes];
-		while ((nrBytes = r.read(buf)) != -1) {
-			writer.write(buf, 0, nrBytes);
-		}
+        if (r.read(buffer) != -1) {
+        	buffer.clear();
+            writer.write(new String(buffer.array()));
+            buffer.compact();
+        }
 	    writer.flush();
 		writer.close();
 	    return writer.toString();

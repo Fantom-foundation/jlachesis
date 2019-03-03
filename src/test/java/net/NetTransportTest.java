@@ -61,7 +61,7 @@ public class NetTransportTest {
 					RPC rpc = ch.in().read();
 					SyncRequest req = (SyncRequest) rpc.getCommand();
 					assertEquals("Response rpc should match", expectedReq, req);
-					rpc.Respond(expectedResp, null);
+					rpc.respond(expectedResp, null);
 				}
 			}.setTimeout(timeout, errTimeout).run();
 		});
@@ -84,7 +84,7 @@ public class NetTransportTest {
 					RPC rpc = ch.in().read();
 					EagerSyncRequest req = (EagerSyncRequest) rpc.getCommand();
 					assertEquals("Response rpc should match", expectedReq, req);
-					rpc.Respond(expectedResp, null);
+					rpc.respond(expectedResp, null);
 				}
 			}.setTimeout(timeout, errTimeout).run();
 		});
@@ -112,7 +112,7 @@ public class NetTransportTest {
 					RPC rpc = ch.in().read();
 					FastForwardRequest req = (FastForwardRequest) rpc.getCommand();
 					assertEquals("Response rpc should match", expectedReq, req);
-					rpc.Respond(expectedResp, null);
+					rpc.respond(expectedResp, null);
 				}
 			}.setTimeout(timeout, errTimeout).run();
 		});
@@ -139,7 +139,7 @@ public class NetTransportTest {
 						RPC rpc = ch.in().read();
 						SyncRequest req = (SyncRequest) rpc.getCommand();
 						assertEquals("Response rpc should match", expectedReq, req);
-						rpc.Respond(expectedResp, null);
+						rpc.respond(expectedResp, null);
 					}
 				}.setTimeout(timeout, errTimeout).run();
 			}
@@ -171,9 +171,9 @@ public class NetTransportTest {
 	}
 
 	//@Test
-	public void TestNetworkTransport() {
+	public void testNetworkTransport() {
 		// Transport 1 is consumer
-		RResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport("127.0.0.1:0", null, 2 , Duration.ofSeconds(time.Second), logger);
+		RResult<NetworkTransport> newTCPTransport = TCPTransport.NewTCPTransport("127.0.0.1:0", null, 2 , Duration.ofSeconds(1), logger);
 		NetworkTransport trans1 = newTCPTransport.result;
 		error err = newTCPTransport.err;
 		assertNull("No error", err);

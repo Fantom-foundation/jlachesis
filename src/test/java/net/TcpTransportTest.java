@@ -24,11 +24,11 @@ public class TcpTransportTest {
 	public void TestTCPTransport_BadAddr() {
 		error err = TCPTransport.NewTCPTransport("0.0.0.0:100000000", null, 1, Duration.ZERO,
 				TestUtils.NewTestLogger(this.getClass())).err;
-		assertEquals("err", "Port value out of range: 100000000", err.Error());
+		assertEquals("err", "port out of range:100000000", err.Error());
 
 		err = TCPTransport.NewTCPTransport("0.0.0.0:-1", null, 1, Duration.ZERO,
 				TestUtils.NewTestLogger(this.getClass())).err;
-		assertEquals("err", "Port value out of range: -1", err.Error());
+		assertEquals("err", "port out of range:-1", err.Error());
 
 		err = TCPTransport.NewTCPTransport("0.0.0.0:44775", null, 1, Duration.ZERO,
 				TestUtils.NewTestLogger(this.getClass())).err;
@@ -61,7 +61,7 @@ public class TcpTransportTest {
 		assertNull("No error when create new tcp transport", err);
 		assertEquals("Bind address should match", "127.0.0.1", trans.localAddr());
 
-		int actualPort = ((TCPStreamLayer) trans.stream).listener.getLocalPort();
+		int actualPort = ((TCPStreamLayer) trans.stream).listener.socket().getLocalPort();
 		assertEquals("Bind port should match", expectedPort, actualPort);
 	}
 }

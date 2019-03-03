@@ -1,7 +1,9 @@
 package common;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.nio.channels.ServerSocketChannel;
 
 public class NetUtils {
 
@@ -10,11 +12,14 @@ public class NetUtils {
 	 * @param bindAddr a bind address in the form of ":9000"
 	 * @return
 	 */
-	public static RResult<ServerSocket> bind(String bindAddr) {
+	public static RResult<ServerSocketChannel> bind(String bindAddr) {
 		try {
 			int port = parsePort(bindAddr);
-			ServerSocket list = new ServerSocket(port, 50);
-			return new RResult<>(list, null);
+			String addr = parseAddress(bindAddr);
+			ServerSocketChannel serverSocket = ServerSocketChannel.open();
+			serverSocket.configureBlocking(false);
+	        serverSocket.socket().bind(new InetSocketAddress(addr, port));
+	        return new RResult<>(serverSocket, null);
 		} catch (Exception e) {
 			return new RResult<>(null, error.Errorf(e.getMessage()));
 		}
@@ -27,6 +32,17 @@ public class NetUtils {
 			port = Integer.parseInt(tokens[1]);
 		}
 		return port;
+	}
+
+	public static String parseAddress(String bindAddr) {
+		String[] tokens = bindAddr.split(":");
+		if (tokens.length == 0) {
+			return "";
+		}
+		if (tokens.length == 2) {
+			return tokens[0];
+		}
+		return bindAddr;
 	}
 
 	public static String getUnusedNetAddr() {

@@ -1,7 +1,8 @@
 package net;
 
 import java.net.InetAddress;
-import java.net.Socket;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
 import java.time.Duration;
 
 import common.RResult;
@@ -13,9 +14,11 @@ import common.error;
  */
 interface StreamLayer  {
 	/** Dial is used to create a new outgoing connection. */
-	RResult<Socket> dial(String address, Duration timeout);
+	RResult<SocketChannel> dial(String address, Duration timeout);
 
-	RResult<Socket> accept();
+	RResult<SocketChannel> accept();
+
+	Selector selector();
 
 	error close();
 

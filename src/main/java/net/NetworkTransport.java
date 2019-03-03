@@ -1,13 +1,14 @@
 package net;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.net.Socket;
 import java.net.SocketException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
 import java.time.Duration;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -175,30 +176,18 @@ public class NetworkTransport implements Transport {
 		logger.field("target", target)
 			.field("timeout", timeout.toMillis()).debug("Dialing");
 
-
-		RResult<Socket> dialCall = stream.dial(target, timeout);
-		Socket conn2 = dialCall.result;
+		RResult<SocketChannel> dialCall = stream.dial(target, timeout);
+		SocketChannel conn2 = dialCall.result;
 		error err = dialCall.err;
 		if (err != null) {
 			return new RResult<NetConn>(null, err);
 		}
 
 		// Wrap the conn
-		NetConn netConn;
-		try {
-			BufferedReader r = new BufferedReader(new InputStreamReader(conn2.getInputStream()));
-			PrintWriter w = new PrintWriter(conn2.getOutputStream(), true);
-			netConn = new NetConn(target, conn2, r, w);
-
-			// Setup encoder/decoders
-			netConn.dec = new JsonDecoder(r);
-			netConn.enc = new JsonEncoder(w);
-		} catch (IOException e) {
-			return new RResult<NetConn>(null, error.Errorf(e.getMessage()));
-		}
+		conn = new NetConn(target, conn2);
 
 		// Done
-		return new RResult<NetConn>(netConn, null);
+		return new RResult<NetConn>(conn, null);
 	}
 
 	/**
@@ -254,7 +243,8 @@ public class NetworkTransport implements Transport {
 		if (timeout.getSeconds() > 0) {
 			logger.field("timeout", timeout.toMillis()).debug("SetSoTimeout()");
 			try {
-				conn.conn.setSoTimeout((int) timeout.toMillis());
+				//conn.conn.configureBlocking(false);
+				conn.conn.socket().setSoTimeout((int) timeout.toMillis());
 			} catch (SocketException e) {
 				e.printStackTrace();
 				return error.Errorf(e.getMessage());
@@ -275,7 +265,6 @@ public class NetworkTransport implements Transport {
 		boolean canReturn = decodeResponse.result;
 		err = decodeResponse.err;
 		logger.field("err", err).field("canReturn", canReturn).debug("decodeResponse finished");
-
 		if (canReturn) {
 			returnConn(conn);
 		}
@@ -311,17 +300,6 @@ public class NetworkTransport implements Transport {
 			conn.release();
 			return err;
 		}
-
-		// Flush
-		try {
-			logger.field("err", err).debug("sendRPC() flushing");
-			conn.w.flush();
-		} catch (IOException e) {
-			logger.field("err", err).debug("sendRPC() flushing error");
-			e.printStackTrace();
-			conn.release();
-			return error.Errorf(e.getMessage());
-		}
 		return null;
 	}
 
@@ -337,13 +315,12 @@ public class NetworkTransport implements Transport {
 		// Decode the error if any
 		error rpcError = new error(null);
 		error err = conn.dec.decode(rpcError);
-
 		logger.field("rpcError", rpcError)
 			.field("err", err).debug("decodeResponse() decoded the error");
 
 		if (err != null) {
 			conn.release();
-			return new RResult<Boolean>(false, err);
+			return new RResult<>(false, err);
 		}
 
 		// Decode the response
@@ -353,15 +330,15 @@ public class NetworkTransport implements Transport {
 
 		if (err != null) {
 			conn.release();
-			return new RResult<Boolean>(false, err);
+			return new RResult<>(false, err);
 		}
 
 		// Format an error if any
 		if (rpcError.Error() != null) {
-			return new RResult<Boolean>(false, rpcError);
+			return new RResult<>(true, rpcError);
 		}
 
-		return new RResult<Boolean>(true, null);
+		return new RResult<>(true, null);
 	}
 
 	/**
@@ -369,26 +346,61 @@ public class NetworkTransport implements Transport {
 	 */
 	public void listen() {
 		logger.field("addr", localAddr()).info("Listening");
+		Selector selector = stream.selector();
+		try {
 
-		while (true) {
-			// Accept incoming connections
-			RResult<Socket> accept = stream.accept();
-			Socket conn = accept.result;
-			error err = accept.err;
-			if (err != null) {
-				if (IsShutdown()) {
-					return;
-				}
-				//logger.field("error", err).error("Failed to accept connection");
-				continue;
+			while (true) {
+				// Accept incoming connections
+				selector.select();
+
+	            Set<SelectionKey> selectedKeys = selector.selectedKeys();
+	            Iterator<SelectionKey> iter = selectedKeys.iterator();
+
+	            ByteBuffer buffer = ByteBuffer.allocate(9056);
+	            while (iter.hasNext()) {
+	                SelectionKey key = iter.next();
+
+	                if (key.isAcceptable()) {
+	                	RResult<SocketChannel> accept = stream.accept();
+	        			SocketChannel conn = accept.result;
+	        			error err = accept.err;
+	        			if (err != null) {
+	        				if (IsShutdown()) {
+	        					return;
+	        				}
+	        				logger.field("error", err).error("Failed to accept connection");
+	        				continue;
+	        			}
+	        			logger.field("node", conn.socket().getLocalAddress())
+	        					.field("from", conn.socket().getRemoteSocketAddress())
+	        					.field("conn", conn)
+	        					.info("connection accepted. server socket");
+
+	        			//ExecService.go(() -> handleConn(conn));
+	        			handleConn(conn);
+	                }
+
+	                if (key.isReadable()) {
+	                	logger.field("key", key).debug("TBD XXXX key is in readable mode");
+	                	// Handle the connection
+	                	SocketChannel client = (SocketChannel) key.channel();
+	                	buffer.clear();
+	                	client.read(buffer);
+
+	                    buffer.flip();
+	                    client.write(buffer);
+	                    buffer.clear();
+	                }
+	                if (key.isWritable()) {
+	                	logger.field("key", key).debug("TBD YYYY key is in writable mode");
+	                	// Handle the connection
+	                }
+
+	                iter.remove();
+	            }
 			}
-			logger.field("node", conn.getLocalAddress())
-					.field("from", conn.getRemoteSocketAddress())
-					.field("conn", conn)
-					.info("connection accepted. server socket");
-
-			// Handle the connection in dedicated routine
-			ExecService.go(() -> handleConn(conn));
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -396,37 +408,26 @@ public class NetworkTransport implements Transport {
 	 * Handle an inbound connection for its lifespan.
 	 * @param conn
 	 */
-	public void handleConn(Socket conn) {
+	public void handleConn(SocketChannel conn) {
 		logger.error("handleConn() conn=" + conn);
 		try {
-			BufferedReader r = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-			PrintWriter w = new PrintWriter(conn.getOutputStream(), true);
-			JsonDecoder dec = new JsonDecoder(r);
-			JsonEncoder enc = new JsonEncoder(w);
+			JsonDecoder dec = new JsonDecoder(conn);
+			JsonEncoder enc = new JsonEncoder(conn);
 
 			while (true) {
 				logger.error("handleConn() LOOPING conn=" + conn);
-				error err = handleCommand(r, dec, enc);
+				error err = handleCommand(dec, enc);
 				logger.field("err", err).error("handleConn() handleCommand finished");
 
 				if (err != null) {
-					// FIXIT: should we check for ErrTransportShutdown here as well?
-					// TODO how to convert go's EOF
+					// TODO: should we check for ErrTransportShutdown here as well?
 					// if (err != io.EOF && err != ErrTransportShutdown) {
 					if (err != ErrTransportShutdown) {
-						 logger.field("error", err).error("Failed to decode incoming command");
+						logger.field("error", err).error("Failed to decode incoming command");
 					}
 					return;
 				}
-				w.flush();
-//				if (err != null) {
-//					logger.field("error", err).error("Failed to flush response");
-//					return;
-//				}
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			logger.error("handleConnect error " + e);
 		} finally {
 			try {
 				conn.close();
@@ -445,7 +446,7 @@ public class NetworkTransport implements Transport {
 	 * @param enc
 	 * @return
 	 */
-	public error handleCommand(Reader r, JsonDecoder dec, JsonEncoder enc) {
+	public error handleCommand(JsonDecoder dec, JsonEncoder enc) {
 		// Get the rpc type
 		RResult<Integer> readRpc = dec.readRpc();
 		int rpcType = readRpc.result;
@@ -501,18 +502,22 @@ public class NetworkTransport implements Transport {
 
 		logger.debug("handleCommand() dispatching the RPC");
 
-		final Alternative alt = new Alternative(new Guard[] {consumeCh.in(), shutdownCh.in()});
-		final int CONSUME = 0, SHUTDOWN = 1;
+		CSTimer tim = new CSTimer();
+		final Alternative alt = new Alternative(new Guard[] {shutdownCh.in(), tim});
+		final int SHUTDOWN = 0, TIMER = 1;
 
 		switch (alt.priSelect()) {
-		default:
-			logger.debug("handleCommand() consuming");
-			consumeCh.out().write(rpc);
-			break;
 		case SHUTDOWN:
 			logger.debug("handleCommand() shutdown case");
 			shutdownCh.in().read();
 			return ErrTransportShutdown;
+		case TIMER:
+			logger.debug("handleCommand() timeout case");
+			tim.setAlarm(tim.read() + timeout.toMillis());
+		default:
+			logger.debug("handleCommand() consuming");
+			consumeCh.out().write(rpc);
+			break;
 		}
 
 //		// Wait for response
@@ -543,25 +548,20 @@ public class NetworkTransport implements Transport {
 		final int RESPONSE = 0, SHUTDOWN2 = 1;
 
 		RPCResponse resp;
-		error respErr;
 		switch (alt2.priSelect()) {
 		case RESPONSE:
 			logger.debug("Reading response channel");
 			resp = respCh.in().read();
 			// Send the error first
-			respErr = null;
-			if (resp.Error != null) {
-				respErr = resp.Error;
-			}
-			if (respErr != null) {
-				err = enc.encode(respErr);
+			if (resp.error != null) {
+				err = enc.encode(resp.error);
 				if (err != null) {
 					return err;
 				}
 			}
 
 			// Send the response
-			err = enc.encode(resp.Response);
+			err = enc.encode(resp.response);
 			if (err != null) {
 				return err;
 			}
