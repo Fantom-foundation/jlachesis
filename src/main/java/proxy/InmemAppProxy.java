@@ -17,8 +17,8 @@ import poset.InternalTransaction;
 public class InmemAppProxy implements AppProxy {
 	Logger logger;
 	ProxyHandler handler;
-	One2OneChannel<byte[]> submitCh; // chan []byte
-	One2OneChannel<poset.InternalTransaction> submitInternalCh; // chan poset.InternalTransaction
+	One2OneChannel<byte[]> submitCh;
+	One2OneChannel<poset.InternalTransaction> submitInternalCh;
 
 	/**
 	 * Constructor instantiates an InmemProxy without a handler.
@@ -63,24 +63,22 @@ public class InmemAppProxy implements AppProxy {
 	 * inmem interface: AppProxy implementation
 	 */
 	// SubmitCh implements AppProxy interface method
-	public One2OneChannel<byte[]> SubmitCh() /* chan []byte */ {
+	public One2OneChannel<byte[]> SubmitCh() {
 		return submitCh;
 	}
 
 	public void ProposePeerAdd(peers.Peer peer) {
-		submitInternalCh.out().write(new InternalTransaction(poset.TransactionType.PEER_ADD, peer)); // <-
-																										// poset.NewInternalTransaction(poset.TransactionType.PEER_ADD,
-																										// peer);
+		submitInternalCh.out().write(new InternalTransaction(poset.TransactionType.PEER_ADD, peer));
 	}
 
 	public void ProposePeerRemove(peers.Peer peer) {
-		submitInternalCh.out().write(new InternalTransaction(poset.TransactionType.PEER_REMOVE, peer)); // <-
+		submitInternalCh.out().write(new InternalTransaction(poset.TransactionType.PEER_REMOVE, peer));
 	}
 
 	/**
 	 * SubmitCh returns the channel of raw transactions
 	 */
-	public One2OneChannel<poset.InternalTransaction> SubmitInternalCh() /* chan poset.InternalTransaction */ {
+	public One2OneChannel<poset.InternalTransaction> SubmitInternalCh() {
 		return submitInternalCh;
 	}
 

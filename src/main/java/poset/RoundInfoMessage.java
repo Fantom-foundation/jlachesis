@@ -7,7 +7,7 @@ import common.IProto;
 import poset.proto.RoundInfoMessage.Builder;
 
 public class RoundInfoMessage {
-	Map<String,RoundEvent> Events; //  `protobuf:"bytes,1,rep,name=Events,proto3" json:"Events,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Map<String,RoundEvent> Events;
 
 	public RoundInfoMessage() {
 		super();

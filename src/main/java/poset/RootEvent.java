@@ -61,11 +61,11 @@ import common.IProto;
  * of a Poset.
  */
 public class RootEvent {
-	String Hash; //                string   `protobuf:"bytes,1,opt,name=Hash,proto3" json:"Hash,omitempty"`
-	long CreatorID; //           int64    `protobuf:"varint,2,opt,name=CreatorID,proto3" json:"CreatorID,omitempty"`
-	long Index; //                int64    `protobuf:"varint,3,opt,name=Index,proto3" json:"Index,omitempty"`
-	long LamportTimestamp; //     int64    `protobuf:"varint,4,opt,name=LamportTimestamp,proto3" json:"LamportTimestamp,omitempty"`
-	long Round; //                int64    `protobuf:"varint,5,opt,name=Round,proto3" json:"Round,omitempty"`
+	String Hash;
+	long CreatorID;
+	long Index;
+	long LamportTimestamp;
+	long Round;
 
 	public RootEvent(String hash, long creatorID, long index, long lamportTimestamp, long round) {
 		super();

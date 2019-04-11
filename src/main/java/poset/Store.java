@@ -6,8 +6,9 @@ import common.RResult;
 import common.RResult3;
 import common.error;
 
-// Store provides an interface for persistent and non-persistent stores
-// to store key lachesis consensus information on a node.
+/**
+ * Store provides an interface for persistent and non-persistent stores
+ */
 public interface Store {
 	int cacheSize();
 	RResult<peers.Peers> participants();

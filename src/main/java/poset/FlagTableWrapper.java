@@ -7,7 +7,7 @@ import common.IProto;
 import poset.proto.FlagTableWrapper.Builder;
 
 public class FlagTableWrapper {
-	Map<String,Long> Body; //  `protobuf:"bytes,1,rep,name=Body,proto3" json:"Body,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
+	Map<String,Long> Body;
 
 	/**
 	 * @param body

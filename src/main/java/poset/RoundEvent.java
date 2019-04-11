@@ -6,9 +6,9 @@ import common.IProto;
 import poset.proto.Trilean;
 
 public class RoundEvent {
-	boolean Consensus; // `protobuf:"varint,1,opt,name=Consensus,proto3" json:"Consensus,omitempty"`
-	boolean Witness; //  `protobuf:"varint,2,opt,name=Witness,proto3" json:"Witness,omitempty"`
-	Trilean Famous; // `protobuf:"varint,3,opt,name=Famous,proto3,enum=poset.Trilean" json:"Famous,omitempty"`
+	boolean Consensus;
+	boolean Witness;
+	Trilean Famous;
 
 	public RoundEvent() {
 		// TODO: just add these inits

@@ -8,9 +8,9 @@ import com.google.protobuf.Parser;
 import common.IProto;
 
 public class BlockSignature {
-	byte[] validator; // `protobuf:"bytes,1,opt,name=Validator,json=validator,proto3" json:"Validator,omitempty"`
-	long index; // `protobuf:"varint,2,opt,name=Index,json=index" json:"Index,omitempty"`
-	String signature; // `protobuf:"bytes,3,opt,name=Signature,json=signature" json:"Signature,omitempty"`
+	byte[] validator;
+	long index;
+	String signature;
 
 	public BlockSignature(byte[] validator, long index, String signature) {
 		super();

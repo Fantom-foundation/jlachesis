@@ -10,9 +10,9 @@ import common.error;
  * application.
  */
 public interface AppProxy {
-	One2OneChannel<byte[]> SubmitCh(); // chan []byte
+	One2OneChannel<byte[]> SubmitCh();
 
-	One2OneChannel<poset.InternalTransaction> SubmitInternalCh(); // chan poset.InternalTransaction
+	One2OneChannel<poset.InternalTransaction> SubmitInternalCh();
 
 	RResult<byte[]> CommitBlock(poset.Block block);
 

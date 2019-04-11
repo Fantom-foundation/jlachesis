@@ -1,8 +1,8 @@
 package poset;
 
 public class WireBlockSignature {
-	long Index; // `protobuf:"varint,1,opt,name=Index,json=index" json:"Index,omitempty"`
-	String Signature; // `protobuf:"bytes,2,opt,name=Signature,json=signature" json:"Signature,omitempty"`
+	long Index;
+	String Signature;
 
 	public WireBlockSignature(long index, String signature) {
 		super();

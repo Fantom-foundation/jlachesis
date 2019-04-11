@@ -8,15 +8,15 @@ import com.google.protobuf.Parser;
 import common.IProto;
 
 public class EventMessage {
-	EventBody Body; // `protobuf:"bytes,1,opt,name=Body,json=body" json:"Body,omitempty"`
-	String Signature; //     `protobuf:"bytes,2,opt,name=Signature,json=signature" json:"Signature,omitempty"`
-	byte[] FlagTable; //     `protobuf:"bytes,3,opt,name=FlagTable,json=flagTable,proto3" json:"FlagTable,omitempty"`
-	String[] WitnessProof; //   `protobuf:"bytes,4,rep,name=WitnessProof,json=witnessProof" json:"WitnessProof,omitempty"`
-	long SelfParentIndex; //      `protobuf:"varint,5,opt,name=SelfParentIndex,json=selfParentIndex" json:"SelfParentIndex,omitempty"`
-	long OtherParentCreatorID; //      `protobuf:"varint,6,opt,name=OtherParentCreatorID,json=otherParentCreatorID" json:"OtherParentCreatorID,omitempty"`
-	long OtherParentIndex; //      `protobuf:"varint,7,opt,name=OtherParentIndex,json=otherParentIndex" json:"OtherParentIndex,omitempty"`
-	long CreatorID; //      `protobuf:"varint,8,opt,name=CreatorID,json=creatorID" json:"CreatorID,omitempty"`
-	long TopologicalIndex; //      `protobuf:"varint,9,opt,name=TopologicalIndex,json=topologicalIndex" json:"TopologicalIndex,omitempty"`
+	EventBody Body;
+	String Signature;
+	byte[] FlagTable;
+	String[] WitnessProof;
+	long SelfParentIndex;
+	long OtherParentCreatorID;
+	long OtherParentIndex;
+	long CreatorID;
+	long TopologicalIndex;
 
 	public EventMessage() {
 		super();

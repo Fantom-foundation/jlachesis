@@ -2,7 +2,9 @@ package proxy.proto;
 
 import common.error;
 
-// RestoreResponse captures both an error.
+/**
+ * RestoreResponse captures both an error.
+ */
 public class RestoreResponse {
 	public byte[] StateHash;
 	public error Error;

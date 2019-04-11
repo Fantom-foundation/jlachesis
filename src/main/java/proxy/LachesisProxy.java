@@ -9,11 +9,11 @@ import common.error;
  * transactions to the lachesis node.
  */
 public interface LachesisProxy {
-	One2OneChannel<proxy.proto.Commit> CommitCh(); // chan proto.Commit;
+	One2OneChannel<proxy.proto.Commit> CommitCh();
 
-	One2OneChannel<proxy.proto.SnapshotRequest> SnapshotRequestCh(); // chan proto.SnapshotRequest;
+	One2OneChannel<proxy.proto.SnapshotRequest> SnapshotRequestCh();
 
-	One2OneChannel<proxy.proto.RestoreRequest> RestoreCh(); // chan proto.RestoreRequest;
+	One2OneChannel<proxy.proto.RestoreRequest> RestoreCh();
 
 	error SubmitTx(byte[] tx);
 }

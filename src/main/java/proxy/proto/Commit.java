@@ -4,10 +4,12 @@ import org.jcsp.lang.One2OneChannel;
 
 import common.error;
 
-// Commit provides a response mechanism.
+/**
+ * Commit provides a response mechanism.
+ */
 public class Commit {
 	poset.Block Block;
-	One2OneChannel<CommitResponse> RespChan; // chan<- CommitResponse;
+	One2OneChannel<CommitResponse> RespChan;
 
 	public Commit(poset.Block block, One2OneChannel<CommitResponse> respChan) {
 		super();

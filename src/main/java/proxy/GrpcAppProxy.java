@@ -47,14 +47,12 @@ public class GrpcAppProxy implements AppProxy, LachesisNodeServer {
 
 	Duration timeout;
 
-	// typedef ClientStream LachesisNode_ConnectServer
-	One2OneChannel<LachesisNode_ConnectServer> new_clients; // chan ClientStream;
-	Map<UUID, One2OneChannel<ToServer.Answer>> askings; // map[UUID]chan *internal.ToServer.Answer;
+	One2OneChannel<LachesisNode_ConnectServer> new_clients;
+	Map<UUID, One2OneChannel<ToServer.Answer>> askings;
 	ReadWriteLock askings_sync;
 
-	One2OneChannel<byte[]> event4server; // chan []byte;
-	One2OneChannel<ToClient> event4clients; // chan *internal.ToClient;
-
+	One2OneChannel<byte[]> event4server;
+	One2OneChannel<ToClient> event4clients;
 	/**
 	 * Constructor instantiates a joined AppProxy-interface listen to remote apps
 	 *
@@ -72,11 +70,11 @@ public class GrpcAppProxy implements AppProxy, LachesisNodeServer {
 		this.timeout = timeout;
 		this.new_clients = Channel.one2one(); // make(chan ClientStream, 100);
 		// TODO: make chans buffered?
-		this.askings = new HashMap<UUID, One2OneChannel<ToServer.Answer>>(); // make(map[UUID]chan *internal.ToServer.Answer),
+		this.askings = new HashMap<UUID, One2OneChannel<ToServer.Answer>>();
 		this.askings_sync = new ReentrantReadWriteLock();
 
-		this.event4server = Channel.one2one(); // make(chan []byte),
-		this.event4clients = Channel.one2one(); // make(chan *internal.ToClient),
+		this.event4server = Channel.one2one();
+		this.event4clients = Channel.one2one();
 
 //		p.listener, err = net.Listen("tcp", bind_addr);
 		int parsePort = NetUtils.parsePort(bind_addr);

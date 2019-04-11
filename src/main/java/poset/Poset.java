@@ -23,22 +23,24 @@ import node.Core;
 import peers.Peer;
 import peers.Peers.Listener;
 
-//Poset is a DAG of Events. It also contains methods to extract a consensus
-//order of Events and map them onto a blockchain.
+/**
+ * Poset is a DAG of Events. It also contains methods to extract a consensus
+ * order of Events and map them onto a blockchain.
+ */
 public class Poset {
-	public peers.Peers Participants;  //[public key] => id
-	public Store Store; //           //store of Events, Rounds, and Blocks
+	public peers.Peers Participants; //[public key] => id
+	public Store Store;              //store of Events, Rounds, and Blocks
 	List<String> UndeterminedEvents; //[index] => hash . FIFO queue of Events whose consensus order is not yet determined
 	List<pendingRound> PendingRounds; //FIFO queue of Rounds which have not attained consensus yet
-	long LastConsensusRound; //     *int64           //index of last consensus round
-	long FirstConsensusRound; //    *int64           //index of first consensus round (only used in tests)
-	long AnchorBlock; //             *int64           //index of last block with enough signatures
-	int LastCommitedRoundEvents;              //number of events in round before LastConsensusRound
-	List<BlockSignature> SigPool;                 //Pool of Block signatures that need to be processed
-	long ConsensusTransactions;  //number of consensus transactions
-	int PendingLoadedEvents;  //number of loaded events that are not yet committed
-	One2OneChannel<Block> commitCh; //              chan Block       //channel for committing Blocks
-	long topologicalIndex;  //counter used to order events in topological order (only local)
+	long LastConsensusRound;       //index of last consensus round
+	long FirstConsensusRound;      //index of first consensus round (only used in tests)
+	long AnchorBlock;              //index of last block with enough signatures
+	int LastCommitedRoundEvents;   //number of events in round before LastConsensusRound
+	List<BlockSignature> SigPool;  //Pool of Block signatures that need to be processed
+	long ConsensusTransactions;    //number of consensus transactions
+	int PendingLoadedEvents;       //number of loaded events that are not yet committed
+	One2OneChannel<Block> commitCh;//channel for committing Blocks
+	long topologicalIndex;         //counter used to order events in topological order (only local)
 	int superMajority;
 	int trustCount;
 	Core core;
@@ -51,8 +53,14 @@ public class Poset {
 
 	Logger logger;
 
-	//NewPoset instantiates a Poset from a list of participants, underlying
-	//data store and commit channel
+	/**
+	 * Constructor
+	 * Instantiates a Poset from a list of participants, underlying data store and commit channel
+	 * @param participants
+	 * @param store
+	 * @param commitCh
+	 * @param logger
+	 */
 	public Poset(peers.Peers participants, Store store, One2OneChannel<Block> commitCh /* chan Block */, Logger logger) {
 		if (logger == null) {
 			logger = Logger.getLogger(Poset.class);

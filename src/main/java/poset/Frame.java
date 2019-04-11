@@ -10,9 +10,9 @@ import common.error;
 import crypto.hash;
 
 public class Frame {
-	long Round; //  `protobuf:"varint,1,opt,name=Round,proto3" json:"Round,omitempty"`
-	Root[] Roots; //  `protobuf:"bytes,2,rep,name=Roots,proto3" json:"Roots,omitempty"`
-	EventMessage[] Events; // `protobuf:"bytes,3,rep,name=Events,proto3" json:"Events,omitempty"`
+	long Round;
+	Root[] Roots;
+	EventMessage[] Events;
 
 	public Frame() {
 		// TODO

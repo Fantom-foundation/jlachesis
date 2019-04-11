@@ -6,7 +6,6 @@ import java.util.Comparator;
 public class EventComparatorByLamportTimestamp implements Comparator<Event> {
 
 	public EventComparatorByLamportTimestamp() {
-		// TODO Auto-generated constructor stub
 	}
 
 	public int compare(Event o1, Event o2) {

@@ -38,7 +38,7 @@ import proxy.proto.ToServer.Answer.Builder;
 
 public class GrpcLachesisProxy implements proxy.LachesisProxy {
 
-//    ZeroTime = time.Date(0, time.January, 0, 0, 0, 0, 0, time.Local)
+	// ZeroTime = time.Date(0, time.January, 0, 0, 0, 0, 0, time.Local)
 	static final Instant ZeroTime;
 	static {
 		Calendar calendar = Calendar.getInstance();
@@ -55,9 +55,9 @@ public class GrpcLachesisProxy implements proxy.LachesisProxy {
 	error ErrConnShutdown = error.Errorf("client disconnected");
 
 	Logger logger;
-	One2OneChannel<proxy.proto.Commit> commitCh; // chan proto.Commit
-	One2OneChannel<proxy.proto.SnapshotRequest> queryCh; // chan proto.SnapshotRequest
-	One2OneChannel<proxy.proto.RestoreRequest> restoreCh; // chan proto.RestoreRequest
+	One2OneChannel<proxy.proto.Commit> commitCh;
+	One2OneChannel<proxy.proto.SnapshotRequest> queryCh;
+	One2OneChannel<proxy.proto.RestoreRequest> restoreCh;
 
 	Duration reconn_timeout;
 	String addr;

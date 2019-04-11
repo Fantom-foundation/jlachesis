@@ -11,26 +11,26 @@ public interface ProxyHandler {
 	/**
 	 * CommitHandler is called when Lachesis commits a block to the DAG. It returns
 	 * the state hash resulting from applying the block's transactions to the state.
-	 * 
+	 *
 	 * @param block
 	 * @return
 	 */
-	RResult<byte[]> CommitHandler(poset.Block block); // return (stateHash []byte, err error)
+	RResult<byte[]> CommitHandler(poset.Block block);
 
 	/**
 	 * SnapshotHandler is called by Lachesis to retrieve a snapshot corresponding to
 	 * a particular block.
-	 * 
+	 *
 	 * @param blockIndex
 	 * @return
 	 */
-	RResult<byte[]> SnapshotHandler(long blockIndex); // return (snapshot []byte, err error)
+	RResult<byte[]> SnapshotHandler(long blockIndex);
 
 	/**
 	 * RestoreHandler is called by Lachesis to restore the application to a specific
-	 * 
+	 *
 	 * @param snapshot
 	 * @return
 	 */
-	RResult<byte[]> RestoreHandler(byte[] snapshot); // return (stateHash []byte, err error)
+	RResult<byte[]> RestoreHandler(byte[] snapshot);
 }

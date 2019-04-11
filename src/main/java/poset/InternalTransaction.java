@@ -6,8 +6,8 @@ import common.IProto;
 import peers.Peer;
 
 public class InternalTransaction {
-	TransactionType Type; // `protobuf:"varint,1,opt,name=Type,json=type,enum=poset.TransactionType" json:"Type,omitempty"`
-	Peer Peer; // `protobuf:"bytes,2,opt,name=peer" json:"peer,omitempty"`
+	TransactionType Type;
+	Peer Peer;
 
 	public InternalTransaction(TransactionType type, Peer peer) {
 		super();

@@ -4,10 +4,12 @@ import org.jcsp.lang.One2OneChannel;
 
 import common.error;
 
-// RestoreRequest provides a response mechanism.
+/**
+ * RestoreRequest provides a response mechanism.
+ */
 public class RestoreRequest {
 	byte[] Snapshot;
-	One2OneChannel<RestoreResponse> RespChan; // chan<- RestoreResponse
+	One2OneChannel<RestoreResponse> RespChan;
 
 	public RestoreRequest(byte[] snapshot, One2OneChannel<RestoreResponse> respChan) {
 		super();

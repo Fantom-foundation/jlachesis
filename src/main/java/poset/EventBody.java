@@ -11,12 +11,12 @@ import common.error;
 import crypto.hash;
 
 public class EventBody {
-	byte[][] Transactions; //  `protobuf:"bytes,1,rep,name=Transactions,json=transactions,proto3" json:"Transactions,omitempty"`
-	InternalTransaction[] InternalTransactions; // `protobuf:"bytes,2,rep,name=InternalTransactions,json=internalTransactions" json:"InternalTransactions,omitempty"`
-	String[] Parents ; //  `protobuf:"bytes,3,rep,name=Parents,json=parents" json:"Parents,omitempty"`
-	byte[] Creator; //  `protobuf:"bytes,4,opt,name=Creator,json=creator,proto3" json:"Creator,omitempty"`
-	long Index; // `protobuf:"varint,5,opt,name=Index,json=index" json:"Index,omitempty"`
-	BlockSignature [] BlockSignatures; //     `protobuf:"bytes,6,rep,name=BlockSignatures,json=blockSignatures" json:"BlockSignatures,omitempty"`
+	byte[][] Transactions;
+	InternalTransaction[] InternalTransactions;
+	String[] Parents;
+	byte[] Creator;
+	long Index;
+	BlockSignature [] BlockSignatures;
 
 	public EventBody(byte[][] transactions, InternalTransaction[] internalTransactions, String[] parents,
 			byte[] creator, long index, BlockSignature[] blockSignatures) {

@@ -8,9 +8,9 @@ import com.google.protobuf.Parser;
 import common.IProto;
 
 public class Root {
-	long NextRound; //  `protobuf:"varint,1,opt,name=NextRound,proto3" json:"NextRound,omitempty"`
-	RootEvent SelfParent; //   `protobuf:"bytes,2,opt,name=SelfParent,proto3" json:"SelfParent,omitempty"`
-	Map<String,RootEvent> Others; // `protobuf:"bytes,3,rep,name=Others,proto3" json:"Others,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	long NextRound;
+	RootEvent SelfParent;
+	Map<String,RootEvent> Others;
 
 	public Root()
 	{
