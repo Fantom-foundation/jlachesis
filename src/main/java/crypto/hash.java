@@ -8,12 +8,6 @@ import autils.Appender;
 
 public class hash {
 	public static byte[] SHA256(byte[] hashBytes) {
-		// TBD: is the transformation ok?
-//		hasher := sha256.New();
-//		hasher.Write(hashBytes);
-//		hash := hasher.Sum(null);
-//		return hash;
-
 		MessageDigest digest;
 		try {
 			digest = MessageDigest.getInstance("SHA-256");
@@ -26,12 +20,6 @@ public class hash {
 	}
 
 	public static byte[] SimpleHashFromTwoHashes(byte[] left, byte[] right) {
-		// TBD: is the transformation ok?
-//		hasher = sha256.New();
-//		hasher.Write(left);
-//		hasher.Write(right);
-//		return hasher.Sum(null);
-
 		MessageDigest digest;
 		try {
 			digest = MessageDigest.getInstance("SHA-256");

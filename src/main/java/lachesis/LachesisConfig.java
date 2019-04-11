@@ -9,15 +9,15 @@ import autils.Logger;
 import node.Config;
 
 public class LachesisConfig {
-	public String DataDir; // `mapstructure:"datadir"`
-	public String BindAddr; // string `mapstructure:"listen"`
-	public String ServiceAddr; // string `mapstructure:"service-listen"`
-	public boolean ServiceOnly; // `mapstructure:"service-only"`
-	public int MaxPool; // `mapstructure:"max-pool"`
-	public boolean Store; // `mapstructure:"store"`
-	public String LogLevel; // `mapstructure:"log"`
+	public String DataDir;
+	public String BindAddr;
+	public String ServiceAddr;
+	public boolean ServiceOnly;
+	public int MaxPool;
+	public boolean Store;
+	public String LogLevel;
 
-	public node.Config NodeConfig; // `mapstructure:",squash"`
+	public node.Config NodeConfig;
 
 	public boolean LoadPeers;
 	private proxy.AppProxy Proxy;
@@ -25,9 +25,9 @@ public class LachesisConfig {
 
 	Logger logger;
 
-	public boolean Test; //   `mapstructure:"test"`
-	public long TestN; // `mapstructure:"test_n"`
-	public long TestDelay; // `mapstructure:"test_delay"`
+	public boolean Test;
+	public long TestN;
+	public long TestDelay;
 
 	public LachesisConfig() {
 		super();

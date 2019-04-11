@@ -15,10 +15,10 @@ import channel.ChannelUtils;
 public class ControlTimer {
 	timerFactory timerFactory;
 	One2OneChannelInt tickCh; //       chan struct{} //sends a signal to listening process
-	One2OneChannel<Duration> resetCh; //     chan time.Duration //receives instruction to reset the heartbeatTimer
+	One2OneChannel<Duration> resetCh;
 	One2OneChannelInt stopCh; //       chan struct{} //receives instruction to stop the heartbeatTimer
 	One2OneChannelInt shutdownCh; //   chan struct{} //receives instruction to exit Run loop
-	boolean set; //          bool
+	boolean set;
 
 
 	public interface timerFactory {
@@ -28,7 +28,7 @@ public class ControlTimer {
 	public ControlTimer(timerFactory timerFactory) {
 		this.timerFactory = timerFactory;
 		this.tickCh = Channel.one2oneInt(); // make(chan struct{});
-		this.resetCh = Channel.one2one();// make(chan time.Duration);
+		this.resetCh = Channel.one2one();
 		this.stopCh = Channel.one2oneInt();//  make(chan struct{});
 		this.shutdownCh = Channel.one2oneInt(); //  make(chan struct{}),;
 	}

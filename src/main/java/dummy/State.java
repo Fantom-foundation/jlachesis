@@ -10,15 +10,6 @@ import common.RResult;
 import common.error;
 import proxy.ProxyHandler;
 
-
-/*
- * The dummy App is used for testing and as an example for building Lachesis
- * applications. Here, we define the dummy's state which doesn't really do
- * anything useful. It saves and logs block transactions. The state hash is
- * computed by cumulatively hashing transactions together as they come in.
- * Snapshots correspond to the state hash resulting from executing a the block's
- * transactions.
- */
 /**
  * State implements ProxyHandler
  */

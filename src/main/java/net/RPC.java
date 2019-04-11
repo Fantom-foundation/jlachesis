@@ -9,7 +9,7 @@ import common.error;
  */
 public class RPC {
 	private Object command;
-	private One2OneChannel<RPCResponse> respChan; // chan<- RPCResponse
+	private One2OneChannel<RPCResponse> respChan;
 
 	public RPC(One2OneChannel<RPCResponse> chan) {
 		super();

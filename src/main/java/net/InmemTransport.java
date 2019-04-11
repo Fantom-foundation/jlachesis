@@ -24,7 +24,7 @@ import common.error;
 public class InmemTransport implements Transport {
 	private static final Logger logger = Logger.getLogger(InmemTransport.class);
 
-	One2OneChannel<RPC> consumerCh; // chan RPC;
+	One2OneChannel<RPC> consumerCh;
 	String localAddr;
 	Duration timeout;
 

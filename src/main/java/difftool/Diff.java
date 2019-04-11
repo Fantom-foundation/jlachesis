@@ -12,18 +12,19 @@ import poset.Block;
 import poset.Frame;
 import poset.RoundInfo;
 
-// Diff contains and prints differences details
+/**
+ * Diff contains and prints differences details
+ */
 public class Diff {
-	error Err; // `json:"-"`
+	error Err;
 
-	node.Node[] node= new node.Node[2]; // `json:"-"`
+	node.Node[] node= new node.Node[2];
 	long[] IDs = new long[2];
-	long BlocksGap; //`json:",omitempty"`
-	long FirstBlockIndex; //`json:",omitempty"`
-	long RoundGap; //`json:",omitempty"`
-	long FirstRoundIndex; //`json:",omitempty"`
-
-	String Descr; // `json:"-"`
+	long BlocksGap;
+	long FirstBlockIndex;
+	long RoundGap;
+	long FirstRoundIndex;
+	String Descr;
 
 	public Diff(Node[] node, long[] iDs) {
 		super();

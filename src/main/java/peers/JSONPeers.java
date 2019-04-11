@@ -13,7 +13,7 @@ import common.error;
  * of a JSON file. This allows human operators to manipulate the file.
  */
 public class JSONPeers  implements PeerStore {
-	Semaphore l; //    sync.Mutex
+	Semaphore l;
 	String path;
 
 	/**

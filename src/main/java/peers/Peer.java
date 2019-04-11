@@ -9,9 +9,9 @@ import common.error;
  * A Peer
  */
 public class Peer {
-	long id; // `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
-	String netAddr; // `protobuf:"bytes,2,opt,name=NetAddr,proto3" json:"NetAddr,omitempty"`
-	String pubKeyHex; // `protobuf:"bytes,3,opt,name=PubKeyHex,proto3" json:"PubKeyHex,omitempty"`
+	long id;
+	String netAddr;
+	String pubKeyHex;
 
 	public static final String jsonPeerPath = "peers.json";
 

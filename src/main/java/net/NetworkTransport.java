@@ -45,10 +45,10 @@ public class NetworkTransport implements Transport {
 
 	Logger logger;
 
-	ConcurrentMap<String, Stack<NetConn>> connPool; // map[string][]*netConn
+	ConcurrentMap<String, Stack<NetConn>> connPool;
 	int maxPool;
 
-	One2OneChannel<RPC> consumeCh; // chan RPC
+	One2OneChannel<RPC> consumeCh;
 
 	boolean shutdown;
 	One2OneChannelInt shutdownCh; // chan struct{}

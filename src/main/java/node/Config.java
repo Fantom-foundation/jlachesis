@@ -7,14 +7,14 @@ import org.apache.log4j.Level;
 import autils.Logger;
 
 public class Config {
-	public Duration HeartbeatTimeout ; // `mapstructure:"heartbeat"`
-	public Duration TCPTimeout       ; // `mapstructure:"timeout"`
-	public int CacheSize; //         `mapstructure:"cache-size"`
-	public long SyncLimit; //         `mapstructure:"sync-limit"`
+	public Duration HeartbeatTimeout;
+	public Duration TCPTimeout;
+	public int CacheSize;
+	public long SyncLimit;
 
 	private Logger logger = Logger.getLogger(Config.class);
 
-	private long TestDelay; // `mapstructure:"test_delay"`
+	private long TestDelay;
 
 	public Config(Duration heartbeatTimeout, Duration tCPTimeout, int cacheSize, long syncLimit, Logger logger, long testDelay) {
 		super();

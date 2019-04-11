@@ -43,7 +43,7 @@ public class Node extends NodeState {
 
 	long id;
 	Core core;
-	Lock coreLock; // sync.Mutex
+	Lock coreLock;
 
 	String localAddr;
 
@@ -51,13 +51,13 @@ public class Node extends NodeState {
 	Lock selectorLock;
 
 	net.Transport trans;
-	One2OneChannel<net.RPC> netCh; // <-chan net.RPC;
+	One2OneChannel<net.RPC> netCh;
 
 	proxy.AppProxy proxy;
-	One2OneChannel<byte[]> submitCh; // TBD: chan []byte
-	One2OneChannel<poset.InternalTransaction> submitInternalCh; // chan poset.InternalTransaction
+	One2OneChannel<byte[]> submitCh;
+	One2OneChannel<poset.InternalTransaction> submitInternalCh;
 
-	One2OneChannel<poset.Block> commitCh; // chan poset.Block
+	One2OneChannel<poset.Block> commitCh;
 
 	One2OneChannel<Object> shutdownCh; // chan struct{}
 

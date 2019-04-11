@@ -2,7 +2,7 @@ package net;
 
 
 public enum NetworkTransportType {
-	rpcSync ((byte) 0), // uint8 = iota
+	rpcSync ((byte) 0),
 	rpcEagerSync((byte) 1),
 	rpcFastForward ((byte) 2);
 

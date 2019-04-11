@@ -5,7 +5,6 @@ import java.util.Arrays;
 
 /**
  * An Appender provides a means to express the append and slide operations.
- *
  * @author qn
  */
 public class Appender {
