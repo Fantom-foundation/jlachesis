@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 set -e # Exit with nonzero exit code if anything fails
 
-SOURCE_BRANCH="feature/automated-documentation"
-#SOURCE_BRANCH="master"
+SOURCE_BRANCH="master"
 TARGET_BRANCH="gh-pages"
 
 REPO=$(git config remote.origin.url)
