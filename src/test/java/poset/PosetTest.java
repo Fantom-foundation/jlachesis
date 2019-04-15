@@ -316,7 +316,7 @@ public class PosetTest {
 
 	/*  */
 
-	/*
+	/**
 	|  e12  |
 	|   | \ |
 	|  s10 e20
@@ -494,7 +494,7 @@ public class PosetTest {
 		}
 	}
 
-	/*
+	/*8
 	|    |    e20
 	|    |   / |
 	|    | /   |
@@ -511,7 +511,6 @@ public class PosetTest {
 	Node 2 Forks; events a and e2 are both created by node2, they are not
 	self-parent sand yet they are both ancestors of event e20
 	*/
-
 	@Test
 	public void testFork() {
 		this.index = new HashMap<String,String>();
@@ -561,7 +560,7 @@ public class PosetTest {
 		assertNotNull(String.format("InsertEvent should return error for %s", e20), err);
 	}
 
-	/*
+	/**
 	|  s11  |
 	|   |   |
 	|   f1  |
@@ -579,7 +578,6 @@ public class PosetTest {
 	e0  e1  e2
 	0   1    2
 	*/
-
 	public void initRoundPoset() {
 		play[] plays = new play[]{
 			new play(1, 1, e1, e0, e10, null, null, new String[]{e0, e1}),
@@ -1268,65 +1266,66 @@ public class PosetTest {
 //
 //	}
 //
-//	/*
-//	                   Round 8
-//	      [m0]  | [m2]-----------------------------
-//			| \ | / |  Round 7
-//			|  <l1> |
-//			|  /|   |
-//		  <l0>  |   |
-//			| \ |   |
-//			|   \   |
-//			|   | \ |
-//			|   | <l2>-----------------------------
-//			|   | / |  Round 6
-//			| [k10] |
-//			| / |   |
-//		  [k0]  | [k2]-----------------------------
-//			| \ | / |  Round 5
-//			| <j1>  |
-//			|  /|   |
-//		  <j0>  |   |
-//			| \ |   |
-//			|   \   |
-//			|   | \ |
-//		    |   | <j2>-----------------------------
-//			|   | / |  Round 4
-//			| [i1]  |
-//			| / |   |
-//		  [i0]  | [i2]-----------------------------
-//			| \ | / |  Round 3
-//			| <h10> |
-//			|  /|   |
-//		   h0b  |   |
-//			|   |   |
-//		  <h0>  |   |
-//			| \ |   |
-//			|   \   |
-//			|   | \ |
-//		---g0x  | <h2>----------------------------- //g0x's other-parent is f2. This situation can happen with concurrency.
-//		|	|   | / |  Round 2
-//		|	|  g10  |
-//		|	| / |   |
-//		|  [g0] | [g2]
-//		|	| \ | / |
-//		|	| [g1]  | ------------------------------
-//		|	|   |   |  Round 1
-//		|	| <f1>  |
-//		|  	|  /|   |
-//		| <f0>  |   |
-//		|	| \ |   |
-//		|	|   \   |
-//		|	|   | \ |
-//		|   |   |  f2b
-//		|	|   |   |
-//		----------<f2>------------------------------
-//			|   | / |  Round 0
-//			|  e10  |
-//		    | / |   |
-//		   [e0][e1][e2]
-//			0   1    2
-//	*/
+
+	/**
+	                   Round 8
+	      [m0]  | [m2]-----------------------------
+			| \ | / |  Round 7
+			|  <l1> |
+			|  /|   |
+		  <l0>  |   |
+			| \ |   |
+			|   \   |
+			|   | \ |
+			|   | <l2>-----------------------------
+			|   | / |  Round 6
+			| [k10] |
+			| / |   |
+		  [k0]  | [k2]-----------------------------
+			| \ | / |  Round 5
+			| <j1>  |
+			|  /|   |
+		  <j0>  |   |
+			| \ |   |
+			|   \   |
+			|   | \ |
+		    |   | <j2>-----------------------------
+			|   | / |  Round 4
+			| [i1]  |
+			| / |   |
+		  [i0]  | [i2]-----------------------------
+			| \ | / |  Round 3
+			| <h10> |
+			|  /|   |
+		   h0b  |   |
+			|   |   |
+		  <h0>  |   |
+			| \ |   |
+			|   \   |
+			|   | \ |
+		---g0x  | <h2>----------------------------- //g0x's other-parent is f2. This situation can happen with concurrency.
+		|	|   | / |  Round 2
+		|	|  g10  |
+		|	| / |   |
+		|  [g0] | [g2]
+		|	| \ | / |
+		|	| [g1]  | ------------------------------
+		|	|   |   |  Round 1
+		|	| <f1>  |
+		|  	|  /|   |
+		| <f0>  |   |
+		|	| \ |   |
+		|	|   \   |
+		|	|   | \ |
+		|   |   |  f2b
+		|	|   |   |
+		----------<f2>------------------------------
+			|   | / |  Round 0
+			|  e10  |
+		    | / |   |
+		   [e0][e1][e2]
+			0   1    2
+	*/
 	public void initConsensusPoset(boolean db) {
 		play[] plays = new play[]{
 			new play(1, 1, e1, e0, e10, null, null, new String[]{e0, e1}),
